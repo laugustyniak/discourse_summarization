@@ -1,60 +1,45 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
-import re
+
 import spacy
-import morfeusz2
+import re
+from textlytics.sentiment import DocumentPreprocessor
 
 
 class Preprocesser:
-    def __init__(self, lang, punctuation='\'"#&$%`~', words_to_skip=['ok']):
+    def __init__(self):
         print 'Preprocesser: initializing'
-        self.nlp = spacy.en.English(parser=False, entity=False)
+        # load spacy with parsers and entities, it will be useful in next steps of analysis
+        self.nlp = spacy.load('en')
+        self.dp = DocumentPreprocessor()
         print 'Preprocesser: initialized'
-        self.punctuation = punctuation
-        self.words_to_skip = words_to_skip
-        self.lang = lang
 
     def preprocess(self, text):
-
-        result = {'raw_text': text, 'tokens': []}
-
         # preprocessing tekstu do analizy
         text = text.strip()
-        text = text.lower()
+        # text = text.lower() # for NER it's better to have use upper/lower case
         text = text.decode('utf8')
 
-        if self.lang in ['en']:
-            doc = self.nlp(text, entity=False, parse=False)
-            for token in doc:
-                token_info = {'text': token.orth_,
-                              'pos': token.pos_,
-                              'lemma': token.lemma_,
-                              'is_stop': token.is_stop}
-                result['tokens'].append(token_info)
-        elif self.lang in ['pl']:
-            m = morfeusz2.Morfeusz()
-            for token in text.split():
-                token_info = {'text': self.get_morfeusz_lemma(m, token),
-                              'pos': self.get_morfeusz_nouns(m, token),
-                              'lemma': self.get_morfeusz_lemma(m, token),
-                              'is_stop': False}
-                result['tokens'].append(token_info)
-            print result
-        else:
-            raise Exception("Wrong language in preprocessing step")
+        # FIXME: temporary cleaning of char that are specific to RQT trees
+        # FIXME: this was the problem with word with q in the end!!
+        text = re.sub('^U.', '', text)
+        text = re.sub('q . <P>$', '', text)
+        text = re.sub(' . <s>$', '', text)
+
+        # analiza spacy
+        doc = self.nlp(text)
+
+        # FIXME: move this to aspect extractor
+        ner_types = [u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC']
+        entities = [ent.lemma_ for ent in doc.ents if ent.label_ in ner_types]
+        result = {'raw_text': doc.text, 'tokens': [], 'entities': entities}
+
+        # TODO: it's better to use spacy objects than saving it to dictionary
+        # zapisanie wyników dla każdego tokena tekstu
+        for idx, token in enumerate(doc):
+            token_info = {'text': token.orth_, 'pos': token.pos_, 'lemma': token.lemma_,
+                          'is_stop': token.is_stop}
+
+            result['tokens'].append(token_info)
+
         return result
-
-    def get_morfeusz_nouns(self, m, text):
-        return 'NOUN' if m.analyse(text)[0][2][2].split(':')[0] == 'subst' else ''
-
-    def get_morfeusz_lemma(self, m, text):
-        lemma = m.analyse(text)[0][2][1].encode('utf-8').split(':')[0]
-        # useful because of 'ok' would be lematize to 'oko;, and others
-        if lemma in self.words_to_skip:
-            lemma = text
-        return lemma
-
-    def remove_punctuation(self, text):
-        regex = re.compile('[%s]' % re.escape(self.punctuation))
-        text = regex.sub(' ', text)
-        return ' '.join(text.split())

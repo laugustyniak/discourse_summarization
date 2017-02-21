@@ -2,31 +2,30 @@
 # author: Krzysztof xaru Rajda
 
 import sys
-from os.path import join
 import shutil
 import subprocess
 from joblib import Parallel
 from joblib import delayed
 import simplejson
 import os.path
-from os.path import basename
+from os.path import basename, exists
 from pprint import pprint
 from time import time
 from datetime import datetime
 from optparse import OptionParser
 
+from tqdm import tqdm
+
 sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
 from EDUTreePreprocesser import EDUTreePreprocesser
 from EDUAspectExtractor import EDUAspectExtractor
-from LogisticRegresionSentimentAnalyzer import \
-    LogisticRegresionSentimentAnalyzer as SentimentAnalyzer
+from LogisticRegressionSentimentAnalyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
 from EDUTreeRulesExtractor import EDUTreeRulesExtractor
 from AspectsGraphBuilder import AspectsGraphBuilder
 from ResultsAnalyzer import ResultsAnalyzer
 from Serializer import Serializer
 from utils_multiprocess import batch_with_indexes
-from Preprocesser import Preprocesser
 
 import logging
 import sys
@@ -48,6 +47,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
 
     for n_doc, document_id in enumerate(xrange(docs_id_range[0], docs_id_range[1]), start=1):
         start_time = datetime.now()
+
         logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
         try:
             edu_tree_path = edu_trees_dir + str(document_id) + '.tree'
@@ -67,14 +67,19 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
                                              )
 
                 document_path = extracted_documents_dir + str(document_id)
-                parser.parse(document_path)
+
+                if exists(document_path):
+                    parser.parse(document_path)
+                    raise
+                else:
+                    logging.warning('Document #{} does not exist! Skipping to next one.'.format(document_id))
+                    errors += 1
 
                 processed += 1
         except (ValueError, IndexError) as err:
-            logging.error('Error for doc #{}: {}'.format(document_id, str(err)))
+            logging.error('ValueError for doc #{}: {}'.format(document_id, str(err)))
+            shutil.rmtree(edu_tree_path)
             errors += 1
-            # shutil.rmtree(edu_tree_path)
-            pass
             # raise ValueError
         # except IndexError as err:
         #     logging.error('IndexError for doc #{}: {}'.format(document_id, str(err)))
@@ -88,17 +93,16 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
         parser.unload()
 
     logging.info(
-        'Docs processed: {}, docs skipped: {}, docs with errors: {}'.format(processed, skipped, errors))
+        'Docs processed: {}, docs skipped: {}'.format(processed, skipped))
 
 
 class AspectAnalysisSystem:
-    def __init__(self, inputPath, outputPathRoot, goldStandardPath, lang,
-                 jobs=1, sent_model_path=None):
+    def __init__(self, inputPath, outputPathRoot, goldStandardPath, jobs=1, sent_model_path=None,
+                 n_logger=1000):
 
         self.__ensurePathExist(outputPathRoot)
 
         self.sent_model_path = sent_model_path
-        self.lang = lang
 
         self.paths = {}
         self.paths['input'] = inputPath
@@ -142,6 +146,9 @@ class AspectAnalysisSystem:
         # number of all processes
         self.jobs = jobs
 
+        # by how many examples logging will be done
+        self.n_loger = n_logger
+
     #
     #   Sprawdza czy sciezka istnieje i tworzy ja w razie potrzeby
     #
@@ -160,8 +167,6 @@ class AspectAnalysisSystem:
             documents_count : int
                 Number of documents processed
         """
-        preproc = Preprocesser(lang=self.lang)
-
         existing_documents_list = os.listdir(
             self.paths['extracted_documents_dir'])
         documents_count = len(existing_documents_list)
@@ -173,7 +178,6 @@ class AspectAnalysisSystem:
                 with open(inputFilePath, 'r') as f:
                     raw_documents = simplejson.load(f)
                     for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
-                        document = preproc.remove_punctuation(document)
                         self.serializer.save(document, self.paths[
                             'extracted_documents_dir'] + str(ref_id))
                         self.serializer.save(str(doc_id), self.paths[
@@ -245,20 +249,20 @@ class AspectAnalysisSystem:
     #
     #   Preprocessing danych - oddzielanie zalezno�ci EDU od tekstu
     #
-    def __performEDUPreprocessing(self, documentsCount):
+    def __performEDUPreprocessing(self, documents_count):
 
         if not os.path.exists(self.paths['raw_edu_list']):
-            preprocesser = EDUTreePreprocesser(lang=self.lang)
+            preprocesser = EDUTreePreprocesser()
 
             # Parallel(n_jobs=self.jobs)(
             # 	delayed(self.__performEDUPreprocessing_multiprocess())(preprocesser, docs_id_range)
             # 	for docs_id_range, in batch_with_indexes(range(documentsCount), self.jobs))
 
-            for document_id in range(0, documentsCount):
+            for document_id in range(0, documents_count):
                 try:
-                    logging.debug(
-                        '__performEDUPreprocessing documentId: {}'.format(
-                            document_id))
+                    if not document_id % self.n_loger:
+                        logging.debug('__performEDUPreprocessing documentId: {}/{}'.format(
+                            document_id, documents_count))
                     tree = self.serializer.load(self.paths['edu_trees_dir'] + str(
                         document_id) + '.tree.ser')
 
@@ -269,9 +273,9 @@ class AspectAnalysisSystem:
                 except TypeError as err:
                     logging.error('Document id: {} and error: {}'.format(document_id, str(err)))
 
-            EDUList = preprocesser.getPreprocessedEdusList()
+            edu_list = preprocesser.getPreprocessedEdusList()
 
-            self.serializer.save(EDUList, self.paths['raw_edu_list'])
+            self.serializer.save(edu_list, self.paths['raw_edu_list'])
 
     # def __performEDUPreprocessing_multiprocess(self, preprocesser, docs_id_range):
     #
@@ -615,19 +619,13 @@ if __name__ == "__main__":
 
     if len(sysArgs) == 0:
         inputFilePath = INPUT_PATH + DEFAULT_INPUT_FILENAME
-        logging.info('No input file specified. Using default: {}'.format(join(INPUT_PATH, DEFAULT_INPUT_FILENAME)))
+
+        print "No input file specified. Using default: " + INPUT_PATH + DEFAULT_INPUT_FILENAME
 
     else:
         inputFilePath = sysArgs[0]
         if len(sysArgs) > 1:
             sent_model_path = sysArgs[1]
-            logging.info('Sentiemnt model: {}'.format(sent_model_path))
-
-        if len(sysArgs) > 2:
-            lang = sysArgs[2]
-        else:
-            lang = 'en'
-        logging.info('Lang: {}'.format(lang))
 
         if not os.path.exists(inputFilePath):
             inputFilePath = os.path.join(INPUT_PATH, inputFilePath)
@@ -646,6 +644,5 @@ if __name__ == "__main__":
 
         AAS = AspectAnalysisSystem(inputFilePath, outputPath,
                                    goldStandardPath, jobs=20,
-                                   sent_model_path=sent_model_path,
-                                   lang=lang)
+                                   sent_model_path=sent_model_path)
         AAS.run()

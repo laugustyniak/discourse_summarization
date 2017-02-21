@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
+#author: Krzysztof xaru Rajda
 
-from POSAspectExtractor import POSAspectExtractor
+from AspectExtractor import AspectExtractor
 
 
-class EDUAspectExtractor():
+class EDUAspectExtractor(object):
     def __init__(self):
-        self.extractor = POSAspectExtractor()
-
+        self.extractor = AspectExtractor()
+        
     def extract(self, EDU):
-
+            
         aspects = self.extractor.extract(EDU)
-
+            
         return aspects
 
     def getAspectsInDocument(self, documentsAspects, aspects):
-
+        
         if documentsAspects is None:
             return aspects
         else:
             docAsp = documentsAspects + aspects
-
-            # wymuszamy unikalnosc
+            
+            #wymuszamy unikalnosc
             docAsp = list(set(docAsp))
-
-            return docAsp
+            
+            return docAsp 
+       
