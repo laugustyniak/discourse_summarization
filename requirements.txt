@@ -22,7 +22,7 @@ setuptools==3.3
 simplejson==3.8.2
 six (1.5.2)
 sklearn (0.0)
-spacy (0.101.0)
+spacy (1.6)
 Sphinx (1.2.2)
 sputnik (0.9.3)
 ssh-import-id (3.21)
