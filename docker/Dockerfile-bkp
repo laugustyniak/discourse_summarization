@@ -1,0 +1,74 @@
+FROM ipython/notebook
+
+# Graph-tool install
+RUN echo "deb http://downloads.skewed.de/apt/trusty trusty universe">>/etc/apt/sources.list
+RUN echo "deb-src http://downloads.skewed.de/apt/trusty trusty universe">>/etc/apt/sources.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 92F371361A7ECE03
+RUN apt-get update -y 
+
+RUN apt-get install  software-properties-common  python-graph-tool python-rsvg python-yaml wget -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN sudo add-apt-repository ppa:webupd8team/java -y &&  apt-get update -y 
+RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && echo debconf shared/accepted-oracle-license-v1-1 seen true |  sudo debconf-set-selections
+RUN apt-get install oracle-java8-installer -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# RUN cd /tmp && wget https://oss.sonatype.org/content/repositories/snapshots/com/github/alexarchambault/jupyter/jupyter-scala-cli_2.11.6/0.2.0-SNAPSHOT/jupyter-scala_2.11.6-0.2.0-SNAPSHOT.tar.xz
+#RUN cd /tmp && tar -xvf ./jupyter-scala_2.11.6-0.2.0-SNAPSHOT.tar.xz
+#RUN /tmp/jupyter-scala_2.11.6-0.2.0-SNAPSHOT/bin/jupyter-scala
+
+ENV JVM_OPT '-Xmx135G'
+
+# Python libs for Aspect-based sentiment analysis 
+
+# RUN apt-get update -y
+# RUN apt-get install python-yaml -y
+#RUN apt-get install swig -y
+
+#RUN cd /tmp
+#RUN wget https://github.com/downloads/chokkan/liblbfgs/liblbfgs-1.10.tar.gz
+#RUN tar xvzf liblbfgs-1.10.tar.gz
+#RUN cd liblbfgs-1.10.tar.gz
+#RUN ./configure
+#RUN make
+#RUN make install
+
+#RUN cd /tmp
+#RUN wget https://github.com/downloads/chokkan/crfsuite/crfsuite-0.12.tar.gz
+#RUN tar xvzf crfsuite-0.12.tar.gz
+#RUN cd crfsuite-0.12.tar.gz
+#RUN ./configure
+#RUN make 
+#RUN cd swig/python/ 
+
+RUN cd /datasets/sentiment/aspects/krzysztof-rajda-magisterka/edu_dependency_parser/tools/crfsuite/liblbfgs-1.10
+RUN ./configure --prefix=$HOME/local
+RUN make 
+RUN make install
+
+RUN cd /datasets/sentiment/aspects/krzysztof-rajda-magisterka/edu_dependency_parser/tools/crfsuite/crfsuite-0.12
+RUN ./configure --prefix=$HOME/local --with-liblbfgs=$HOME/local
+RUN make 
+RUN make install
+
+RUN chmod +x ../crfsuite-stdin
+
+RUN crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
+
+RUN pip install http://pyyaml.org/download/pyyaml/PyYAML-3.08.tar.gz
+RUN pip install ntlk==2.0.4
+#RUN pip install https://pypi.python.org/packages/ea/b3/4c5157bf034437905fbbd3c80e58c8b4a22cf3400db0bdf19dae3079a732/nltk-2.0b9.tar.gz
+
+# add nltk downloads
+
+# Other Python libs
+RUN pip install networkx seaborn pandas matplotlib sklearn statsmodels nltk BeautifulSoup4 unidecode pattern justext plotly line_profiler memory_profiler tqdm joblib spacy
+RUN python -m spacy.en.download
+
+# install Morfeusz - Polish Lang Lemmatizer
+RUN cd /tmp
+RUN wget -O - http://sgjp.pl/apt/sgjp.gpg.key|sudo apt-key add -
+RUN sudo add-apt-repository 'deb http://sgjp.pl/apt/ubuntu trusty main'
+#RUN sudo apt-get update
+RUN sudo apt-get install python-morfeusz2
+
+

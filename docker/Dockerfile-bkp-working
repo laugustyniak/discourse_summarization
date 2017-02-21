@@ -1,0 +1,56 @@
+FROM ipython/notebook
+
+# Graph-tool install
+#RUN echo "deb http://downloads.skewed.de/apt/trusty trusty universe">>/etc/apt/sources.list
+#RUN echo "deb-src http://downloads.skewed.de/apt/trusty trusty universe">>/etc/apt/sources.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 92F371361A7ECE03
+RUN apt-get update -y 
+RUN apt-get install  software-properties-common python-rsvg wget -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# SSH
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+RUN echo 'root:pythonSA2016' | chpasswd
+RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
+
+RUN sudo add-apt-repository ppa:webupd8team/java -y &&  apt-get update -y 
+RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && echo debconf shared/accepted-oracle-license-v1-1 seen true |  sudo debconf-set-selections
+RUN apt-get install oracle-java8-installer -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get install libxml2
+
+ENV JVM_OPT '-Xmx135G'
+
+# Python's nltk and other libs need this
+#RUN apt-get install libxml2-dev libxslt1-dev -y && pip install lxml
+
+# Python libs
+RUN pip install networkx pandas statsmodels BeautifulSoup4 unidecode pattern justext plotly line_profiler memory_profiler tqdm joblib spacy seaborn matplotlib
+RUN pip install scikit-learn==0.15.2
+RUN python -m spacy.en.download --force
+
+# install Morfeusz - Polish Lang Lemmatizer
+RUN cd /tmp &&  wget -O - http://sgjp.pl/apt/sgjp.gpg.key|sudo apt-key add - && sudo add-apt-repository 'deb http://sgjp.pl/apt/ubuntu trusty main'
+RUN sudo apt-get update
+RUN sudo apt-get install python-morfeusz2 -y
+
+# Python libs for Aspect-based sentiment analysis 
+RUN apt-get update -y
+RUN apt-get install python-yaml -y
+RUN pip install http://pyyaml.org/download/pyyaml/PyYAML-3.09.tar.gz
+
+# Install NLTK
+COPY /resources /root/resources
+RUN sh $HOME/resources/install_nltk.sh
+
+# Aspect-based SA lib
+COPY /krzysztof-rajda-magisterka $HOME/sa
+RUN sh $HOME/sa/edu_dependency_parser/tools/build_crf.sh 
