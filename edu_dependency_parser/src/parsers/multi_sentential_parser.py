@@ -1,9 +1,4 @@
 from base_parser import BaseParser
-from trees.parse_tree import ParseTree
-import utils_multiprocess.utils
-import random
-import os.path
-import paths
 
 
 class MultiSententialParser(BaseParser):
@@ -52,7 +47,10 @@ class MultiSententialParser(BaseParser):
 
             seq_prob = self.connect_stumps(best_one, doc)
 
-        doc.discourse_tree = doc.constituents[0].parse_subtree
+        if doc.constituents:
+            doc.discourse_tree = doc.constituents[0].parse_subtree
+        else:
+            doc.discourse_tree = u''
 
     #        print doc.discourse_tree
 
