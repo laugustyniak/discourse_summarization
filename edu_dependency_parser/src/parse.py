@@ -161,8 +161,9 @@ class DiscourseParser():
 
                     out = pt.pprint()
 
-                    with open(outfname, "w") as f_o:
-                        f_o.write(out)
+                    f_o = open(outfname, "w")
+                    f_o.write(out)
+                    f_o.close()
                     utils.serialize.saveData(core_filename, pt, self.output_dir,
                                              '.tree.ser')
 
