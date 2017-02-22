@@ -3,7 +3,6 @@
 
 import spacy
 import re
-from textlytics.sentiment import DocumentPreprocessor
 
 
 class Preprocesser:
@@ -11,7 +10,6 @@ class Preprocesser:
         print 'Preprocesser: initializing'
         # load spacy with parsers and entities, it will be useful in next steps of analysis
         self.nlp = spacy.load('en')
-        self.dp = DocumentPreprocessor()
         print 'Preprocesser: initialized'
 
     def preprocess(self, text):
@@ -37,9 +35,12 @@ class Preprocesser:
         # TODO: it's better to use spacy objects than saving it to dictionary
         # zapisanie wyników dla każdego tokena tekstu
         for idx, token in enumerate(doc):
-            token_info = {'text': token.orth_, 'pos': token.pos_, 'lemma': token.lemma_,
-                          'is_stop': token.is_stop}
-
-            result['tokens'].append(token_info)
+            # skip tokens with length lower than 2
+            if len(token.string) > 1:
+                token_info = {'text': token.orth_, 'pos': token.pos_, 'lemma': token.lemma_,
+                              'is_stop': token.is_stop}
+                result['tokens'].append(token_info)
+            # else:
+            #     print('Strange potential aspect: {}'.format(token))
 
         return result
