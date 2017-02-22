@@ -6,14 +6,26 @@
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types=None):
+    def __init__(self, ner_types=None, aspects_to_skip=[]):
         """ Initialize extractor.
 
         Parameters
         ----------
         ner_types : list
-            List of unicode names of Named Entity than mayby be chosen by spacy extractor as aspects.
+            List of unicode names of Named Entity than may by be chosen by spacy extractor as aspects.
+
+        aspects_to_skip : list
+            List of aspects that should be removed.
         """
+        if aspects_to_skip:
+            self.aspects_to_skip = aspects_to_skip
+        else:
+            self.aspects_to_skip = [u'day', u'days', u'week', u'weeks', u'month', u'months', u'year', u'years',
+                                    u'time', u'today', u'data', u'date',
+                                    u'monday', u'tuesday', u'wednesday', u'thursday', u'friday', u'saturday', u'sunday',
+                                    u'january', u'february', u'march', u'april', u'may', u'june', u'july',
+                                    u'august', u'september', u'october', u'november', u'december',
+                                    u'end']
         if ner_types is None:
             self.ner_types = [u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC']
         else:
@@ -40,18 +52,16 @@ class AspectExtractor(object):
 
         """
         tokens = input_text['tokens']
-        aspects = []
         aspect_sequence = []
         aspect_sequence_main_encountered = False
         aspect_sequence_enabled = False
 
         # 1. look for NER examples
         # aspects = [ent.text for ent in tokens.ents if ent.label_ in self.ner_types]
-        aspect = input_text['entities']
+        aspects = input_text['entities']
 
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
-
             # jesli jest główny (rzeczownik) - akceptujemy od razu
             if self.__is_interesting_main(token):
                 if not token['is_stop']:
@@ -62,18 +72,15 @@ class AspectExtractor(object):
             # jesli jest ciekawy (przymiotnik, przysłówek, liczba) i jest potencjalnym elementem sekwencji - dodajemy
             elif self.__is_interesting_addition(token) and (
                         (idx + 1 < len(tokens) and self.__is_interesting_addition(tokens[idx + 1])) or
-                                idx + 1 == len(tokens)):
+                        (idx + 1 == len(tokens))):
                 if not token['is_stop']:
                     aspect_sequence.append(token['lemma'])
             else:
-
                 # akceptujemy sekwencje, jesli byl w niej element główny
                 if aspect_sequence_enabled and aspect_sequence_main_encountered:
                     aspect = ' '.join(aspect_sequence)
-
                     if aspect not in aspects:
                         aspects.append(aspect)
-
                 aspect_sequence_main_encountered = False
                 aspect_sequence_enabled = False
                 aspect_sequence = []
@@ -84,6 +91,6 @@ class AspectExtractor(object):
 
         # nie wiem czemu puste wartosci leca - odfiltrowujemy
         # lower case every aspect and only longer than 1
-        aspects = [x.lower() for x in aspects if len(x) > 1]
+        aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip]
 
         return aspects

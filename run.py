@@ -70,7 +70,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
 
                 if exists(document_path):
                     parser.parse(document_path)
-                    raise
+                    # raise
                 else:
                     logging.warning('Document #{} does not exist! Skipping to next one.'.format(document_id))
                     errors += 1
@@ -149,6 +149,9 @@ class AspectAnalysisSystem:
         # by how many examples logging will be done
         self.n_loger = n_logger
 
+        # count number of error within parsing RDT
+        self.parsing_errors = 0
+
     #
     #   Sprawdza czy sciezka istnieje i tworzy ja w razie potrzeby
     #
@@ -209,6 +212,8 @@ class AspectAnalysisSystem:
         # processed = 0
         # skipped = 0
 
+        logging.info('Documents: #{} will be processed'.format(documents_count))
+
         if batch_size is None:
             batch_size = documents_count / self.jobs
             if batch_size < 1:
@@ -253,28 +258,20 @@ class AspectAnalysisSystem:
 
         if not os.path.exists(self.paths['raw_edu_list']):
             preprocesser = EDUTreePreprocesser()
-
             # Parallel(n_jobs=self.jobs)(
             # 	delayed(self.__performEDUPreprocessing_multiprocess())(preprocesser, docs_id_range)
             # 	for docs_id_range, in batch_with_indexes(range(documentsCount), self.jobs))
-
             for document_id in range(0, documents_count):
                 try:
                     if not document_id % self.n_loger:
-                        logging.debug('__performEDUPreprocessing documentId: {}/{}'.format(
-                            document_id, documents_count))
-                    tree = self.serializer.load(self.paths['edu_trees_dir'] + str(
-                        document_id) + '.tree.ser')
-
+                        logging.debug('EDU Preprocessor documentId: {}/{}'.format(document_id, documents_count))
+                    tree = self.serializer.load(self.paths['edu_trees_dir'] + str(document_id) + '.tree.ser')
                     preprocesser.processTree(tree, document_id)
-
-                    self.serializer.save(tree, self.paths['link_trees_dir'] + str(
-                        document_id))
+                    self.serializer.save(tree, self.paths['link_trees_dir'] + str(document_id))
                 except TypeError as err:
                     logging.error('Document id: {} and error: {}'.format(document_id, str(err)))
-
+                    self.parsing_errors += 1
             edu_list = preprocesser.getPreprocessedEdusList()
-
             self.serializer.save(edu_list, self.paths['raw_edu_list'])
 
     # def __performEDUPreprocessing_multiprocess(self, preprocesser, docs_id_range):
@@ -529,6 +526,7 @@ class AspectAnalysisSystem:
 
         timerStart = time()
         self.__performEDUPreprocessing(documentsCount)
+        logging.warning('{} trees were not parse!'.format(self.parsing_errors))
         timerEnd = time()
 
         print "EDU trees preprocessing succeeded in %.2f seconds" % (
