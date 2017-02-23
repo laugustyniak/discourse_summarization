@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
-
+import pickle
 import sys
 import shutil
 import subprocess
@@ -107,13 +107,14 @@ class AspectAnalysisSystem:
         self.paths = {}
         self.paths['input'] = inputPath
 
-        self.paths[
-            'extracted_documents_dir'] = outputPathRoot + '/extracted_documents/'
+        self.paths['extracted_documents_dir'] = outputPathRoot + '/extracted_documents/'
         self.__ensurePathExist(self.paths['extracted_documents_dir'])
 
-        self.paths[
-            'extracted_documents_ids'] = outputPathRoot + '/extracted_documents_ids/'
+        self.paths['extracted_documents_ids'] = outputPathRoot + '/extracted_documents_ids/'
         self.__ensurePathExist(self.paths['extracted_documents_ids'])
+
+        self.paths['extracted_documents_metadata'] = outputPathRoot + '/extracted_documents_metadata/'
+        self.__ensurePathExist(self.paths['extracted_documents_metadata'])
 
         self.paths['documents_info'] = outputPathRoot + '/documents_info'
 
@@ -174,11 +175,12 @@ class AspectAnalysisSystem:
             self.paths['extracted_documents_dir'])
         documents_count = len(existing_documents_list)
 
+        # FIXME: disambiguate file loading and metadata information storing
         if documents_count == 0:
-            f_extension = basename(inputFilePath).split('.')[-1]
+            f_extension = basename(input_file_path).split('.')[-1]
             logging.debug('Input file extension: {}'.format(f_extension))
             if f_extension in ['json']:
-                with open(inputFilePath, 'r') as f:
+                with open(input_file_path, 'r') as f:
                     raw_documents = simplejson.load(f)
                     for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
                         self.serializer.save(document, self.paths[
@@ -186,6 +188,18 @@ class AspectAnalysisSystem:
                         self.serializer.save(str(doc_id), self.paths[
                             'extracted_documents_ids'] + str(ref_id))
                         documents_count += 1
+            # this is {'doc_id': {'text', text, 'metadata1': xxx}}
+            # text with additional metadata
+            elif f_extension in ['pkl', 'p', 'pickle']:
+                with open(input_file_path, 'r') as f:
+                    raw_documents = pickle.load(f)
+                    print raw_documents.items()[:2]
+                for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
+                    self.serializer.save(document['text'], self.paths[
+                        'extracted_documents_dir'] + str(ref_id))
+                    self.serializer.save({doc_id: document}, self.paths[
+                        'extracted_documents_metadata'] + str(ref_id))
+                    documents_count += 1
             # elif f_extension in ['txt', 'csv']:
             #     f = open(inputFilePath, "r")
             #     input_ = f.read()
@@ -616,31 +630,31 @@ if __name__ == "__main__":
     sent_model_path = None
 
     if len(sysArgs) == 0:
-        inputFilePath = INPUT_PATH + DEFAULT_INPUT_FILENAME
+        input_file_path = INPUT_PATH + DEFAULT_INPUT_FILENAME
 
         print "No input file specified. Using default: " + INPUT_PATH + DEFAULT_INPUT_FILENAME
 
     else:
-        inputFilePath = sysArgs[0]
+        input_file_path = sysArgs[0]
         if len(sysArgs) > 1:
             sent_model_path = sysArgs[1]
 
-        if not os.path.exists(inputFilePath):
-            inputFilePath = os.path.join(INPUT_PATH, inputFilePath)
+        if not os.path.exists(input_file_path):
+            input_file_path = os.path.join(INPUT_PATH, input_file_path)
 
-    if not os.path.exists(inputFilePath):
+    if not os.path.exists(input_file_path):
         print "Input file does not exist. Terminating..."
 
     else:
-        print "Using input file: " + inputFilePath
-        inputFileFullName = os.path.split(inputFilePath)[1]
+        print "Using input file: " + input_file_path
+        inputFileFullName = os.path.split(input_file_path)[1]
         inputFileName = os.path.splitext(inputFileFullName)[0]
 
         outputPath = os.path.join(OUTPUT_PATH, inputFileName)
 
         goldStandardPath = INPUT_PATH + inputFileName + '_aspects_list.ser'
 
-        AAS = AspectAnalysisSystem(inputFilePath, outputPath,
-                                   goldStandardPath, jobs=20,
+        AAS = AspectAnalysisSystem(input_file_path, outputPath,
+                                   goldStandardPath, jobs=22,
                                    sent_model_path=sent_model_path)
         AAS.run()
