@@ -4,6 +4,8 @@ import pickle
 import sys
 import shutil
 import subprocess
+
+import argparse
 from joblib import Parallel
 from joblib import delayed
 import simplejson
@@ -98,8 +100,9 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
 
 class AspectAnalysisSystem:
     def __init__(self, inputPath, outputPathRoot, goldStandardPath, jobs=1, sent_model_path=None,
-                 n_logger=1000):
+                 n_logger=1000, batch_size=None):
 
+        self.batch_size = batch_size
         self.__ensurePathExist(outputPathRoot)
 
         self.sent_model_path = sent_model_path
@@ -528,7 +531,7 @@ class AspectAnalysisSystem:
         print "Performing EDU segmentation and dependency parsing..."
 
         timerStart = time()
-        self.__perform_edu_parsing(documentsCount)
+        self.__perform_edu_parsing(documentsCount, batch_size=self.batch_size)
         timerEnd = time()
 
         # print "EDU dependency parsing succeeded in %.2f seconds. Processed" % (
@@ -626,35 +629,44 @@ if __name__ == "__main__":
     INPUT_PATH = os.path.join(ROOT_PATH, 'edu_dependency_parser/texts/')
     DEFAULT_INPUT_FILENAME = 'test.txt'
 
-    sysArgs = sys.argv[1:]
-    sent_model_path = None
+    parser = argparse.ArgumentParser(description='Process documents.')
+    parser.add_argument('-input', type=str, dest='input_file',
+                        help='Path to the file with documents (json, csv, pickle)')
+    parser.add_argument('-model', help='path to sentiment model', type=str, dest='model')
+    parser.add_argument('-batch', help='batch size for each process', type=int, dest='batch_size')
 
-    if len(sysArgs) == 0:
+    args = parser.parse_args()
+
+    # chose input file
+    if args.input_file:
+        input_file_path = args.input_file
+        logging.info('Input File: {}'.format(input_file_path))
+    else:
         input_file_path = INPUT_PATH + DEFAULT_INPUT_FILENAME
+        logging.info("No input file specified. Using default: {}".format(INPUT_PATH + DEFAULT_INPUT_FILENAME))
 
-        print "No input file specified. Using default: " + INPUT_PATH + DEFAULT_INPUT_FILENAME
-
+    # check sentiment model
+    if args.model:
+        sent_model_path = args.model
+        logging.info('Sentiment Model: {}'.format(sent_model_path))
     else:
-        input_file_path = sysArgs[0]
-        if len(sysArgs) > 1:
-            sent_model_path = sysArgs[1]
+        sent_model_path = None
+        logging.info('Sentiment Model: default')
 
-        if not os.path.exists(input_file_path):
-            input_file_path = os.path.join(INPUT_PATH, input_file_path)
-
-    if not os.path.exists(input_file_path):
-        print "Input file does not exist. Terminating..."
-
+    # batch size
+    if args.batch_size:
+        batch_size = args.batch_size
+        logging.info('Batch Size: {}'.format(batch_size))
     else:
-        print "Using input file: " + input_file_path
-        inputFileFullName = os.path.split(input_file_path)[1]
-        inputFileName = os.path.splitext(inputFileFullName)[0]
+        batch_size = None
+        logging.info('Batch Size not specified')
 
-        outputPath = os.path.join(OUTPUT_PATH, inputFileName)
-
-        goldStandardPath = INPUT_PATH + inputFileName + '_aspects_list.ser'
-
-        AAS = AspectAnalysisSystem(input_file_path, outputPath,
-                                   goldStandardPath, jobs=22,
-                                   sent_model_path=sent_model_path)
-        AAS.run()
+    inputFileFullName = os.path.split(input_file_path)[1]
+    inputFileName = os.path.splitext(inputFileFullName)[0]
+    outputPath = os.path.join(OUTPUT_PATH, inputFileName)
+    goldStandardPath = INPUT_PATH + inputFileName + '_aspects_list.ser'
+    AAS = AspectAnalysisSystem(input_file_path, outputPath,
+                               goldStandardPath, jobs=22,
+                               sent_model_path=sent_model_path,
+                               batch_size=batch_size)
+    AAS.run()
