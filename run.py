@@ -623,23 +623,22 @@ class AspectAnalysisSystem:
 
 
 if __name__ == "__main__":
-
     ROOT_PATH = os.getcwd()
     DEFAULT_OUTPUT_PATH = os.path.join(ROOT_PATH, 'results')
     DEFAULT_INPUT_FILE_PATH = os.path.join(ROOT_PATH, 'texts', 'test.txt')
 
-    parser = argparse.ArgumentParser(description='Process documents.')
-    parser.add_argument('-input', type=str, dest='input_file_path', default=DEFAULT_INPUT_FILE_PATH,
-                        help='Path to the file with documents (json, csv, pickle)')
-    parser.add_argument('-output', type=str, dest='output_file_path', default=DEFAULT_OUTPUT_PATH,
-                        help='Number of processes')
-    parser.add_argument('-sent_model', type=str, dest='sent_model_path', default=None,
-                        help='path to sentiment model')
-    parser.add_argument('-batch', type=int, dest='batch_size', default=None,
-                        help='batch size for each process')
-    parser.add_argument('-p', type=int, dest='max_processes', default=1,
-                        help='Number of processes')
-    args = parser.parse_args()
+    arg_parser = argparse.ArgumentParser(description='Process documents.')
+    arg_parser.add_argument('-input', type=str, dest='input_file_path', default=DEFAULT_INPUT_FILE_PATH,
+                            help='Path to the file with documents (json, csv, pickle)')
+    arg_parser.add_argument('-output', type=str, dest='output_file_path', default=DEFAULT_OUTPUT_PATH,
+                            help='Number of processes')
+    arg_parser.add_argument('-sent_model', type=str, dest='sent_model_path', default=None,
+                            help='path to sentiment model')
+    arg_parser.add_argument('-batch', type=int, dest='batch_size', default=None,
+                            help='batch size for each process')
+    arg_parser.add_argument('-p', type=int, dest='max_processes', default=1,
+                            help='Number of processes')
+    args = arg_parser.parse_args()
 
     input_file_full_name = os.path.split(args.input_file_path)[1]
     input_file_name = os.path.splitext(input_file_full_name)[0]
