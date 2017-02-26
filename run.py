@@ -99,51 +99,52 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
 
 
 class AspectAnalysisSystem:
-    def __init__(self, inputPath, outputPathRoot, goldStandardPath, jobs=1, sent_model_path=None,
+    def __init__(self, input_path, output_path, gold_standard_path, jobs=1, sent_model_path=None,
                  n_logger=1000, batch_size=None):
 
+        self.input_file_path = input_path
         self.batch_size = batch_size
-        self.__ensurePathExist(outputPathRoot)
+        self.__ensurePathExist(output_path)
 
         self.sent_model_path = sent_model_path
 
         self.paths = {}
-        self.paths['input'] = inputPath
+        self.paths['input'] = input_path
 
-        self.paths['extracted_documents_dir'] = outputPathRoot + '/extracted_documents/'
+        self.paths['extracted_documents_dir'] = output_path + '/extracted_documents/'
         self.__ensurePathExist(self.paths['extracted_documents_dir'])
 
-        self.paths['extracted_documents_ids'] = outputPathRoot + '/extracted_documents_ids/'
+        self.paths['extracted_documents_ids'] = output_path + '/extracted_documents_ids/'
         self.__ensurePathExist(self.paths['extracted_documents_ids'])
 
-        self.paths['extracted_documents_metadata'] = outputPathRoot + '/extracted_documents_metadata/'
+        self.paths['extracted_documents_metadata'] = output_path + '/extracted_documents_metadata/'
         self.__ensurePathExist(self.paths['extracted_documents_metadata'])
 
-        self.paths['documents_info'] = outputPathRoot + '/documents_info'
+        self.paths['documents_info'] = output_path + '/documents_info'
 
-        self.paths['edu_trees_dir'] = outputPathRoot + '/edu_trees_dir/'
+        self.paths['edu_trees_dir'] = output_path + '/edu_trees_dir/'
         self.__ensurePathExist(self.paths['edu_trees_dir'])
 
-        self.paths['link_trees_dir'] = outputPathRoot + '/link_trees_dir/'
+        self.paths['link_trees_dir'] = output_path + '/link_trees_dir/'
         self.__ensurePathExist(self.paths['link_trees_dir'])
 
-        self.paths['raw_edu_list'] = outputPathRoot + '/raw_edu_list'
+        self.paths['raw_edu_list'] = output_path + '/raw_edu_list'
         self.paths[
-            'sentiment_filtered_edus'] = outputPathRoot + '/sentiment_filtered_edus'
-        self.paths['aspects_per_edu'] = outputPathRoot + '/aspects_per_edu'
+            'sentiment_filtered_edus'] = output_path + '/sentiment_filtered_edus'
+        self.paths['aspects_per_edu'] = output_path + '/aspects_per_edu'
         self.paths[
-            'edu_dependency_rules'] = outputPathRoot + '/edu_dependency_rules'
+            'edu_dependency_rules'] = output_path + '/edu_dependency_rules'
 
-        self.paths['aspects_graph'] = outputPathRoot + '/aspects_graph'
+        self.paths['aspects_graph'] = output_path + '/aspects_graph'
         self.paths[
-            'aspects_importance'] = outputPathRoot + '/aspects_importance'
+            'aspects_importance'] = output_path + '/aspects_importance'
 
         self.paths[
-            'final_documents_info'] = outputPathRoot + '/final_documents_info'
+            'final_documents_info'] = output_path + '/final_documents_info'
 
-        self.paths['gold_standard'] = goldStandardPath
+        self.paths['gold_standard'] = gold_standard_path
 
-        self.paths['results'] = outputPathRoot + '/results_allGraph_filter1.csv'
+        self.paths['results'] = output_path + '/results_allGraph_filter1.csv'
 
         self.serializer = Serializer()
 
@@ -180,10 +181,10 @@ class AspectAnalysisSystem:
 
         # FIXME: disambiguate file loading and metadata information storing
         if documents_count == 0:
-            f_extension = basename(input_file_path).split('.')[-1]
+            f_extension = basename(self.input_file_path).split('.')[-1]
             logging.debug('Input file extension: {}'.format(f_extension))
             if f_extension in ['json']:
-                with open(input_file_path, 'r') as f:
+                with open(self.input_file_path, 'r') as f:
                     raw_documents = simplejson.load(f)
                     for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
                         self.serializer.save(document, self.paths[
@@ -194,7 +195,7 @@ class AspectAnalysisSystem:
             # this is {'doc_id': {'text', text, 'metadata1': xxx}}
             # text with additional metadata
             elif f_extension in ['pkl', 'p', 'pickle']:
-                with open(input_file_path, 'r') as f:
+                with open(self.input_file_path, 'r') as f:
                     raw_documents = pickle.load(f)
                     print raw_documents.items()[:2]
                 for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
@@ -512,161 +513,143 @@ class AspectAnalysisSystem:
 
     def run(self):
 
-        totalTimerStart = time()
+        total_timer_start = time()
 
         # wczytujemy dokumenty wejsciowe
 
         print '--------------------------------------'
         print "Extracting documents from input file..."
 
-        timerStart = time()
+        timer_start = time()
         documentsCount = self.__parse_input_documents()
-        timerEnd = time()
+        timer_end = time()
 
         print "Extracted", documentsCount, "documents from input file in %.2f seconds." % (
-            timerEnd - timerStart)
+            timer_end - timer_start)
 
         #   przeprowadzamy analiz� dyskursu - segmentujemy na edu i parsujemy zaleznosci
         print '--------------------------------------'
         print "Performing EDU segmentation and dependency parsing..."
 
-        timerStart = time()
+        timer_start = time()
         self.__perform_edu_parsing(documentsCount, batch_size=self.batch_size)
-        timerEnd = time()
+        timer_end = time()
 
         # print "EDU dependency parsing succeeded in %.2f seconds. Processed" % (
-        # 	timerEnd - timerStart), processed, "documents, skipped", skipped, "documents"
+        # 	timer_end - timer_start), processed, "documents, skipped", skipped, "documents"
 
         #   przeprowadzamy preprocessing danych na drzewie EDU
         print '--------------------------------------'
         print "Performing EDU trees preprocessing..."
 
-        timerStart = time()
+        timer_start = time()
         self.__performEDUPreprocessing(documentsCount)
         logging.warning('{} trees were not parse!'.format(self.parsing_errors))
-        timerEnd = time()
+        timer_end = time()
 
         print "EDU trees preprocessing succeeded in %.2f seconds" % (
-            timerEnd - timerStart)
+            timer_end - timer_start)
 
         #   przeprowadzamy filtrowanie EDU wg sentymentu
         print '--------------------------------------'
         print "Performing EDU sentiment filtering..."
 
-        timerStart = time()
+        timer_start = time()
         self.__filterEDUBySentiment()
-        timerEnd = time()
+        timer_end = time()
 
         print "EDU filtering succeeded in %.2f seconds" % (
-            timerEnd - timerStart)
+            timer_end - timer_start)
 
         #   przeprowadzamy ekstrakcj� aspekt�w z EDU
         print '--------------------------------------'
         print "Performing EDU aspects extraction..."
 
-        timerStart = time()
+        timer_start = time()
         self.__extractAspectsFromEDU()
-        timerEnd = time()
+        timer_end = time()
 
-        print "EDU aspects extraction in %.2f seconds" % (timerEnd - timerStart)
+        print "EDU aspects extraction in %.2f seconds" % (timer_end - timer_start)
 
         #   przeprowadzamy ekstrakcj� regu� zale�no�ci pomi�dzy EDU
         print '--------------------------------------'
         print "Performing EDU dependency rules extraction..."
 
-        timerStart = time()
+        timer_start = time()
         self.__extractEDUDepencencyRules(documentsCount)
-        timerEnd = time()
+        timer_end = time()
 
         print "EDU dependency rules extraction succeeded in %.2f seconds" % (
-            timerEnd - timerStart)
+            timer_end - timer_start)
 
         #   przeprowadzamy budow� grafu aspekt�w
         print '--------------------------------------'
         print "Performing aspects graph building..."
 
-        timerStart = time()
+        timer_start = time()
         self.__buildAspectDepencencyGraph()
-        timerEnd = time()
+        timer_end = time()
 
         print "Aspects graph building succeeded in %.2f seconds" % (
-            timerEnd - timerStart)
+            timer_end - timer_start)
 
-        for i in range(1, 1000):
-            threshold = i / 1000.0
+        # for i in range(1, 1000):
+        #     threshold = i / 1000.0
 
         # filtrujemy aspekty
         # print '--------------------------------------'
         # print "Performing aspects filtering...", threshold
 
-        # timerStart = time()
+        # timer_start = time()
         # self.__filterAspects(threshold)
-        # timerEnd = time()
+        # timer_end = time()
 
-        # print "Aspects filtering succeeded in %.2f seconds" % (timerEnd - timerStart)
+        # print "Aspects filtering succeeded in %.2f seconds" % (timer_end - timer_start)
 
         # analizujemy wyniki
         # print '--------------------------------------'
         # print "Performing results analysis..."
         #
-        # timerStart = time()
+        # timer_start = time()
         # self.__analyzeResults(threshold)
-        timerEnd = time()
+        timer_end = time()
 
-        # print "Results analysis succeeded in %.2f seconds" % (timerEnd - timerStart)
+        # print "Results analysis succeeded in %.2f seconds" % (timer_end - timer_start)
 
-        totalTimerEnd = time()
+        total_timer_end = time()
 
         print "Whole system run in %.2f seconds" % (
-            totalTimerEnd - totalTimerStart)
+            total_timer_end - total_timer_start)
 
 
 if __name__ == "__main__":
 
     ROOT_PATH = os.getcwd()
-    OUTPUT_PATH = os.path.join('/datasets/sentiment/aspects', 'results/')
-    # OUTPUT_PATH = os.path.join(ROOT_PATH, 'results/')
-    INPUT_PATH = os.path.join(ROOT_PATH, 'edu_dependency_parser/texts/')
-    DEFAULT_INPUT_FILENAME = 'test.txt'
+    DEFAULT_OUTPUT_PATH = os.path.join(ROOT_PATH, 'results')
+    DEFAULT_INPUT_FILE_PATH = os.path.join(ROOT_PATH, 'texts', 'test.txt')
 
     parser = argparse.ArgumentParser(description='Process documents.')
-    parser.add_argument('-input', type=str, dest='input_file',
+    parser.add_argument('-input', type=str, dest='input_file_path', default=DEFAULT_INPUT_FILE_PATH,
                         help='Path to the file with documents (json, csv, pickle)')
-    parser.add_argument('-model', help='path to sentiment model', type=str, dest='model')
-    parser.add_argument('-batch', help='batch size for each process', type=int, dest='batch_size')
-
+    parser.add_argument('-output', type=str, dest='output_file_path', default=DEFAULT_OUTPUT_PATH,
+                        help='Number of processes')
+    parser.add_argument('-sent_model', type=str, dest='sent_model_path', default=None,
+                        help='path to sentiment model')
+    parser.add_argument('-batch', type=int, dest='batch_size', default=None,
+                        help='batch size for each process')
+    parser.add_argument('-p', type=int, dest='max_processes', default=1,
+                        help='Number of processes')
     args = parser.parse_args()
 
-    # chose input file
-    if args.input_file:
-        input_file_path = args.input_file
-        logging.info('Input File: {}'.format(input_file_path))
-    else:
-        input_file_path = INPUT_PATH + DEFAULT_INPUT_FILENAME
-        logging.info("No input file specified. Using default: {}".format(INPUT_PATH + DEFAULT_INPUT_FILENAME))
-
-    # check sentiment model
-    if args.model:
-        sent_model_path = args.model
-        logging.info('Sentiment Model: {}'.format(sent_model_path))
-    else:
-        sent_model_path = None
-        logging.info('Sentiment Model: default')
-
-    # batch size
-    if args.batch_size:
-        batch_size = args.batch_size
-        logging.info('Batch Size: {}'.format(batch_size))
-    else:
-        batch_size = None
-        logging.info('Batch Size not specified')
-
-    inputFileFullName = os.path.split(input_file_path)[1]
-    inputFileName = os.path.splitext(inputFileFullName)[0]
-    outputPath = os.path.join(OUTPUT_PATH, inputFileName)
-    goldStandardPath = INPUT_PATH + inputFileName + '_aspects_list.ser'
-    AAS = AspectAnalysisSystem(input_file_path, outputPath,
-                               goldStandardPath, jobs=22,
-                               sent_model_path=sent_model_path,
-                               batch_size=batch_size)
+    input_file_full_name = os.path.split(args.input_file_path)[1]
+    input_file_name = os.path.splitext(input_file_full_name)[0]
+    print input_file_name
+    output_path = os.path.join(args.output_file_path, input_file_name)
+    gold_standard_path = os.path.dirname(args.input_file_path) + input_file_name + '_aspects_list.ser'
+    AAS = AspectAnalysisSystem(input_path=args.input_file_path,
+                               output_path=output_path,
+                               gold_standard_path=gold_standard_path,
+                               jobs=args.max_processes,
+                               sent_model_path=args.sent_model_path,
+                               batch_size=args.batch_size)
     AAS.run()
