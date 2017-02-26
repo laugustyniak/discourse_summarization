@@ -85,16 +85,13 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
                     errors += 1
 
                 processed += 1
-        except (ValueError, IndexError) as err:
+        # skip documents that parsing returns errors
+        except (ValueError, IndexError, ZeroDivisionError) as err:
             logging.error(
-                'ValueError for doc #{}: {}'.format(document_id, str(err)))
+                'Error for doc #{}: {}. It has been skipped'.format(
+                    document_id, str(err)))
             shutil.rmtree(edu_tree_path)
             errors += 1
-            # raise ValueError
-        # except IndexError as err:
-        #     logging.error('IndexError for doc #{}: {}'.format(document_id, str(err)))
-        #     # shutil.rmtree(edu_tree_path)
-        #     pass
 
         logging.info(
             'EDU document id: {} -> parsed in {} seconds'.format(document_id, (
