@@ -1,35 +1,0 @@
-Äctrees.parse_tree
-ParseTree
-q)Åq(h)Åq(h)Åq(h)Åq(h)Åq(Ua_!Unfortunately , classic Attribute Listing offered no advice about the combinatorial explosion!_qUL_!that occurs as the number of attributes and alternatives increases . <s>!_qe}q	(U_parentq
-hUnodeqUElaboration[N][S]ubh)Åq(h)Åq(h)Åq(U_!If you have N attributes!_qU6_!and each could be achieved in M alternative ways ,!_qe}q(h
-hhUJoint[N][N]ubU^_!there are MN combinations so even with only 5 attributes , each with only 4 alternatives ,!_qe}q(h
-hhUCondition[S][N]ubUE_!you already have over 1000 logically different combinations ! <s>!_qe}q(h
-hhUCondition[S][N]ube}q(h
-hhUElaboration[N][S]ubh)Åq(U_!The designer is left!_qh)Åq(U._!to explore different possible combinations!_qU)_!using imagination and intuition . <s>!_qe}q(h
-hhUElaboration[N][S]ube}q(h
-hhUEnablement[N][S]ube}q(h
-hhUElaboration[N][S]ubh)Åq(h)Åq (h)Åq!(U&_!Using randomly chosen combinations!_q"U_!to stimulate ideas :!_q#e}q$(h
-h hUEnablement[N][S]ubh)Åq%(h)Åq&(U:_!If you prefer a more mechanical and less intuitive way!_q'U)_!of using this array of alternatives ,!_q(e}q)(h
-h%hUElaboration[N][S]ubh)Åq*(U/_!you could generate provocative combinations!_q+h)Åq,(U-_!by working through each attribute in turn!_q-h)Åq.(h)Åq/(U_!and picking one of the ways!_q0U)_!of achieving that attribute at random!_q1e}q2(h
-h.hUElaboration[N][S]ubU_!( e.g. with dice ) . <s>!_q3e}q4(h
-h,hUsame-unit[N][N]ube}q5(h
-h*hUJoint[N][N]ube}q6(h
-h%hUManner-Means[N][S]ube}q7(h
-h hUCondition[S][N]ube}q8(h
-hhUElaboration[N][S]ubh)Åq9(h)Åq:(h)Åq;(U5_!You can then use this either as a random stimulus!_q<U_!to trigger more ideas!_q=e}q>(h
-h:hUElaboration[N][S]ubU_!( cf. <s>!_q?e}q@(h
-h9hUsame-unit[N][N]ubh)ÅqA(h)ÅqB(U_!Random Stimuli )!_qCh)ÅqD(U
-_!or you!_qEh)ÅqF(U1_!can attempt a form of constructive evaluation!_qGh)ÅqH(U0_!by identifying what would be good about it ,!_qIh)ÅqJ(h)ÅqK(U_!and what problems!_qLU_!it would create!_qMe}qN(h
-hJhUElaboration[N][S]ubU_!( e.g. <s>!_qOe}qP(h
-hHhUsame-unit[N][N]ube}qQ(h
-hFhUJoint[N][N]ube}qR(h
-hDhUManner-Means[N][S]ube}qS(h
-hBhUElaboration[N][S]ube}qT(h
-hAhUElaboration[N][S]ubh)ÅqU(UG_!Plusses , potentials and concerns , or Receptivity to ideas ) . <s>!_qVh)ÅqW(U;_!This process of generating random combinations and then!_qXU>_!using them to stimulate ideas can be repeated ad lib . <s>!_qYe}qZ(h
-hUhUElaboration[N][S]ube}q[(h
-hAhUExplanation[N][S]ube}q\(h
-h9hUElaboration[N][S]ube}q](h
-hhUElaboration[N][S]ube}q^(h
-hhUElaboration[N][S]ube}q_(h
-hhUElaboration[N][S]ubUo_!The combinatorial problem is explored more fully in later developments such as Morphological Analysis . <P>!_q`e}qa(h
-NhUElaboration[N][S]ub.
