@@ -86,7 +86,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
 
                 processed += 1
         # skip documents that parsing returns errors
-        except (ValueError, IndexError, ZeroDivisionError) as err:
+        except (ValueError, IndexError, ZeroDivisionError, OSError) as err:
             logging.error(
                 'Error for doc #{}: {}. It has been skipped'.format(
                     document_id, str(err)))
