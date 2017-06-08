@@ -646,7 +646,7 @@ class AspectAnalysisSystem:
 
         total_timer_end = time()
 
-        logging.info("Whole system run in {.2f} seconds".format(
+        logging.info("Whole system run in {:.2f} seconds".format(
             total_timer_end - total_timer_start))
 
 
