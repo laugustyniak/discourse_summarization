@@ -5,13 +5,12 @@ from sklearn.externals import joblib
 import os
 
 
-class LogisticRegresionSentimentAnalyzer:
+class LogisticRegressionSentimentAnalyzer:
     def __init__(self, model_path=None):
         print 'SentimentAnalyzer: initializing'
 
         if model_path is None:
-            self.model = joblib.load(os.path.dirname(os.path.realpath(
-                __file__)) + '/Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-Electronics.pkl')
+            self.model = joblib.load('/data/models/all-domains-balanced-1-3-5.csv-LogisticRegression.model')
         else:
             self.model = joblib.load(model_path)
 

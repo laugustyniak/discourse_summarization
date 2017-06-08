@@ -16,14 +16,14 @@ pytz==2012c
 PyYAML==3.10
 requests==2.2.1
 roman==2.0.0
-scikit-learn==0.17.1
+scikit-learn==0.18.1
 scipy==0.13.3
 seaborn==0.7.1
 setuptools==3.3
 simplejson==3.8.2
 six (1.5.2)
 sklearn (0.0)
-spacy (0.101.0)
+spacy (1.6)
 Sphinx (1.2.2)
 sputnik (0.9.3)
 ssh-import-id (3.21)
