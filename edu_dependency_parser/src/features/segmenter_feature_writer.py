@@ -4,7 +4,7 @@ Created on 2014-01-11
 @author: Wei
 '''
 
-import utils_multiprocess.rst_lib
+import utils.rst_lib
 from nltk.grammar import *
 import nltk
 from nltk.tree import Tree
@@ -80,7 +80,7 @@ class SegmenterFeatureWriter:
 		l_treepos = token1.get_treepos()
 		r_treepos = token2.get_treepos()
 
-		common_ancestor_pos = utils_multiprocess.rst_lib.common_ancestor(l_treepos,
+		common_ancestor_pos = utils.rst_lib.common_ancestor(l_treepos,
 		                                                                 r_treepos)
 		#        print 'common_ancestor_pos', common_ancestor_pos
 
@@ -178,7 +178,7 @@ class SegmenterFeatureWriter:
 		if (start, end) in self.cached_subtrees:
 			subtrees = self.cached_subtrees[(start, end)]
 		else:
-			subtrees = utils_multiprocess.utils.get_syntactic_subtrees(tree, start, end)
+			subtrees = utils.utils.get_syntactic_subtrees(tree, start, end)
 			self.cached_subtrees[(start, end)] = subtrees
 
 		#        if token.word == 'to':

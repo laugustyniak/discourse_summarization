@@ -430,10 +430,10 @@ class AspectAnalysisSystem:
 
             self.serializer.save(rules, self.paths['edu_dependency_rules'])
 
-    #
-    #   Budowa grafu zale�no�ci aspekt�w
-    #
     def __buildAspectDepencencyGraph(self):
+        #
+        #   Budowa grafu zale�no�ci aspekt�w
+        #
 
         if not (os.path.exists(self.paths['aspects_graph']) and os.path.exists(
                 self.paths['aspects_importance'])):
@@ -646,7 +646,7 @@ class AspectAnalysisSystem:
 
         total_timer_end = time()
 
-        logging.info("Whole system run in {.2f} seconds".format(
+        logging.info("Whole system run in {:.2f} seconds".format(
             total_timer_end - total_timer_start))
 
 

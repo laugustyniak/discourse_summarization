@@ -10,7 +10,7 @@ class LogisticRegressionSentimentAnalyzer:
         print 'SentimentAnalyzer: initializing'
 
         if model_path is None:
-            self.model = joblib.load('/data/models/all-domains-balanced-1-3-5.csv-LogisticRegression.model')
+            self.model = joblib.load('/data/models/Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-10-domains.pkl')
         else:
             self.model = joblib.load(model_path)
 

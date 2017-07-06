@@ -3,7 +3,7 @@ Created on Aug 8, 2013
 
 @author: Vanessa
 '''
-import utils_multiprocess.utils
+import utils.utils
 from trees.parse_tree import ParseTree
 import sys
 
@@ -61,7 +61,7 @@ class Constituent:
         if self.l_start == self.r_end - 1:
             return True
         
-        if utils_multiprocess.utils.find_EDU_in_sentence_index(self.doc.cuts, self.l_start) == utils_multiprocess.utils.find_EDU_in_sentence_index(self.doc.cuts, self.r_end - 1):
+        if utils.utils.find_EDU_in_sentence_index(self.doc.cuts, self.l_start) == utils.utils.find_EDU_in_sentence_index(self.doc.cuts, self.r_end - 1):
             return True
         else:
             return False
@@ -248,7 +248,7 @@ class Constituent:
         assert c.doc == self.doc
         assert self.r_end == c.l_start
         
-        t = utils_multiprocess.utils.make_new_subtree(label, self.parse_subtree, c.parse_subtree, deepcopy = False)
+        t = utils.utils.make_new_subtree(label, self.parse_subtree, c.parse_subtree, deepcopy = False)
         new_c = Constituent(t, self.doc, self.l_start, self.r_end, c.r_end, self.start_sent_id, c.end_sent_id)
         
         new_c.left_child = self
