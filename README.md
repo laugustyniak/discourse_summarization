@@ -2,11 +2,11 @@
 
 `usage: run.py [-h] [-input INPUT_FILE_PATH] [-output OUTPUT_FILE_PATH]
               [-sent_model SENT_MODEL_PATH] [-batch BATCH_SIZE]
-              [-p MAX_PROCESSES]
+              [-p MAX_PROCESSES]`
 
-Process documents.
+## Process documents.
 
-optional arguments:
+`optional arguments:
   -h, --help            show this help message and exit
   -input INPUT_FILE_PATH
                         Path to the file with documents (json, csv, pickle)
@@ -18,5 +18,5 @@ optional arguments:
   -p MAX_PROCESSES      Number of processes
 `
 
-Exemplary execution:
+## Exemplary execution:
 `python run.py -input data/reviews/ipod.json -output results -batch 1000 -p 23`
