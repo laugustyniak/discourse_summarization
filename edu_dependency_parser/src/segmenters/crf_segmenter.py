@@ -6,7 +6,7 @@ Created on 2014-01-11
 from features.segmenter_feature_writer import SegmenterFeatureWriter
 from classifiers.crf_classifier import CRFClassifier
 import paths
-import utils_multiprocess.utils
+import utils.utils
 from document.token import Token
 
 class CRFSegmenter:
@@ -187,7 +187,7 @@ class CRFSegmenter:
         for (start_word, end_word) in edu_word_segmentations:
             edu = []
             for j in range(start_word, end_word):
-                edu.extend(utils_multiprocess.utils.unescape_penn_special_word(sentence.tokens[j].word).split(' '))
+                edu.extend(utils.utils.unescape_penn_special_word(sentence.tokens[j].word).split(' '))
             
             if end_word == len(sentence.tokens):
 #                print sentence.raw_text

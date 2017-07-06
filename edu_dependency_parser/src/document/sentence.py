@@ -3,7 +3,7 @@ Created on 2014-01-09
 
 @author: Wei
 '''
-import utils_multiprocess.rst_lib
+import utils.rst_lib
 from base_representation import BaseRepresentation
 from constituent import Constituent
 

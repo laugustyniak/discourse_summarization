@@ -5,8 +5,9 @@ jupyter_lab:
     - 8877:8888
     - 8822:22
   volumes:
-    - "/datasets:/dataset"
-    - "/nfs:/nfs"
+#    - "/datasets:/dataset"
+#    - "/nfs:/nfs"
+    - "/home/lukasz:/notebooks"
   environment:
 #    - GRANT_SUDO=yes
 #    - PASSWORD=sentimentLukasza2016

@@ -1,6 +1,6 @@
 from base_parser import BaseParser
 from trees.parse_tree import ParseTree
-import utils_multiprocess.utils
+import utils.utils
 import random
 import os.path
 import paths

@@ -11,12 +11,16 @@ from trees.parse_tree import ParseTree
 class EDUTreeRulesExtractor():
     def __processTree(self, tree):
         for index, node in enumerate(tree):
+            # go to the subtree
             if isinstance(node, ParseTree):
                 self.__processTree(node)
+            # recursively until leaf
             else:
+                # leaf, parent/current subtree, index of leaf in the tree
                 self.__traverseParent(node, tree, index)
 
     def __traverseParent(self, leaf, parent, childIndex):
+        # leaf = child
         if parent is not None:
             for id in range(childIndex + 1, len(parent)):
                 self.__makeRules(leaf, parent[id])
@@ -42,6 +46,6 @@ class EDUTreeRulesExtractor():
 
         return self.rules
 
-        # INFO: reguly s� determinowane przez kolejnosc odwiedzania w�z��w przy preprocessingu
-        #   Je�li olejemy warto�� relacji, regu�y mog� by� budowane od danego numeru do konca numerk�w:
+        # INFO: reguly są determinowane przez kolejnosc odwiedzania węzłów przy preprocessingu
+        #   Jeśli olejemy wartość relacji, reguły mogą być budowane od danego numeru do konca numerków:
         #   k -> k+1, k -> k+2, ... k -> n

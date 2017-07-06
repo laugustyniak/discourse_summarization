@@ -19,4 +19,4 @@ optional arguments:
 `
 
 Exemplary execution:
-`python run.py -input rhetorical-samples/ipod.json -output results -batch 1000 -p 23`
+`python run.py -input data/reviews/ipod.json -output results -batch 1000 -p 23`
