@@ -8,41 +8,43 @@ sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
 from trees.parse_tree import ParseTree
 
 
-class EDUTreeRulesExtractor():
-    def __processTree(self, tree):
+class EDUTreeRulesExtractor(object):
+    def __init__(self):
+        self.rules = []
+        self.accepted_edus = None
+
+    def __process_tree(self, tree):
         for index, node in enumerate(tree):
             # go to the subtree
             if isinstance(node, ParseTree):
-                self.__processTree(node)
+                self.__process_tree(node)
             # recursively until leaf
             else:
                 # leaf, parent/current subtree, index of leaf in the tree
-                self.__traverseParent(node, tree, index)
+                self.__traverse_parent(node, tree, index)
 
-    def __traverseParent(self, leaf, parent, childIndex):
+    def __traverse_parent(self, leaf, parent, child_index):
         # leaf = child
         if parent is not None:
-            for id in range(childIndex + 1, len(parent)):
-                self.__makeRules(leaf, parent[id])
+            for id in range(child_index + 1, len(parent)):
+                self.__make_rules(leaf, parent[id])
 
             if parent.parent is not None:
-                self.__traverseParent(leaf, parent.parent, parent.parent_index)
+                self.__traverse_parent(leaf, parent.parent, parent.parent_index)
 
-    def __makeRules(self, base, tree):
+    def __make_rules(self, base, tree):
 
         # int oznacza, że rekursywnie doszliśmy do liścia w drzewie pod aktualnym liście analizowanym
         if isinstance(tree, int):
-            if tree in self.acceptedEDUs and base in self.acceptedEDUs:
+            if tree in self.accepted_edus and base in self.accepted_edus:
                 self.rules.append((base, tree))
         else:
             for index, subtree in enumerate(tree):
-                self.__makeRules(base, subtree)
+                self.__make_rules(base, subtree)
 
-    def extract(self, tree, acceptedEDUs):
-
-        self.rules = []
-        self.acceptedEDUs = acceptedEDUs
-        self.__processTree(tree)
+    def extract(self, tree, accepted_edus):
+        self.accepted_edus = accepted_edus
+        self.__process_tree(tree)
 
         return self.rules
 

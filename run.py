@@ -404,86 +404,81 @@ class AspectAnalysisSystem:
             self.serializer.save(aspectsPerEDU, self.paths['aspects_per_edu'])
             self.serializer.save(documentsInfo, self.paths['documents_info'])
 
-    #
-    #   Ekstrakcja regu� asocjacyjnych z drzewa zaleznosci EDU
-    #
-    def __extractEDUDepencencyRules(self, documentsCount):
+    # todo: unnecessary parameter?
+    def __extract_edu_dependency_rules(self, documents_count):
+        """Ekstrakcja reguł asocjacyjnych z drzewa zaleznosci EDU"""
 
         if not os.path.exists(self.paths['edu_dependency_rules']):
 
-            rulesExtractor = EDUTreeRulesExtractor()
+            rules_extractor = EDUTreeRulesExtractor()
             rules = []
 
-            documentsInfo = self.serializer.load(self.paths['documents_info'])
+            documents_info = self.serializer.load(self.paths['documents_info'])
 
-            for documentId, documentInfo in documentsInfo.iteritems():
+            for document_id, document_info in documents_info.iteritems():
 
-                if len(documentInfo['accepted_edus']) > 0:
-                    linkTree = self.serializer.load(
-                        self.paths['link_trees_dir'] + str(documentId))
+                if len(document_info['accepted_edus']) > 0:
+                    link_tree = self.serializer.load(
+                        self.paths['link_trees_dir'] + str(document_id))
 
-                extractedRules = rulesExtractor.extract(linkTree, documentInfo[
+                extracted_rules = rules_extractor.extract(link_tree, document_info[
                     'accepted_edus'])
 
-                if len(extractedRules) > 0:
-                    rules += extractedRules
+                if len(extracted_rules) > 0:
+                    rules += extracted_rules
 
             self.serializer.save(rules, self.paths['edu_dependency_rules'])
 
-    def __buildAspectDepencencyGraph(self):
-        #
-        #   Budowa grafu zale�no�ci aspekt�w
-        #
+    def __build_aspect_dependency_graph(self):
+        """Budowa grafu zależności aspektów"""
 
         if not (os.path.exists(self.paths['aspects_graph']) and os.path.exists(
                 self.paths['aspects_importance'])):
-            dependencyRules = self.serializer.load(
+            dependency_rules = self.serializer.load(
                 self.paths['edu_dependency_rules'])
-            aspectsPerEDU = self.serializer.load(self.paths['aspects_per_edu'])
+            aspects_per_edu = self.serializer.load(self.paths['aspects_per_edu'])
 
             builder = AspectsGraphBuilder()
-            graph, pageRanks = builder.build(dependencyRules, aspectsPerEDU)
+            graph, page_ranks = builder.build(dependency_rules, aspects_per_edu)
 
             self.serializer.save(graph, self.paths['aspects_graph'])
-            self.serializer.save(pageRanks, self.paths['aspects_importance'])
+            self.serializer.save(page_ranks, self.paths['aspects_importance'])
 
-    #
-    #   Odsiewamy �mieciowe aspekty na podsawie informacji o ich wa�nosci
-    #
-    def __filterAspects(self, threshold):
+    def __filter_aspects(self, threshold):
+        """Odsiewamy śmieciowe aspekty na podsawie informacji o ich ważnosci"""
 
-        aspectsImportance = self.serializer.load(
+        aspects_importance = self.serializer.load(
             self.paths['aspects_importance'])
-        documentsInfo = self.serializer.load(self.paths['documents_info'])
+        documents_info = self.serializer.load(self.paths['documents_info'])
 
-        aspectsCount = len(aspectsImportance)
-        aspectsList = list(aspectsImportance)
+        aspects_count = len(aspects_importance)
+        aspects_list = list(aspects_importance)
 
         # """
-        for documentId, documentInfo in documentsInfo.iteritems():
+        for documentId, documentInfo in documents_info.iteritems():
 
             aspects = []
 
             if 'aspects' in documentInfo:
 
                 for aspect in documentInfo['aspects']:
-                    if aspect in aspectsImportance:
-                        aspectPosition = float(
-                            aspectsList.index(aspect) + 1) / aspectsCount
+                    if aspect in aspects_importance:
+                        aspect_position = float(
+                            aspects_list.index(aspect) + 1) / aspects_count
 
-                        if aspectPosition < threshold:
+                        if aspect_position < threshold:
                             aspects.append(aspect)
 
-            documentsInfo[documentId]['aspects'] = aspects
+            documents_info[documentId]['aspects'] = aspects
 
         # print '--------------------'
-        # pprint(documentsInfo)
-        self.serializer.save(documentsInfo, self.paths['final_documents_info'])
+        # pprint(documents_info)
+        self.serializer.save(documents_info, self.paths['final_documents_info'])
         """
 
         aspectsPerEDU = self.serializer.load(self.paths['aspects_per_edu'])
 
-        for documentId, documentInfo in documentsInfo.iteritems():
+        for documentId, documentInfo in documents_info.iteritems():
 
             aspects = []
 
@@ -492,21 +487,21 @@ class AspectAnalysisSystem:
                 mainAspectImportance = -1
 
                 for aspect in aspectsPerEDU[EDUId]:
-                    if aspect in aspectsImportance:
+                    if aspect in aspects_importance:
 
-                        aspectPosition = float(aspectsList.index(aspect)+1)/aspectsCount
+                        aspect_position = float(aspects_list.index(aspect)+1)/aspects_count
 
-                        if aspectPosition < threshold and aspectsImportance[aspect] > mainAspectImportance:
+                        if aspect_position < threshold and aspects_importance[aspect] > mainAspectImportance:
                             mainAspect = aspect
-                            mainAspectImportance = aspectsImportance[aspect]
+                            mainAspectImportance = aspects_importance[aspect]
 
                 if mainAspect is not None:
                     aspects.append(mainAspect)
 
 
-            documentsInfo[documentId]['aspects'] = aspects
+            documents_info[documentId]['aspects'] = aspects
 
-        self.serializer.save(documentsInfo, self.paths['final_documents_info'])
+        self.serializer.save(documents_info, self.paths['final_documents_info'])
         #
         """
 
@@ -599,7 +594,7 @@ class AspectAnalysisSystem:
         logging.info("Performing EDU dependency rules extraction...")
 
         timer_start = time()
-        self.__extractEDUDepencencyRules(documents_count)
+        self.__extract_edu_dependency_rules(documents_count)
         timer_end = time()
 
         logging.info(
@@ -611,7 +606,7 @@ class AspectAnalysisSystem:
         logging.info("Performing aspects graph building...")
 
         timer_start = time()
-        self.__buildAspectDepencencyGraph()
+        self.__build_aspect_dependency_graph()
         timer_end = time()
 
         logging.info(
