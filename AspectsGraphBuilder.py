@@ -18,8 +18,11 @@ ch.setFormatter(formatter)
 root.addHandler(ch)
 
 
-class AspectsGraphBuilder():
-    def __addNodeToGraph(self, graph, node):
+class AspectsGraphBuilder(object):
+    def __init__(self):
+        pass
+
+    def __add_node_to_graph(self, graph, node):
         if graph.has_node(node):
             graph.node[node]['support'] += 1
         else:
@@ -27,62 +30,62 @@ class AspectsGraphBuilder():
 
         return graph
 
-    def __addEdgeToGraph(self, graph, nodeLeft, nodeRight):
-        if graph.has_edge(nodeLeft, nodeRight):
-            graph[nodeLeft][nodeRight]['support'] += 1
+    def __add_edge_to_graph(self, graph, node_left, node_right):
+        if graph.has_edge(node_left, node_right):
+            graph[node_left][node_right]['support'] += 1
         else:
-            graph.add_edge(nodeLeft, nodeRight)
-            graph[nodeLeft][nodeRight]['support'] = 1
+            graph.add_edge(node_left, node_right)
+            graph[node_left][node_right]['support'] = 1
 
         return graph
 
-    def __buildAspectsGraph(self, rules, aspectsPerEDU):
+    def __build_aspects_graph(self, rules, aspects_per_edu):
         graph = nx.DiGraph()
 
         for rule_id, rule in enumerate(rules):
             # logging.debug('Rule: {}'.format(rule))
             left_node, right_node = rule
 
-            for id1, aspect_left in enumerate(aspectsPerEDU[left_node]):
-                for id2, aspect_right in enumerate(aspectsPerEDU[right_node]):
-                    graph = self.__addNodeToGraph(graph, aspect_left)
-                    graph = self.__addNodeToGraph(graph, aspect_right)
+            for id1, aspect_left in enumerate(aspects_per_edu[left_node]):
+                for id2, aspect_right in enumerate(aspects_per_edu[right_node]):
+                    graph = self.__add_node_to_graph(graph, aspect_left)
+                    graph = self.__add_node_to_graph(graph, aspect_right)
 
-                    graph = self.__addEdgeToGraph(graph, aspect_left, aspect_right)
+                    graph = self.__add_edge_to_graph(graph, aspect_left, aspect_right)
 
         return graph
 
-    def __calculateEdgesWeight(self, graph):
+    def __calculate_edges_weight(self, graph):
 
         for edge in graph.edges():
-            edgeSupport = graph[edge[0]][edge[1]]['support']
-            firstNodeSupport = graph.node[edge[0]]['support']
-            graph[edge[0]][edge[1]]['weight'] = edgeSupport / float(firstNodeSupport)
+            edge_support = graph[edge[0]][edge[1]]['support']
+            first_node_support = graph.node[edge[0]]['support']
+            graph[edge[0]][edge[1]]['weight'] = edge_support / float(first_node_support)
 
             del graph[edge[0]][edge[1]]['support']
 
         return graph
 
-    def __deleteTemporaryInfo(self, graph):
+    def __delete_temporary_info(self, graph):
 
         for node in graph.nodes():
             del graph.node[node]['support']
 
         return graph
 
-    def __calculatePageRanks(self, graph):
+    def __calculate_page_ranks(self, graph):
 
-        pageRanks = nx.pagerank(graph)
-        pageRanks = OrderedDict(sorted(pageRanks.items(), key=itemgetter(1), reverse=True))
+        page_ranks = nx.pagerank(graph)
+        page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
 
-        return pageRanks
+        return page_ranks
 
-    def build(self, rules, aspectsPerEDU):
+    def build(self, rules, aspects_per_edu):
 
-        graph = self.__buildAspectsGraph(rules, aspectsPerEDU)
-        graph = self.__calculateEdgesWeight(graph)
-        graph = self.__deleteTemporaryInfo(graph)
+        graph = self.__build_aspects_graph(rules, aspects_per_edu)
+        graph = self.__calculate_edges_weight(graph)
+        graph = self.__delete_temporary_info(graph)
 
-        pageRanks = self.__calculatePageRanks(graph)
+        page_ranks = self.__calculate_page_ranks(graph)
 
-        return graph, pageRanks
+        return graph, page_ranks
