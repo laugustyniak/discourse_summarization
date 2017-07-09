@@ -101,9 +101,13 @@ RUN pip install networkx \
 RUN pip install spacy
 #RUN python -m spacy download en
 
+# add wordnet data
+COPY nltk_data /root/nltk_data
+
 # install Morfeusz - Polish Lang Lemmatizer
 #RUN cd /tmp &&  wget -O - http://sgjp.pl/apt/sgjp.gpg.key|sudo apt-key add - && sudo add-apt-repository 'deb http://sgjp.pl/apt/ubuntu trusty main'
 #RUN sudo apt-get update
 #RUN sudo apt-get install python-morfeusz2 -y
 
-CMD ["/bin/sh"]
+ADD notebook.sh /
+CMD ["/notebook.sh"]

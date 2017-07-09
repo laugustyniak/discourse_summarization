@@ -4,7 +4,7 @@
               [-sent_model SENT_MODEL_PATH] [-batch BATCH_SIZE]
               [-p MAX_PROCESSES]`
 
-## Process documents
+## Process documents.
 
 `optional arguments:
   -h, --help            show this help message and exit
@@ -18,5 +18,5 @@
   -p MAX_PROCESSES      Number of processes
 `
 
-## Exemplary execution
+## Exemplary execution:
 `python run.py -input data/reviews/ipod.json -output results -batch 1000 -p 23`
