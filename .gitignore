@@ -9,7 +9,7 @@ results/*
 tests/
 aspects/
 results/
-notebooks/.ipynb_checkpoints/
+.ipynb_checkpoints/
 notebooks/trees/
 
 # ignore discourse parsing libs
