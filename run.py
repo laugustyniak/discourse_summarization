@@ -1,24 +1,20 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
-import pickle
-import sys
-import shutil
-import subprocess
-
 import argparse
+import pickle
+import shutil
+import sys
+import logging
+from datetime import datetime
+from os.path import basename, exists, join, split, splitext, dirname
+from time import time
+
+import simplejson
 from joblib import Parallel
 from joblib import delayed
-import simplejson
-import os.path
-from os.path import basename, exists
-from pprint import pprint
-from time import time
-from datetime import datetime
-from optparse import OptionParser
+from os import makedirs, listdir, getcwd
 
-from tqdm import tqdm
-
-sys.path.append('edu_dependency_parser/src/')
+# sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
 from EDUTreePreprocesser import EDUTreePreprocesser
 from EDUAspectExtractor import EDUAspectExtractor
@@ -29,9 +25,6 @@ from AspectsGraphBuilder import AspectsGraphBuilder
 from ResultsAnalyzer import ResultsAnalyzer
 from Serializer import Serializer
 from utils_multiprocess import batch_with_indexes
-
-import logging
-import sys
 
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
@@ -58,7 +51,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
         try:
             edu_tree_path = edu_trees_dir + str(document_id) + '.tree'
 
-            if os.path.exists(edu_tree_path):
+            if exists(edu_tree_path):
                 logging.info(
                     'EDU Tree Already exists: {}'.format(edu_tree_path))
                 skipped += 1
@@ -172,8 +165,8 @@ class AspectAnalysisSystem:
     #   Sprawdza czy sciezka istnieje i tworzy ja w razie potrzeby
     #
     def __ensurePathExist(self, path):
-        if not os.path.exists(path):
-            os.makedirs(path)
+        if not exists(path):
+            makedirs(path)
 
     #
     #   Parsowanie dokumentow wejsciowych
@@ -186,7 +179,7 @@ class AspectAnalysisSystem:
             documents_count : int
                 Number of documents processed
         """
-        existing_documents_list = os.listdir(
+        existing_documents_list = listdir(
             self.paths['extracted_documents_dir'])
         documents_count = len(existing_documents_list)
 
@@ -289,7 +282,7 @@ class AspectAnalysisSystem:
     #
     def __performEDUPreprocessing(self, documents_count):
 
-        if not os.path.exists(self.paths['raw_edu_list']):
+        if not exists(self.paths['raw_edu_list']):
             preprocesser = EDUTreePreprocesser()
 
             # Parallel(n_jobs=self.jobs)(
@@ -332,84 +325,81 @@ class AspectAnalysisSystem:
     #
     #   Analiza sentymentu EDU i odsianie niesentymentalnych
     #
-    def __filterEDUBySentiment(self):
+    def __filter_edu_by_sentiment(self):
 
-        if not (os.path.exists(
-                self.paths['sentiment_filtered_edus']) and os.path.exists(
-            self.paths['documents_info'])):
+        if not (exists(self.paths['sentiment_filtered_edus']) and
+                    exists(self.paths['documents_info'])):
 
             if self.sent_model_path is None:
                 analyzer = SentimentAnalyzer()
             else:
                 analyzer = SentimentAnalyzer(model_path=self.sent_model_path)
 
-            EDUList = list(
+            edu_list = list(
                 self.serializer.load(self.paths['raw_edu_list']).values())
-            # logging.debug('EDU List: {}'.format(EDUList))
-            # pprint(EDUList)
-            filteredEDUs = {}
-            documentsInfo = {}
+            # logging.debug('EDU List: {}'.format(edu_list))
+            # pprint(edu_list)
+            filtered_edus = {}
+            documents_info = {}
 
-            for EDUId, EDU in enumerate(EDUList):
+            for EDUId, EDU in enumerate(edu_list):
                 # logging.debug('EDU: {}'.format(EDU))
                 sentiment = analyzer.analyze(EDU['raw_text'])
 
-                if not EDU['source_document_id'] in documentsInfo:
-                    documentsInfo[EDU['source_document_id']] = {'sentiment': 0,
-                                                                'EDUs': [],
-                                                                'accepted_edus': []}
+                if not EDU['source_document_id'] in documents_info:
+                    documents_info[EDU['source_document_id']] = {'sentiment': 0,
+                                                                 'EDUs': [],
+                                                                 'accepted_edus': []}
 
-                documentsInfo[EDU['source_document_id']][
+                documents_info[EDU['source_document_id']][
                     'sentiment'] += sentiment
-                documentsInfo[EDU['source_document_id']]['EDUs'].append(EDUId)
+                documents_info[EDU['source_document_id']]['EDUs'].append(EDUId)
 
-                if (sentiment <> 0):
+                if not sentiment:
                     EDU['sentiment'] = sentiment
-                    documentsInfo[EDU['source_document_id']][
+                    documents_info[EDU['source_document_id']][
                         'accepted_edus'].append(EDUId)
 
-                    filteredEDUs[EDUId] = EDU
+                    filtered_edus[EDUId] = EDU
 
-            self.serializer.save(filteredEDUs,
+            self.serializer.save(filtered_edus,
                                  self.paths['sentiment_filtered_edus'])
-            self.serializer.save(documentsInfo, self.paths['documents_info'])
+            self.serializer.save(documents_info, self.paths['documents_info'])
 
-    #
-    #   Ekstrakcja aspekt�w
-    #
-    def __extractAspectsFromEDU(self):
-        if not os.path.exists(self.paths['aspects_per_edu']):
+    def __extract_aspects_from_edu(self):
+        """ extract aspects from EDU and serialize them """
+        if not exists(self.paths['aspects_per_edu']):
 
-            # EDUs = self.serializer.load(self.paths['raw_edu_list'])
-            EDUs = self.serializer.load(self.paths['sentiment_filtered_edus'])
-            documentsInfo = self.serializer.load(self.paths['documents_info'])
+            # edus = self.serializer.load(self.paths['raw_edu_list'])
+            edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
+            documents_info = self.serializer.load(self.paths['documents_info'])
 
-            aspectsPerEDU = {}
+            aspects_per_edu = {}
 
             extractor = EDUAspectExtractor()
 
-            for EDUId, EDU in EDUs.iteritems():
+            for EDUId, EDU in edus.iteritems():
                 asp = extractor.extract(EDU)
-                aspectsPerEDU[EDUId] = asp
+                aspects_per_edu[EDUId] = asp
                 # logging.debug('Aspect: {}'.format(asp))
 
-                # if not 'aspects' in documentsInfo[EDU['source_document_id']]:
-                if 'aspects' not in documentsInfo[EDU['source_document_id']]:
-                    documentsInfo[EDU['source_document_id']]['aspects'] = []
+                # if not 'aspects' in documents_info[EDU['source_document_id']]:
+                if 'aspects' not in documents_info[EDU['source_document_id']]:
+                    documents_info[EDU['source_document_id']]['aspects'] = []
 
-                documentsInfo[EDU['source_document_id']][
+                documents_info[EDU['source_document_id']][
                     'aspects'] = extractor.getAspectsInDocument(
-                    documentsInfo[EDU['source_document_id']]['aspects'],
-                    aspectsPerEDU[EDUId])
+                    documents_info[EDU['source_document_id']]['aspects'],
+                    aspects_per_edu[EDUId])
 
-            self.serializer.save(aspectsPerEDU, self.paths['aspects_per_edu'])
-            self.serializer.save(documentsInfo, self.paths['documents_info'])
+            self.serializer.save(aspects_per_edu, self.paths['aspects_per_edu'])
+            self.serializer.save(documents_info, self.paths['documents_info'])
 
     # todo: unnecessary parameter?
-    def __extract_edu_dependency_rules(self, documents_count):
+    def __extract_edu_dependency_rules(self):
         """Ekstrakcja reguł asocjacyjnych z drzewa zaleznosci EDU"""
 
-        if not os.path.exists(self.paths['edu_dependency_rules']):
+        if not exists(self.paths['edu_dependency_rules']):
 
             rules_extractor = EDUTreeRulesExtractor()
             rules = []
@@ -433,8 +423,7 @@ class AspectAnalysisSystem:
     def __build_aspect_dependency_graph(self):
         """Budowa grafu zależności aspektów"""
 
-        if not (os.path.exists(self.paths['aspects_graph']) and os.path.exists(
-                self.paths['aspects_importance'])):
+        if not (exists(self.paths['aspects_graph']) and exists(self.paths['aspects_importance'])):
             dependency_rules = self.serializer.load(
                 self.paths['edu_dependency_rules'])
             aspects_per_edu = self.serializer.load(self.paths['aspects_per_edu'])
@@ -506,30 +495,26 @@ class AspectAnalysisSystem:
         #
         """
 
-    #
-    #   Odsiewamy �mieciowe aspekty na podsawie informacji o ich wa�nosci
-    #
-    def __analyzeResults(self, threshold):
+    def __analyze_results(self, threshold):
+        """ remove noninformative aspects  """
 
-        documentsInfo = self.serializer.load(self.paths['final_documents_info'])
-        goldStandard = self.serializer.load(self.paths['gold_standard'])
+        documents_info = self.serializer.load(self.paths['final_documents_info'])
+        gold_standard = self.serializer.load(self.paths['gold_standard'])
 
-        if goldStandard is None:
+        if gold_standard is None:
             raise ValueError('GoldStandard data is None')
 
         analyzer = ResultsAnalyzer()
 
-        for documentId, documentInfo in documentsInfo.iteritems():
+        for documentId, documentInfo in documents_info.iteritems():
             document = self.serializer.load(
                 self.paths['extracted_documents_dir'] + str(documentId))
 
-            analyzer.analyze(documentInfo['aspects'], goldStandard[documentId])
+            analyzer.analyze(documentInfo['aspects'], gold_standard[documentId])
 
         measures = analyzer.getAnalyzisResults()
 
-        self.serializer.append(
-            ';'.join(str(x) for x in [threshold] + measures) + '\n',
-            self.paths['results'])
+        self.serializer.append(';'.join(str(x) for x in [threshold] + measures) + '\n', self.paths['results'])
 
     def run(self):
 
@@ -573,7 +558,7 @@ class AspectAnalysisSystem:
         logging.info("Performing EDU sentiment filtering...")
 
         timer_start = time()
-        self.__filterEDUBySentiment()
+        self.__filter_edu_by_sentiment()
         timer_end = time()
 
         logging.info("EDU filtering succeeded in {:.2f} seconds".format(
@@ -584,7 +569,7 @@ class AspectAnalysisSystem:
         logging.info("Performing EDU aspects extraction...")
 
         timer_start = time()
-        self.__extractAspectsFromEDU()
+        self.__extract_aspects_from_edu()
         timer_end = time()
 
         logging.info("EDU aspects extraction in {:.2f} seconds".format(
@@ -595,7 +580,7 @@ class AspectAnalysisSystem:
         logging.info("Performing EDU dependency rules extraction...")
 
         timer_start = time()
-        self.__extract_edu_dependency_rules(documents_count)
+        self.__extract_edu_dependency_rules()
         timer_end = time()
 
         logging.info(
@@ -647,9 +632,9 @@ class AspectAnalysisSystem:
 
 
 if __name__ == "__main__":
-    ROOT_PATH = os.getcwd()
-    DEFAULT_OUTPUT_PATH = os.path.join(ROOT_PATH, 'results')
-    DEFAULT_INPUT_FILE_PATH = os.path.join(ROOT_PATH, 'texts', 'test.txt')
+    ROOT_PATH = getcwd()
+    DEFAULT_OUTPUT_PATH = join(ROOT_PATH, 'results')
+    DEFAULT_INPUT_FILE_PATH = join(ROOT_PATH, 'texts', 'test.txt')
 
     arg_parser = argparse.ArgumentParser(description='Process documents.')
     arg_parser.add_argument('-input', type=str, dest='input_file_path',
@@ -667,11 +652,10 @@ if __name__ == "__main__":
                             help='Number of processes')
     args = arg_parser.parse_args()
 
-    input_file_full_name = os.path.split(args.input_file_path)[1]
-    input_file_name = os.path.splitext(input_file_full_name)[0]
-    output_path = os.path.join(args.output_file_path, input_file_name)
-    gold_standard_path = os.path.dirname(
-        args.input_file_path) + input_file_name + '_aspects_list.ser'
+    input_file_full_name = split(args.input_file_path)[1]
+    input_file_name = splitext(input_file_full_name)[0]
+    output_path = join(args.output_file_path, input_file_name)
+    gold_standard_path = dirname(args.input_file_path) + input_file_name + '_aspects_list.ser'
     AAS = AspectAnalysisSystem(input_path=args.input_file_path,
                                output_path=output_path,
                                gold_standard_path=gold_standard_path,
