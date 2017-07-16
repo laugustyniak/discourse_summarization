@@ -10,7 +10,7 @@ sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
 from trees.parse_tree import ParseTree
 
 
-class EDUTreePreprocesser():
+class EDUTreePreprocesser(object):
     def __init__(self):
         self.edus = []
         self.preprocesser = Preprocesser()

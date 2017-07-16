@@ -291,6 +291,7 @@ class AspectAnalysisSystem:
 
         if not os.path.exists(self.paths['raw_edu_list']):
             preprocesser = EDUTreePreprocesser()
+
             # Parallel(n_jobs=self.jobs)(
             # 	delayed(self.__performEDUPreprocessing_multiprocess())(preprocesser, docs_id_range)
             # 	for docs_id_range, in batch_with_indexes(range(documentsCount), self.jobs))
