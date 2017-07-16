@@ -5,7 +5,7 @@ import spacy
 import re
 
 
-class Preprocesser:
+class Preprocesser(object):
     def __init__(self):
         print 'Preprocesser: initializing'
         # load spacy with parsers and entities, it will be useful in next steps of analysis

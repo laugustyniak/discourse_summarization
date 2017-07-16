@@ -2,8 +2,11 @@
 __pycache__/
 *.py[cod]
 
+# ignore this folders
 texts/*
 results/*
 .idea/
 tests/
 aspects/
+results/
+notebooks/.ipynb_checkpoints/
