@@ -10,6 +10,7 @@ tests/
 aspects/
 results/
 notebooks/.ipynb_checkpoints/
+notebooks/trees/
 
 # ignore discourse parsing libs
 rhetorical-installation/discourse_parse-2.01.tar.gz
