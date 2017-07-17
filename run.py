@@ -14,7 +14,7 @@ from joblib import Parallel
 from joblib import delayed
 from os import makedirs, listdir, getcwd
 
-# sys.path.append('edu_dependency_parser/src/')
+sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
 from EDUTreePreprocesser import EDUTreePreprocesser
 from EDUAspectExtractor import EDUAspectExtractor
@@ -307,7 +307,7 @@ class AspectAnalysisSystem:
                                                                str(err)))
                     self.parsing_errors += 1
             edu_list = preprocesser.getPreprocessedEdusList()
-            self.serializer.save(edu_list, self.paths['raw_edu_list'])
+            self.serializer.save(edu_list, self.paths['raw_edu_list '])
 
     # def __performEDUPreprocessing_multiprocess(self, preprocesser, docs_id_range):
     #
@@ -337,30 +337,30 @@ class AspectAnalysisSystem:
 
             edu_list = list(
                 self.serializer.load(self.paths['raw_edu_list']).values())
-            # logging.debug('EDU List: {}'.format(edu_list))
+            # logging.debug('edu List: {}'.format(edu_list))
             # pprint(edu_list)
             filtered_edus = {}
             documents_info = {}
 
-            for EDUId, EDU in enumerate(edu_list):
-                # logging.debug('EDU: {}'.format(EDU))
-                sentiment = analyzer.analyze(EDU['raw_text'])
+            for edu_id, edu in enumerate(edu_list):
+                # logging.debug('edu: {}'.format(edu))
+                sentiment = analyzer.analyze(edu['raw_text'])
 
-                if not EDU['source_document_id'] in documents_info:
-                    documents_info[EDU['source_document_id']] = {'sentiment': 0,
+                if not edu['source_document_id'] in documents_info:
+                    documents_info[edu['source_document_id']] = {'sentiment': 0,
                                                                  'EDUs': [],
                                                                  'accepted_edus': []}
 
-                documents_info[EDU['source_document_id']][
+                documents_info[edu['source_document_id']][
                     'sentiment'] += sentiment
-                documents_info[EDU['source_document_id']]['EDUs'].append(EDUId)
+                documents_info[edu['source_document_id']]['EDUs'].append(edu_id)
 
                 if not sentiment:
-                    EDU['sentiment'] = sentiment
-                    documents_info[EDU['source_document_id']][
-                        'accepted_edus'].append(EDUId)
+                    edu['sentiment'] = sentiment
+                    documents_info[edu['source_document_id']][
+                        'accepted_edus'].append(edu_id)
 
-                    filtered_edus[EDUId] = EDU
+                    filtered_edus[edu_id] = edu
 
             self.serializer.save(filtered_edus,
                                  self.paths['sentiment_filtered_edus'])
@@ -388,7 +388,7 @@ class AspectAnalysisSystem:
                     documents_info[EDU['source_document_id']]['aspects'] = []
 
                 documents_info[EDU['source_document_id']][
-                    'aspects'] = extractor.getAspectsInDocument(
+                    'aspects'] = extractor.get_aspects_in_document(
                     documents_info[EDU['source_document_id']]['aspects'],
                     aspects_per_edu[EDUId])
 
