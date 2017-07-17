@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#author: Krzysztof xaru Rajda
+# author: Krzysztof xaru Rajda
 
 from AspectExtractor import AspectExtractor
 
@@ -7,22 +7,21 @@ from AspectExtractor import AspectExtractor
 class EDUAspectExtractor(object):
     def __init__(self):
         self.extractor = AspectExtractor()
-        
-    def extract(self, EDU):
-            
-        aspects = self.extractor.extract(EDU)
+
+    def extract(self, edu):
+
+        aspects = self.extractor.extract(edu)
             
         return aspects
 
-    def getAspectsInDocument(self, documentsAspects, aspects):
-        
-        if documentsAspects is None:
+    def get_aspects_in_document(self, documents_aspects, aspects):
+
+        if documents_aspects is None:
             return aspects
         else:
-            docAsp = documentsAspects + aspects
-            
-            #wymuszamy unikalnosc
-            docAsp = list(set(docAsp))
-            
-            return docAsp 
-       
+            doc_asp = documents_aspects + aspects
+
+            # wymuszamy unikalnosc
+            doc_asp = list(set(doc_asp))
+
+            return doc_asp
