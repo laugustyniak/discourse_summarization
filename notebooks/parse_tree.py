@@ -48,48 +48,53 @@ class EDUTreeRulesExtractor(object):
         self.rules = []
         self.accepted_edus = None
         self.relation = None
+        self.left_child = None
+        self.right_child = None
 
-    def __process_tree(self, tree, relation):
-        for index, node in enumerate(tree):
-            # go to the subtree
-            # process tree down
-            if isinstance(node, ParseTree):
-                self.__process_tree(node, relation)
-            #                 print '++++', tree.node, node
+    def _process_tree(self, tree, relation):
+        for child_index, child in enumerate(tree):
+            if not child_index:
+                self.left_child = child
+            # go to the subtree left child_index = 0, or right child_index = 1
+            # check if child is leaf or subtree
+            if isinstance(child, ParseTree):
+                # go into subtree
+                self._process_tree(child, relation)
             # recursively until leaf
             else:
-                # leaf, parent/current subtree, index of leaf in the tree
-                self.__traverse_parent(node, tree, index, tree.node)
-            #                 print '****', node, tree, index, tree.node
+                relation = tree.node
+                # leaf, parent/current subtree, child_index of leaf in the tree, relation type of tree/parent
+                self._traverse_parent(child, tree, child_index, relation)
 
-    def __traverse_parent(self, leaf, parent, child_index, relation):
+    def _traverse_parent(self, leaf, parent, child_index, relation):
+        """ we reached leaf and want to parse sibling of leaf """
         # leaf = child
         if parent is not None:
-            for id in range(child_index + 1, len(parent)):
-                self.__make_rules(leaf, parent[id], relation)
+            # get sibling of leaf or in false you got the same leaf
+            if child_index < len(parent):
+                # for i in range(child_index + 1, len(parent)):
+                self.__make_rules(leaf, parent[0], relation)
 
+            # go up in the tree
             if parent.parent is not None:
-                self.__traverse_parent(leaf, parent.parent, parent.parent_index, relation)
-            else:
                 self.relation = parent.node
-            #                 print 'the highest common node', relation, leaf, parent
+                self._traverse_parent(leaf, parent.parent, parent.parent_index, relation)
 
     def __make_rules(self, leaf_left, tree, relation):
 
         # int oznacza, że rekursywnie doszliśmy do liścia w drzewie pod aktualnym liście analizowanym
         if isinstance(tree, int):
             if tree in self.accepted_edus and leaf_left in self.accepted_edus:
-                print('leaf leaft', leaf_left, 'leaf right', tree, 'relation', relation)
+                # find common nearest parent
                 self.rules.append((leaf_left, tree, relation))
         else:
-            for index, subtree in enumerate(tree):
-                self.__make_rules(leaf_left, subtree, tree.node)
-                print '--', tree.node, leaf_left, subtree
+            for index, child in enumerate(tree):
+                self.__make_rules(leaf_left, child, tree.node)
 
     def extract(self, tree, accepted_edus):
         self.accepted_edus = accepted_edus
         print 'root node', tree.node
-        self.__process_tree(tree, tree.node)
+        self._process_tree(tree, tree.node)
 
         return self.rules
 
