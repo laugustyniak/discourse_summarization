@@ -307,7 +307,7 @@ class AspectAnalysisSystem:
                                                                str(err)))
                     self.parsing_errors += 1
             edu_list = preprocesser.getPreprocessedEdusList()
-            self.serializer.save(edu_list, self.paths['raw_edu_list '])
+            self.serializer.save(edu_list, self.paths['raw_edu_list'])
 
     # def __performEDUPreprocessing_multiprocess(self, preprocesser, docs_id_range):
     #
@@ -327,8 +327,8 @@ class AspectAnalysisSystem:
     #
     def __filter_edu_by_sentiment(self):
 
-        if not (exists(self.paths['sentiment_filtered_edus']) and
-                    exists(self.paths['documents_info'])):
+        if not (exists(self.paths['sentiment_filtered_edus'])
+                and exists(self.paths['documents_info'])):
 
             if self.sent_model_path is None:
                 analyzer = SentimentAnalyzer()
@@ -343,22 +343,21 @@ class AspectAnalysisSystem:
             documents_info = {}
 
             for edu_id, edu in enumerate(edu_list):
+                edu['sentiment'] = []
                 # logging.debug('edu: {}'.format(edu))
-                sentiment = analyzer.analyze(edu['raw_text'])
+                sentiment = analyzer.analyze(edu['raw_text'])[0]
 
                 if not edu['source_document_id'] in documents_info:
-                    documents_info[edu['source_document_id']] = {'sentiment': 0,
+                    documents_info[edu['source_document_id']] = {'sentiment': [],
                                                                  'EDUs': [],
                                                                  'accepted_edus': []}
 
-                documents_info[edu['source_document_id']][
-                    'sentiment'] += sentiment
+                documents_info[edu['source_document_id']]['sentiment'].append(sentiment)
                 documents_info[edu['source_document_id']]['EDUs'].append(edu_id)
 
-                if not sentiment:
-                    edu['sentiment'] = sentiment
-                    documents_info[edu['source_document_id']][
-                        'accepted_edus'].append(edu_id)
+                if sentiment:
+                    edu['sentiment'].append(sentiment)
+                    documents_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
 
                     filtered_edus[edu_id] = edu
 
