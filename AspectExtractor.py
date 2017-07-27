@@ -6,7 +6,7 @@
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types=None, aspects_to_skip=[]):
+    def __init__(self, ner_types=None, aspects_to_skip=None):
         """ Initialize extractor.
 
         Parameters
@@ -17,7 +17,7 @@ class AspectExtractor(object):
         aspects_to_skip : list
             List of aspects that should be removed.
         """
-        if aspects_to_skip:
+        if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
         else:
             self.aspects_to_skip = [u'day', u'days', u'week', u'weeks', u'month', u'months', u'year', u'years',
@@ -31,10 +31,10 @@ class AspectExtractor(object):
         else:
             self.ner_types = ner_types
 
-    def __is_interesting_main(self, token):
+    def _is_interesting_main(self, token):
         return token['pos'] == 'NOUN'
 
-    def __is_interesting_addition(self, token):
+    def _is_interesting_addition(self, token):
         return token['pos'] == 'ADV' or token['pos'] == 'NUM' or token['pos'] == 'NOUN' or token['pos'] == 'ADJ'
 
     def extract(self, input_text):
@@ -63,15 +63,15 @@ class AspectExtractor(object):
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
             # jesli jest główny (rzeczownik) - akceptujemy od razu
-            if self.__is_interesting_main(token):
+            if self._is_interesting_main(token):
                 if not token['is_stop']:
                     aspect_sequence.append(token['lemma'])
                 aspect_sequence_enabled = True
                 aspect_sequence_main_encountered = True
 
             # jesli jest ciekawy (przymiotnik, przysłówek, liczba) i jest potencjalnym elementem sekwencji - dodajemy
-            elif self.__is_interesting_addition(token) and (
-                        (idx + 1 < len(tokens) and self.__is_interesting_addition(tokens[idx + 1])) or
+            elif self._is_interesting_addition(token) and (
+                        (idx + 1 < len(tokens) and self._is_interesting_addition(tokens[idx + 1])) or
                         (idx + 1 == len(tokens))):
                 if not token['is_stop']:
                     aspect_sequence.append(token['lemma'])
