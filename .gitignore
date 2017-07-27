@@ -2,8 +2,21 @@
 __pycache__/
 *.py[cod]
 
+# ignore this folders
 texts/*
 results/*
 .idea/
 tests/
 aspects/
+results/
+.ipynb_checkpoints/
+notebooks/trees/
+
+# ignore discourse parsing libs
+rhetorical-installation/discourse_parse-2.01.tar.gz
+rhetorical-installation/gCRF_dist/
+rhetorical-installation/PyYAML-3.09/
+rhetorical-installation/PyYAML-3.09.tar.gz
+rhetorical-installation/._nltk-2.0b9
+rhetorical-installation/nltk-2.0b9
+rhetorical-installation/nltk-2\.0b9\.tar\.gz
