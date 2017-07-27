@@ -17,6 +17,17 @@ class AspectExtractionTest(unittest.TestCase):
         print aspects_expected
         self.assertEqual(aspects_obtained, aspects_expected)
 
+    def test_get_aspects_noun_phrase(self):
+        aspects_expected = [u'nice car', u'awesome phone']
+        preprocesser = Preprocesser()
+        raw_text = u'i have a nice car and awesome phone'
+        text = preprocesser.preprocess(raw_text)
+        aspects_extractor = AspectExtractor()
+        aspects_obtained = aspects_extractor.extract(text)
+        print aspects_obtained
+        print aspects_expected
+        self.assertEqual(aspects_obtained, aspects_expected)
+
     def test_get_aspects_ner(self):
         aspects_expected = [u'angela merkel', u'merkel', u'europe']
         preprocesser = Preprocesser()
