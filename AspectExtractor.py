@@ -38,7 +38,7 @@ class AspectExtractor(object):
         return token['pos'] == 'ADV' or token['pos'] == 'NUM' or token['pos'] == 'NOUN' or token['pos'] == 'ADJ'
 
     def extract(self, input_text):
-        """ Extracts all possible aspects - NER, NOUN and NOU PHRASES, potentially other dictionary based aspects.
+        """ Extracts all possible aspects - NER, NOUN and NOUN PHRASES, potentially other dictionary based aspects.
 
         Parameters
         ----------
