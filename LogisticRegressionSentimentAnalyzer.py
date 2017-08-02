@@ -2,7 +2,6 @@
 # author: Krzysztof xaru Rajda
 
 from sklearn.externals import joblib
-import os
 
 
 class LogisticRegressionSentimentAnalyzer:

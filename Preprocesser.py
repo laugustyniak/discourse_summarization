@@ -8,7 +8,8 @@ import re
 class Preprocesser(object):
     def __init__(self):
         print 'Preprocesser: initializing'
-        # load spacy with parsers and entities, it will be useful in next steps of analysis
+        # load spacy with parsers and entities,
+        # it will be useful in next steps of analysis
         self.nlp = spacy.load('en')
         print 'Preprocesser: initialized'
 
@@ -23,6 +24,7 @@ class Preprocesser(object):
         text = re.sub('^U.', '', text)
         text = re.sub('q . <P>$', '', text)
         text = re.sub(' . <s>$', '', text)
+        text = re.sub('\r\n$', '', text)
 
         # analiza spacy
         doc = self.nlp(text)
@@ -37,10 +39,10 @@ class Preprocesser(object):
         for idx, token in enumerate(doc):
             # skip tokens with length lower than 2
             if len(token.string) > 1:
-                token_info = {'text': token.orth_, 'pos': token.pos_, 'lemma': token.lemma_,
-                              'is_stop': token.is_stop}
+                token_info = {'text': token.orth_, 'pos': token.pos_,
+                              'lemma': token.lemma_, 'is_stop': token.is_stop}
                 result['tokens'].append(token_info)
-            # else:
-            #     print('Strange potential aspect: {}'.format(token))
+                # else:
+                #     print('Strange potential aspect: {}'.format(token))
 
         return result

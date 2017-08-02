@@ -13,7 +13,8 @@ root.setLevel(logging.DEBUG)
 
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - '
+                              '%(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 root.addHandler(ch)
 
@@ -51,7 +52,8 @@ class AspectsGraphBuilder(object):
                     graph = self._add_node_to_graph(graph, aspect_left)
                     graph = self._add_node_to_graph(graph, aspect_right)
 
-                    graph = self._add_edge_to_graph(graph, aspect_left, aspect_right)
+                    graph = self._add_edge_to_graph(graph, aspect_left,
+                                                    aspect_right)
 
         return graph
 
@@ -60,7 +62,8 @@ class AspectsGraphBuilder(object):
         for edge in graph.edges():
             edge_support = graph[edge[0]][edge[1]]['support']
             first_node_support = graph.node[edge[0]]['support']
-            graph[edge[0]][edge[1]]['weight'] = edge_support / float(first_node_support)
+            graph[edge[0]][edge[1]]['weight'] = \
+                edge_support / float(first_node_support)
 
             del graph[edge[0]][edge[1]]['support']
 
@@ -76,7 +79,8 @@ class AspectsGraphBuilder(object):
     def _calculate_page_ranks(self, graph):
 
         page_ranks = nx.pagerank(graph)
-        page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
+        page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1),
+                                        reverse=True))
 
         return page_ranks
 

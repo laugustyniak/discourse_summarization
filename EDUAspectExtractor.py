@@ -10,9 +10,9 @@ class EDUAspectExtractor(object):
 
     def extract(self, edu):
 
-        aspects = self.extractor.extract(edu)
+        aspects, aspect_concepts = self.extractor.extract(edu)
             
-        return aspects
+        return aspects, aspect_concepts
 
     def get_aspects_in_document(self, documents_aspects, aspects):
 
