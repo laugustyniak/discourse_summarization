@@ -12,7 +12,8 @@ class AspectExtractionTest(unittest.TestCase):
         raw_text = u'i have car and phone'
         text = preprocesser.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
-        aspects_obtained = aspects_extractor.extract(text)
+        # _ we don not want any concepts to test now
+        aspects_obtained, _ = aspects_extractor.extract(text)
         print aspects_obtained
         print aspects_expected
         self.assertEqual(aspects_obtained, aspects_expected)
@@ -23,7 +24,7 @@ class AspectExtractionTest(unittest.TestCase):
         raw_text = u'i have a nice car and awesome phone'
         text = preprocesser.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
-        aspects_obtained = aspects_extractor.extract(text)
+        aspects_obtained, _ = aspects_extractor.extract(text)
         print aspects_obtained
         print aspects_expected
         self.assertEqual(aspects_obtained, aspects_expected)
@@ -35,7 +36,7 @@ class AspectExtractionTest(unittest.TestCase):
         raw_text = u'Angela Merkel is German, angela merkel is europe!'
         text = preprocesser.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
-        aspects_obtained = aspects_extractor.extract(text)
+        aspects_obtained, _ = aspects_extractor.extract(text)
         print aspects_obtained
         print aspects_expected
         self.assertEqual(aspects_obtained, aspects_expected)
@@ -43,11 +44,12 @@ class AspectExtractionTest(unittest.TestCase):
     def test_get_aspects_telecom_lower_cased(self):
         aspects_expected = [u'better plan', u'sprint', u'good plan']
         preprocesser = Preprocesser()
-        raw_text = u'i wonder if you can propose for me better plan and encourage me to not ' \
-                   u'leave for sprint i could get a better plan there'
+        raw_text = u'i wonder if you can propose for me better plan and ' \
+                   u'encourage me to not leave for sprint i could get a ' \
+                   u'better plan there'
         text = preprocesser.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
-        aspects_obtained = aspects_extractor.extract(text)
+        aspects_obtained, _ = aspects_extractor.extract(text)
         print aspects_obtained
         print aspects_expected
         self.assertEqual(aspects_obtained, aspects_expected)
