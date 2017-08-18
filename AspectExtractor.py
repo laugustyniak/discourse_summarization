@@ -9,7 +9,8 @@ class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
     def __init__(self, ner_types=None, aspects_to_skip=None,
-                 conceptnet_io=False, senticnet=False):
+                 conceptnet_io=False, senticnet=False,
+                 exact_match_concepts=False):
         """
         Initialize extractor aspect extractor.
 
@@ -32,7 +33,12 @@ class AspectExtractor(object):
         senticnet : bool
             Do we use sentic conceptnet based entities in aspect extraction
             procedure. By default False. We use sentic.net as data source here.
+
+        exact_match_concepts : bool
+            Do we want to find exactly same concepts? Otherwise we will get
+            all concepts with even substring of partname concept.
         """
+        self.exact_match_concepts = exact_match_concepts
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
         else:
@@ -89,6 +95,13 @@ class AspectExtractor(object):
         aspects : list
             List of extracted aspects.
 
+        concepts : dict of dicts
+            Dictionary with concept name and dict with concepts and semantically
+            related concepts from choosen conceptnet.
+            {'sentic':
+                {'screen': // concept part name
+                    {'screen': ['display', 'pixel', ...]}}
+
         """
         tokens = input_text['tokens']
         aspect_sequence = []
@@ -112,12 +125,12 @@ class AspectExtractor(object):
 
             # jesli jest ciekawy (przymiotnik, przysłówek, liczba)
             # i jest potencjalnym elementem sekwencji - dodajemy
-            elif self._is_interesting_addition(token) and (
-                        (idx + 1 < len(tokens)
-                         and self._is_interesting_addition(tokens[idx + 1]))
-                    or (idx + 1 == len(tokens))):
-                if not token['is_stop']:
-                    aspect_sequence.append(token['lemma'])
+            # elif self._is_interesting_addition(token) and (
+            #             (idx + 1 < len(tokens)
+            #              and self._is_interesting_addition(tokens[idx + 1]))
+            #         or (idx + 1 == len(tokens))):
+            #     if not token['is_stop']:
+            #         aspect_sequence.append(token['lemma'])
             else:
                 # akceptujemy sekwencje, jesli byl w niej element główny
                 if aspect_sequence_enabled and aspect_sequence_main_encountered:
@@ -136,17 +149,22 @@ class AspectExtractor(object):
         if self.senticnet:
             # todo: how deal with several concepts for specific aspect?
             sentic = Sentic()
-            concept_aspects = {}
+            # dict with concepts and related concepts
+            concept_aspects_ = {}
             for asp in aspects:
+                # ngram concepts are concatenated with _ in senticnet
                 asp = asp.replace(' ', '_')
-                concept_aspects[asp] = \
-                    sentic.get_semantic_concept_by_concept(asp)
+                concept_aspects_[asp] = \
+                    sentic.get_semantic_concept_by_concept(asp,
+                                                           self.exact_match_concepts)
+            # save conceptnet name
+            concept_aspects = {'sentic': concept_aspects_}
 
         # 4. ConceptNet.io
         if self.conceptnet_io:
             # todo: impl
-            # lista aspektów
-            pass
+            concept_aspects_ = {}
+            concept_aspects = {'conceptnet_io': concept_aspects_}
 
         # nie wiem czemu puste wartosci leca - odfiltrowujemy
         # lower case every aspect and only longer than 1

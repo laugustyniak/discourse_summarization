@@ -5,7 +5,6 @@ from Preprocesser import Preprocesser
 
 
 class AspectExtractionTest(unittest.TestCase):
-
     def test_get_aspects_nouns(self):
         aspects_expected = [u'car', u'phone']
         preprocesser = Preprocesser()
@@ -53,3 +52,16 @@ class AspectExtractionTest(unittest.TestCase):
         print aspects_obtained
         print aspects_expected
         self.assertEqual(aspects_obtained, aspects_expected)
+
+    def test_sentic_concept_extraction(self):
+        concept = 'screen'
+
+        preprocesser = Preprocesser()
+        raw_text = u'i wonder if you can propose for me better screen'
+        text = preprocesser.preprocess(raw_text)
+        aspects_extractor = AspectExtractor(senticnet=True,
+                                            exact_match_concepts=True)
+        _, concepts_obtained = aspects_extractor.extract(text)
+        self.assertTrue(
+            [True for c in concepts_obtained['sentic'].keys() if c == concept])
+        self.assertEquals(len(concepts_obtained['sentic'][concept][concept]), 5)
