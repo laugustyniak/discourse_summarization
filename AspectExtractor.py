@@ -3,13 +3,16 @@
 # update: Lukasz Augustyniak
 
 from aspects.conceptnets import Sentic
+from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
+    SENTIC_EXACT_MATCH_CONCEPTS
+from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS, \
+    CONCEPTNET_EXACT_MATCH_CONCEPTS
 
 
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types=None, aspects_to_skip=None,
-                 conceptnet_io=False, senticnet=False):
+    def __init__(self, ner_types=None, aspects_to_skip=None):
         """
         Initialize extractor aspect extractor.
 
@@ -23,19 +26,6 @@ class AspectExtractor(object):
 
         aspects_to_skip : list
             List of aspects that should be removed.
-
-        conceptnet_io : bool
-            Do we use ConceptNet based entities in aspect extraction procedure.
-            By default False.
-            We use conceptnet.io as data source here.
-
-        senticnet : bool
-            Do we use sentic conceptnet based entities in aspect extraction
-            procedure. By default False. We use sentic.net as data source here.
-
-        exact_match_concepts : bool
-            Do we want to find exactly same concepts? Otherwise we will get
-            all concepts with even substring of partname concept.
         """
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
@@ -65,8 +55,6 @@ class AspectExtractor(object):
                               u'PRODUCT', u'FAC', u'LOC']
         else:
             self.ner_types = ner_types
-        self.conceptnet_io = conceptnet_io
-        self.senticnet = senticnet
 
     def _is_interesting_main(self, token):
         return token['pos'] == 'NOUN'
@@ -144,8 +132,7 @@ class AspectExtractor(object):
             aspects.append(' '.join(aspect_sequence))
 
         # 3. senticnet
-        if self.senticnet:
-            # todo: how deal with several concepts for specific aspect?
+        if SENTIC_ASPECTS:
             sentic = Sentic()
             # dict with concepts and related concepts
             concept_aspects_ = {}
@@ -153,15 +140,15 @@ class AspectExtractor(object):
                 asp = asp.replace(' ', '_')
                 concept_aspects_[asp] = \
                     sentic.get_semantic_concept_by_concept(asp,
-                                                           self.exact_match_concepts)
+                                                           SENTIC_EXACT_MATCH_CONCEPTS)
             # save conceptnet name
-            concept_aspects = {'sentic': concept_aspects_}
+            concept_aspects['sentic'] = concept_aspects_
 
         # 4. ConceptNet.io
-        if self.conceptnet_io:
+        if CONCEPTNET_ASPECTS:
             # todo: impl
             concept_aspects_ = {}
-            concept_aspects = {'conceptnet_io': concept_aspects_}
+            concept_aspects['conceptnet_io'] = concept_aspects_
 
         # nie wiem czemu puste wartosci leca - odfiltrowujemy
         # lower case every aspect and only longer than 1

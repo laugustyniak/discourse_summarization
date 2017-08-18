@@ -6,7 +6,6 @@ __pycache__/
 texts/*
 results/*
 .idea/
-aspects/
 results/
 .ipynb_checkpoints/
 notebooks/trees/
