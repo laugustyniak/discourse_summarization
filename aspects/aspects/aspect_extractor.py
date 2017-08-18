@@ -2,11 +2,10 @@
 # author: Krzysztof xaru Rajda
 # update: Lukasz Augustyniak
 
-from aspects.conceptnets import Sentic
+from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
     SENTIC_EXACT_MATCH_CONCEPTS
-from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS, \
-    CONCEPTNET_EXACT_MATCH_CONCEPTS
+from aspects.enrichments.conceptnets import Sentic
 
 
 class AspectExtractor(object):

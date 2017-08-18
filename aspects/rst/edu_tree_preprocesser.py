@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
 
-from Preprocesser import Preprocesser
-
-import sys
 import os
+import sys
+
+from aspects.preprocessing.preprocesser import Preprocesser
 
 sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
 from trees.parse_tree import ParseTree

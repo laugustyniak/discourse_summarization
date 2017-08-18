@@ -1,9 +1,8 @@
 import unittest
 
-from AspectExtractor import AspectExtractor
-from Preprocesser import Preprocesser
-
+from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS
+from aspects.preprocessing.preprocesser import Preprocesser
 
 
 class AspectExtractionTest(unittest.TestCase):

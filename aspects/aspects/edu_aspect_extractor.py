@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
 
-from AspectExtractor import AspectExtractor
+from aspects.aspects.aspect_extractor import AspectExtractor
 
 
 class EDUAspectExtractor(object):

@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
 import argparse
+import logging
 import pickle
 import shutil
 import sys
-import logging
 from datetime import datetime
+from os import makedirs, listdir, getcwd
 from os.path import basename, exists, join, split, splitext, dirname
 from time import time
 
 import simplejson
 from joblib import Parallel
 from joblib import delayed
-from os import makedirs, listdir, getcwd
 
 sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
-from EDUTreePreprocesser import EDUTreePreprocesser
-from EDUAspectExtractor import EDUAspectExtractor
-from LogisticRegressionSentimentAnalyzer import \
+from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
+from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
+from aspects.sentiment.sentiment_analyzer import \
     LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
-from EDUTreeRulesExtractor import EDUTreeRulesExtractor
-from AspectsGraphBuilder import AspectsGraphBuilder
-from ResultsAnalyzer import ResultsAnalyzer
-from Serializer import Serializer
-from utils_multiprocess import batch_with_indexes
+from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
+from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
+from aspects.results.ResultsAnalyzer import ResultsAnalyzer
+from aspects.io.serializer import Serializer
+from aspects.utils.utils_multiprocess import batch_with_indexes
 
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
@@ -484,7 +484,7 @@ class AspectAnalysisSystem:
 
         measures = analyzer.getAnalyzisResults()
 
-        self.serializer.append(
+        self.serializer.append_serialized(
             ';'.join(str(x) for x in [threshold] + measures) + '\n',
             self.paths['results'])
 
