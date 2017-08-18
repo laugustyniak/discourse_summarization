@@ -9,8 +9,7 @@ class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
     def __init__(self, ner_types=None, aspects_to_skip=None,
-                 conceptnet_io=False, senticnet=False,
-                 exact_match_concepts=False):
+                 conceptnet_io=False, senticnet=False):
         """
         Initialize extractor aspect extractor.
 
@@ -38,7 +37,6 @@ class AspectExtractor(object):
             Do we want to find exactly same concepts? Otherwise we will get
             all concepts with even substring of partname concept.
         """
-        self.exact_match_concepts = exact_match_concepts
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
         else:
@@ -152,7 +150,6 @@ class AspectExtractor(object):
             # dict with concepts and related concepts
             concept_aspects_ = {}
             for asp in aspects:
-                # ngram concepts are concatenated with _ in senticnet
                 asp = asp.replace(' ', '_')
                 concept_aspects_[asp] = \
                     sentic.get_semantic_concept_by_concept(asp,
