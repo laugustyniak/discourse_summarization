@@ -9,3 +9,6 @@ SENTIC_EXACT_MATCH_CONCEPTS = True
 # We use conceptnet.io as data source here.
 CONCEPTNET_ASPECTS = True
 CONCEPTNET_EXACT_MATCH_CONCEPTS = True
+CONCEPTNET_URL = 'http://api.conceptnet.io/c/en/'
+CONCEPTNET_RELATIONS = ['LocatedNear', 'HasA', 'PartOf', 'MadeOf', 'IsA',
+                        'InheritsFrom']

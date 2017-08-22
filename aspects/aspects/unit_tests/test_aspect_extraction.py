@@ -1,7 +1,8 @@
 import unittest
 
 from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.configs.conceptnets_config import SENTIC_ASPECTS
+from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
+    CONCEPTNET_ASPECTS
 from aspects.preprocessing.preprocesser import Preprocesser
 
 
@@ -59,3 +60,24 @@ class AspectExtractionTest(unittest.TestCase):
                     'sentic'].keys() else False)
             self.assertEquals(
                 len(concepts_obtained['sentic'][concept][concept]), 5)
+
+    def test_conceptnet_io_concept_extraction(self):
+        concept = 'screen'
+        preprocesser = Preprocesser()
+        raw_text = u'i wonder if you can propose for me better screen'
+        text = preprocesser.preprocess(raw_text)
+        if CONCEPTNET_ASPECTS:
+            aspects_extractor = AspectExtractor()
+            _, concepts_obtained = aspects_extractor.extract(text)
+            concepts = concepts_obtained['conceptnet_io'][concept]
+
+            self.assertTrue(
+                True if concept in concepts_obtained[
+                    'conceptnet_io'].keys() else False)
+            # get at least one concept
+            self.assertGreater(len(concepts), 0)
+            # check if all keys in dictionary are in dict with concepts,
+            # keys like in ConceptNet: start, end, relation
+            for k in ['start', 'end', 'relation']:
+                self.assertTrue(
+                    True if k in concepts[0].keys() else False)

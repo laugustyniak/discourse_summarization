@@ -2,9 +2,11 @@
 # author: Krzysztof xaru Rajda
 # update: Lukasz Augustyniak
 
+import requests
+
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
-    SENTIC_EXACT_MATCH_CONCEPTS
+    SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS
 from aspects.enrichments.conceptnets import Sentic
 
 
@@ -94,6 +96,7 @@ class AspectExtractor(object):
         aspect_sequence_enabled = False
         concept_aspects = {}
 
+        # todo add config with NER flag
         # 1. look for NER examples
         # aspects = [ent.text for ent in tokens.ents
         # if ent.label_ in self.ner_types]
@@ -107,15 +110,6 @@ class AspectExtractor(object):
                     aspect_sequence.append(token['lemma'])
                 aspect_sequence_enabled = True
                 aspect_sequence_main_encountered = True
-
-            # jesli jest ciekawy (przymiotnik, przysłówek, liczba)
-            # i jest potencjalnym elementem sekwencji - dodajemy
-            # elif self._is_interesting_addition(token) and (
-            #             (idx + 1 < len(tokens)
-            #              and self._is_interesting_addition(tokens[idx + 1]))
-            #         or (idx + 1 == len(tokens))):
-            #     if not token['is_stop']:
-            #         aspect_sequence.append(token['lemma'])
             else:
                 # akceptujemy sekwencje, jesli byl w niej element główny
                 if aspect_sequence_enabled and aspect_sequence_main_encountered:
@@ -129,6 +123,10 @@ class AspectExtractor(object):
         # dodajemy ostatnią sekwencje
         if aspect_sequence_enabled and aspect_sequence_main_encountered:
             aspects.append(' '.join(aspect_sequence))
+
+        # lower case every aspect and only longer than 1
+        aspects = [x.strip().lower() for x in aspects
+                   if x not in self.aspects_to_skip and x != '']
 
         # 3. senticnet
         if SENTIC_ASPECTS:
@@ -145,13 +143,17 @@ class AspectExtractor(object):
 
         # 4. ConceptNet.io
         if CONCEPTNET_ASPECTS:
-            # todo: impl
             concept_aspects_ = {}
+            for asp in aspects:
+                concept_aspects_[asp] = []
+                cn_edges = requests.get(CONCEPTNET_URL + asp).json()['edges']
+                for edge in cn_edges:
+                    relation = edge['rel']['label']
+                    if relation in CONCEPTNET_RELATIONS:
+                        concept_aspects_[asp].append(
+                            {'start': edge['start']['label'],
+                             'end': edge['end']['label'],
+                             'relation': relation})
             concept_aspects['conceptnet_io'] = concept_aspects_
-
-        # nie wiem czemu puste wartosci leca - odfiltrowujemy
-        # lower case every aspect and only longer than 1
-        aspects = [x.strip().lower() for x in aspects
-                   if x not in self.aspects_to_skip]
 
         return aspects, concept_aspects
