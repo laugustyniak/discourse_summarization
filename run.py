@@ -14,8 +14,6 @@ import simplejson
 from joblib import Parallel
 from joblib import delayed
 
-sys.path.append('edu_dependency_parser/src/')
-from parse import DiscourseParser
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.sentiment.sentiment_analyzer import \
@@ -25,6 +23,9 @@ from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.results_analysis.results_analyzer import ResultsAnalyzer
 from aspects.io.serializer import Serializer
 from aspects.utils.utils_multiprocess import batch_with_indexes
+
+sys.path.append('edu_dependency_parser/src/')
+from parse import DiscourseParser
 
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
