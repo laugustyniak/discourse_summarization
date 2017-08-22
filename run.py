@@ -322,15 +322,18 @@ class AspectAnalysisSystem:
             edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
             documents_info = self.serializer.load(self.paths['documents_info'])
             n_edus = len(edus)
+            max_edu_id = max(documents_info.keys())
 
-            logging.info('# of document info objects: {}'.format(n_edus))
+            logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
+            # fixme !!! zapisywanie co jakis czas, bo kiedy wypierdzieli cos
+            # to od nowa będzie trzeba jechać z API conceptnet
             for eduid, edu in edus.iteritems():
                 aspects, aspect_concepts = extractor.extract(edu)
 
                 aspects_per_edu[eduid] = aspects
                 logging.debug(
-                    '{}/{} aspects: {}'.format(eduid, n_edus, aspects))
+                    '{}/{} aspects: {}'.format(eduid, max_edu_id, aspects))
 
                 if 'aspects' not in documents_info[edu['source_document_id']]:
                     documents_info[edu['source_document_id']]['aspects'] = []

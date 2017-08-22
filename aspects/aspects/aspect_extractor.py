@@ -45,7 +45,7 @@ class AspectExtractor(object):
                                     u'september', u'october',
                                     u'november', u'december',
                                     u'end',
-                                    u'',
+                                    u'', u't',
                                     u'noise',
                                     u'customer', u'agent',
                                     u'unk',
@@ -126,7 +126,7 @@ class AspectExtractor(object):
 
         # lower case every aspect and only longer than 1
         aspects = [x.strip().lower() for x in aspects
-                   if x not in self.aspects_to_skip and x != '']
+                   if x not in self.aspects_to_skip and x != '' and len(x) > 1]
 
         # 3. senticnet
         if SENTIC_ASPECTS:
@@ -151,8 +151,8 @@ class AspectExtractor(object):
                     relation = edge['rel']['label']
                     if relation in CONCEPTNET_RELATIONS:
                         concept_aspects_[asp].append(
-                            {'start': edge['start']['label'],
-                             'end': edge['end']['label'],
+                            {'start': edge['start']['label'].lower(),
+                             'end': edge['end']['label'].lower(),
                              'relation': relation})
             concept_aspects['conceptnet_io'] = concept_aspects_
 
