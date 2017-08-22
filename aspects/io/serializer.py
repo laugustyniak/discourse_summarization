@@ -7,8 +7,11 @@ class Serializer(object):
 
     def load(self, filepath):
         """Load serialized data"""
-        with open(filepath, "rb") as fo:
-            return cPickle.load(fo)
+        try:
+            with open(filepath, "rb") as fo:
+                return cPickle.load(fo)
+        except IOError as err:
+            print('Error {}'.format(str(err)))
 
     def save(self, data, filename):
         """Save serialized data"""
