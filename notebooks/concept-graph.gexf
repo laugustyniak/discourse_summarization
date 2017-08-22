@@ -1,0 +1,427 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf version="1.1" xmlns="http://www.gexf.net/1.1draft" xmlns:viz="http://www.gexf.net/1.1draft/viz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3.org/2001/XMLSchema-instance">
+  <graph defaultedgetype="directed" mode="static">
+    <attributes class="edge" mode="static">
+      <attribute id="0" title="relation" type="string" />
+    </attributes>
+    <nodes>
+      <node id="blind" label="blind" />
+      <node id="a tool for taking pictures" label="a tool for taking pictures" />
+      <node id="diaphragm" label="diaphragm" />
+      <node id="communication" label="communication" />
+      <node id="reflex camera" label="reflex camera" />
+      <node id="elevator operator" label="elevator operator" />
+      <node id="speculator" label="speculator" />
+      <node id="Camera" label="Camera" />
+      <node id="operator" label="operator" />
+      <node id="radio beacon" label="radio beacon" />
+      <node id="box camera" label="box camera" />
+      <node id="bugle call" label="bugle call" />
+      <node id="recording" label="recording" />
+      <node id="indicator" label="indicator" />
+      <node id="jockey" label="jockey" />
+      <node id="drumbeat" label="drumbeat" />
+      <node id="dog-ear" label="dog-ear" />
+      <node id="linear operator" label="linear operator" />
+      <node id="motorman" label="motorman" />
+      <node id="electricity" label="electricity" />
+      <node id="hoister" label="hoister" />
+      <node id="computer screen" label="computer screen" />
+      <node id="distress signal" label="distress signal" />
+      <node id="camouflage" label="camouflage" />
+      <node id="candid camera" label="candid camera" />
+      <node id="output signal" label="output signal" />
+      <node id="camera" label="camera" />
+      <node id="identity" label="identity" />
+      <node id="aperture" label="aperture" />
+      <node id="motion-picture camera" label="motion-picture camera" />
+      <node id="curfew" label="curfew" />
+      <node id="analyze" label="analyze" />
+      <node id="camera lens" label="camera lens" />
+      <node id="fire screen" label="fire screen" />
+      <node id="photographic equipment" label="photographic equipment" />
+      <node id="company operator" label="company operator" />
+      <node id="animal communication" label="animal communication" />
+      <node id="supermarketer" label="supermarketer" />
+      <node id="radio operator" label="radio operator" />
+      <node id="purdah" label="purdah" />
+      <node id="screen" label="screen" />
+      <node id="phone number" label="phone number" />
+      <node id="driver" label="driver" />
+      <node id="mapping" label="mapping" />
+      <node id="A camera" label="A camera" />
+      <node id="radio beam" label="radio beam" />
+      <node id="phone" label="phone" />
+      <node id="all clear" label="all clear" />
+      <node id="flash camera" label="flash camera" />
+      <node id="mosquito net" label="mosquito net" />
+      <node id="surface" label="surface" />
+      <node id="background" label="background" />
+      <node id="interrupt" label="interrupt" />
+      <node id="portrait camera" label="portrait camera" />
+      <node id="consonant" label="consonant" />
+      <node id="engineer" label="engineer" />
+      <node id="causal agent" label="causal agent" />
+      <node id="retreat" label="retreat" />
+      <node id="orinasal phone" label="orinasal phone" />
+      <node id="input signal" label="input signal" />
+      <node id="delayed action" label="delayed action" />
+      <node id="covering" label="covering" />
+      <node id="altarpiece" label="altarpiece" />
+      <node id="signal" label="signal" />
+      <node id="partition" label="partition" />
+      <node id="a flash" label="a flash" />
+      <node id="switchman" label="switchman" />
+      <node id="point-and-shoot camera" label="point-and-shoot camera" />
+      <node id="finder" label="finder" />
+      <node id="telegrapher" label="telegrapher" />
+      <node id="protective covering" label="protective covering" />
+      <node id="businessman" label="businessman" />
+      <node id="display" label="display" />
+      <node id="high sign" label="high sign" />
+      <node id="rood screen" label="rood screen" />
+    </nodes>
+    <edges>
+      <edge id="0" source="blind" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="1" source="diaphragm" target="camera">
+        <attvalues>
+          <attvalue for="0" value="PartOf" />
+        </attvalues>
+      </edge>
+      <edge id="2" source="reflex camera" target="camera">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="3" source="elevator operator" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="4" source="Camera" target="a flash">
+        <attvalues>
+          <attvalue for="0" value="HasA" />
+        </attvalues>
+      </edge>
+      <edge id="5" source="operator" target="speculator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="6" source="operator" target="businessman">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="7" source="operator" target="causal agent">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="8" source="operator" target="mapping">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="9" source="radio beacon" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="10" source="box camera" target="camera">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="11" source="bugle call" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="12" source="recording" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="13" source="indicator" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="14" source="jockey" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="15" source="drumbeat" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="16" source="dog-ear" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="17" source="linear operator" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="18" source="motorman" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="19" source="hoister" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="20" source="computer screen" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="21" source="distress signal" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="22" source="camouflage" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="23" source="candid camera" target="camera">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="24" source="output signal" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="25" source="camera" target="photographic equipment">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="26" source="identity" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="27" source="aperture" target="camera">
+        <attvalues>
+          <attvalue for="0" value="PartOf" />
+        </attvalues>
+      </edge>
+      <edge id="28" source="motion-picture camera" target="camera">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="29" source="curfew" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="30" source="camera lens" target="camera">
+        <attvalues>
+          <attvalue for="0" value="PartOf" />
+        </attvalues>
+      </edge>
+      <edge id="31" source="fire screen" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="32" source="company operator" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="33" source="animal communication" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="34" source="supermarketer" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="35" source="radio operator" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="36" source="purdah" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="37" source="screen" target="covering">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="38" source="screen" target="partition">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="39" source="screen" target="surface">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="40" source="screen" target="protective covering">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="41" source="screen" target="analyze">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="42" source="screen" target="display">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="43" source="phone number" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="44" source="driver" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="45" source="A camera" target="a tool for taking pictures">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="46" source="radio beam" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="47" source="all clear" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="48" source="flash camera" target="camera">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="49" source="mosquito net" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="50" source="background" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="51" source="interrupt" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="52" source="portrait camera" target="camera">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="53" source="consonant" target="phone">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="54" source="engineer" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="55" source="retreat" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="56" source="orinasal phone" target="phone">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="57" source="input signal" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="58" source="delayed action" target="camera">
+        <attvalues>
+          <attvalue for="0" value="PartOf" />
+        </attvalues>
+      </edge>
+      <edge id="59" source="altarpiece" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="60" source="signal" target="electricity">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="61" source="signal" target="communication">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="62" source="switchman" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="63" source="point-and-shoot camera" target="camera">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="64" source="finder" target="camera">
+        <attvalues>
+          <attvalue for="0" value="PartOf" />
+        </attvalues>
+      </edge>
+      <edge id="65" source="telegrapher" target="operator">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="66" source="high sign" target="signal">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+      <edge id="67" source="rood screen" target="screen">
+        <attvalues>
+          <attvalue for="0" value="IsA" />
+        </attvalues>
+      </edge>
+    </edges>
+  </graph>
+</gexf>

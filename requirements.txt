@@ -1,15 +1,3 @@
-joblib>=0.9.4
-networkx>=1.11
-nose>=1.3.7
-numpy>=1.10.4
-pandas>=0.20.3
-pathlib>=1.0.1
-Pillow>=4.2.1
-plotly==1.12.2
-scikit-learn>=0.18.2
-scipy>=0.13.3
-seaborn==0.7.1
-simplejson==3.8.2
-six>=1.10.0
-spacy>=1.8.2
-wordcloud>=1.3.1
+version https://git-lfs.github.com/spec/v1
+oid sha256:53a4b35aff31ced55039ebbecbc10a95d06f80e8c7208c37ccc25e7ddd6ad1f7
+size 241
