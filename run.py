@@ -57,7 +57,6 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
                 skipped += 1
             else:
                 if parser is None:
-                    # parser = DiscourseParser(output_dir=edu_trees_dir)
                     parser = DiscourseParser(output_dir=edu_trees_dir,
                                              # verbose=True,
                                              # skip_parsing=True,
@@ -241,42 +240,11 @@ class AspectAnalysisSystem:
             for docs_id_range, l in
             batch_with_indexes(range(documents_count), batch_size))
 
-    # for documentId in range(0, documentsCount):
-    # 	logging.debug('__performEDUParsing documentId: {}'.format(documentId))
-    # 	EDUTreePath = self.paths['edu_trees_dir'] + str(
-    # 		documentId) + '.tree'
-    #
-    # 	if os.path.exists(EDUTreePath):
-    # 		print 'EDU Tree Already exists: {}'.format(EDUTreePath)
-    # 		skipped += 1
-    # 	else:
-    # 		if parser is None:
-    # 			parser = DiscourseParser(
-    # 				output_dir=self.paths['edu_trees_dir'])
-    #
-    # 		documentPath = self.paths['extracted_documents_dir'] + str(
-    # 			documentId)
-    # 		parser.parse(documentPath)
-    #
-    # 		processed += 1
-
-    # if parser is not None:
-    # 	parser.unload()
-
-    # return processed, skipped
-
-    #
-    #   Preprocessing danych - oddzielanie zalezno�ci EDU od tekstu
-    #
     def _perform_edu_preprocessing(self, documents_count):
 
         if not exists(self.paths['raw_edu_list']):
             preprocesser = EDUTreePreprocesser()
 
-            # Parallel(n_jobs=self.jobs)(
-            # 	delayed(self.__performEDUPreprocessing_multiprocess())
-            # (preprocesser, docs_id_range)	for docs_id_range, in
-            # batch_with_indexes(range(documentsCount), self.jobs))
             for document_id in range(0, documents_count):
                 try:
                     if not document_id % self.n_loger:
@@ -298,24 +266,8 @@ class AspectAnalysisSystem:
             edu_list = preprocesser.getPreprocessedEdusList()
             self.serializer.save(edu_list, self.paths['raw_edu_list'])
 
-    # def __performEDUPreprocessing_multiprocess(self, preprocesser,
-    # docs_id_range):
-    #
-    # 	for document_id in range(docs_id_range[0], docs_id_range[1]):
-    # 		logging.debug(
-    # 			'__performEDUPreprocessing documentId: {}'.format(document_id))
-    # 		tree = self.serializer.load(self.paths['edu_trees_dir'] + str(
-    # 			document_id) + '.tree.ser')
-    #
-    # 		preprocesser.processTree(tree, document_id)
-    #
-    # 		self.serializer.save(tree, self.paths['link_trees_dir'] + str(
-    # 			document_id))
-
-    #
-    #   Analiza sentymentu EDU i odsianie niesentymentalnych
-    #
     def _filter_edu_by_sentiment(self):
+        """Filter out EDUs without sentiment, with neutral sentiment too"""
 
         if not (exists(self.paths['sentiment_filtered_edus'])
                 and exists(self.paths['documents_info'])):
@@ -341,7 +293,8 @@ class AspectAnalysisSystem:
                     documents_info[edu['source_document_id']] = {
                         'sentiment': [],
                         'EDUs': [],
-                        'accepted_edus': []}
+                        'accepted_edus': [],
+                        'aspect_concepts': {}}
 
                 documents_info[edu['source_document_id']]['sentiment'].append(
                     sentiment)
@@ -361,42 +314,43 @@ class AspectAnalysisSystem:
     def _extract_aspects_from_edu(self):
         """ extract aspects from EDU and serialize them """
         if not exists(self.paths['aspects_per_edu']):
+            aspects_per_edu = {}
+            extractor = EDUAspectExtractor()
 
             # edus = self.serializer.load(self.paths['raw_edu_list'])
             edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
             documents_info = self.serializer.load(self.paths['documents_info'])
+            n_edus = len(edus)
 
-            aspects_per_edu = {}
-            aspect_concepts_per_edu = {}
+            logging.info('# of document info objects: {}'.format(n_edus))
 
-            extractor = EDUAspectExtractor()
+            for eduid, edu in edus.iteritems():
+                aspects, aspect_concepts = extractor.extract(edu)
 
-            for EDUId, EDU in edus.iteritems():
-                aspects, aspect_concepts = extractor.extract(EDU)
-                aspects_per_edu[EDUId] = aspects
-                aspect_concepts_per_edu[EDUId] = aspect_concepts
-                # logging.debug('Aspect: {}'.format(aspects))
+                aspects_per_edu[eduid] = aspects
+                logging.debug(
+                    '{}/{} aspects: {}'.format(eduid, n_edus, aspects))
 
-                # if not 'aspects' in documents_info[EDU['source_document_id']]:
-                if 'aspects' not in documents_info[EDU['source_document_id']]:
-                    documents_info[EDU['source_document_id']]['aspects'] = []
-                    documents_info[EDU['source_document_id']][
-                        'aspect_concepts'] = []
+                if 'aspects' not in documents_info[edu['source_document_id']]:
+                    documents_info[edu['source_document_id']]['aspects'] = []
 
-                documents_info[EDU['source_document_id']][
+                documents_info[edu['source_document_id']][
                     'aspects'] = extractor.get_aspects_in_document(
-                    documents_info[EDU['source_document_id']]['aspects'],
-                    aspects_per_edu[EDUId])
+                    documents_info[edu['source_document_id']]['aspects'],
+                    aspects_per_edu[eduid])
+
+                documents_info[edu['source_document_id']][
+                    'aspect_concepts'] = aspect_concepts
 
             self.serializer.save(aspects_per_edu, self.paths['aspects_per_edu'])
             self.serializer.save(documents_info, self.paths['documents_info'])
 
-    # todo: unnecessary parameter?
     def _extract_edu_dependency_rules(self):
-        """Ekstrakcja reguł asocjacyjnych z drzewa zaleznosci EDU"""
+        """Extract association rules to RST trees"""
 
         if not exists(self.paths['edu_dependency_rules']):
 
+            link_tree = None
             rules_extractor = EDUTreeRulesExtractor()
             rules = []
 
@@ -514,7 +468,7 @@ class AspectAnalysisSystem:
 
         logging.info("EDU segmentation and dependency parsing documents "
                      "from input file in {:.2f} seconds.".format(
-                        timer_end - timer_start))
+            timer_end - timer_start))
 
         # process EDU based on rhetorical trees
         logging.info('--------------------------------------')
