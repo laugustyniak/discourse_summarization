@@ -36,7 +36,7 @@ class Preprocesser(object):
         # zapisanie wyników dla każdego tokena tekstu
         for idx, token in enumerate(doc):
             # skip tokens with length lower than 2
-            if len(token.string) > 1:
+            if len(token.string.strip()) > 1:
                 token_info = {'text': token.orth_, 'pos': token.pos_,
                               'lemma': token.lemma_, 'is_stop': token.is_stop}
                 result['tokens'].append(token_info)

@@ -36,6 +36,15 @@ class AspectExtractionTest(unittest.TestCase):
         aspects_obtained, _ = aspects_extractor.extract(text)
         self.assertEqual(aspects_obtained, aspects_expected)
 
+    def test_1_char_aspects_and_donts(self):
+        aspects_expected = []
+        preprocesser = Preprocesser()
+        raw_text = u'I don\'t like it, it is not, do not'
+        text = preprocesser.preprocess(raw_text)
+        aspects_extractor = AspectExtractor()
+        aspects_obtained, _ = aspects_extractor.extract(text)
+        self.assertEqual(aspects_obtained, aspects_expected)
+
     def test_get_aspects_telecom_lower_cased(self):
         aspects_expected = [u'plan', u'sprint']
         preprocesser = Preprocesser()

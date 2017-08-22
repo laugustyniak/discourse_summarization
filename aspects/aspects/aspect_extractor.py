@@ -105,7 +105,7 @@ class AspectExtractor(object):
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
             # jesli jest główny (rzeczownik) - akceptujemy od razu
-            if self._is_interesting_main(token):
+            if self._is_interesting_main(token) and len(token) > 1:
                 if not token['is_stop']:
                     aspect_sequence.append(token['lemma'])
                 aspect_sequence_enabled = True
@@ -126,7 +126,7 @@ class AspectExtractor(object):
 
         # lower case every aspect and only longer than 1
         aspects = [x.strip().lower() for x in aspects
-                   if x not in self.aspects_to_skip and x != '' and len(x) > 1]
+                   if x not in self.aspects_to_skip and x != '']
 
         # 3. senticnet
         if SENTIC_ASPECTS:
