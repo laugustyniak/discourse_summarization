@@ -1,28 +1,23 @@
-'''
+"""
 Created on 2014-01-17
 
 @author: Vanessa Wei Feng
 @upgrade: Krzysztof xaru Rajda
-'''
+"""
 
-from segmenters.crf_segmenter import CRFSegmenter
-from treebuilder.build_tree_CRF import CRFTreeBuilder
+import os.path
+import traceback
 
 import paths
-import os.path
-import sys
+import utils.serialize
 from document.doc import Document
-import time
-import traceback
-from datetime import datetime
+from prep.preprocesser import Preprocesser
+from segmenters.crf_segmenter import CRFSegmenter
+from treebuilder.build_tree_CRF import CRFTreeBuilder
 from trees.parse_tree import ParseTree
 
-from prep.preprocesser import Preprocesser
 
-import utils.serialize
-
-
-class DiscourseParser():
+class DiscourseParser(object):
     def __init__(self, output_dir=None, verbose=False,
                  skip_parsing=False, global_features=False,
                  save_preprocessed_doc=False, preprocesser=None):
