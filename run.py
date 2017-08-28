@@ -280,14 +280,12 @@ class AspectAnalysisSystem:
 
             edu_list = list(
                 self.serializer.load(self.paths['raw_edu_list']).values())
-            # logging.debug('edu List: {}'.format(edu_list))
-            # pprint(edu_list)
             filtered_edus = {}
             documents_info = {}
 
             for edu_id, edu in enumerate(edu_list):
                 edu['sentiment'] = []
-                # logging.debug('edu: {}'.format(edu))
+                logging.debug('edu: {}'.format(edu))
                 sentiment = analyzer.analyze(edu['raw_text'])[0]
 
                 if not edu['source_document_id'] in documents_info:
