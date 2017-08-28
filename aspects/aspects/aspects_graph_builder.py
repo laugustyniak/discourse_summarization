@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
 import logging
-import sys
 
-import networkx as nx
 from collections import OrderedDict
 from operator import itemgetter
+
+import networkx as nx
 
 log = logging.getLogger(__name__)
 
