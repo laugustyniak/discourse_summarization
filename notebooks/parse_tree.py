@@ -4,7 +4,7 @@ import sys
 from glob import glob
 from os.path import basename, join
 
-from aspects.utils.utils import load_serialized
+from aspects.utilities.transformations import load_serialized
 
 sys.path.append("../edu_dependency_parser/src")
 from trees.parse_tree import ParseTree
