@@ -280,14 +280,12 @@ class AspectAnalysisSystem:
 
             edu_list = list(
                 self.serializer.load(self.paths['raw_edu_list']).values())
-            # logging.debug('edu List: {}'.format(edu_list))
-            # pprint(edu_list)
             filtered_edus = {}
             documents_info = {}
 
             for edu_id, edu in enumerate(edu_list):
                 edu['sentiment'] = []
-                # logging.debug('edu: {}'.format(edu))
+                logging.debug('edu: {}'.format(edu))
                 sentiment = analyzer.analyze(edu['raw_text'])[0]
 
                 if not edu['source_document_id'] in documents_info:
@@ -295,7 +293,8 @@ class AspectAnalysisSystem:
                         'sentiment': [],
                         'EDUs': [],
                         'accepted_edus': [],
-                        'aspect_concepts': {}}
+                        'aspect_concepts': {},
+                        'aspect_keywords': {}}
 
                 documents_info[edu['source_document_id']]['sentiment'].append(
                     sentiment)
@@ -329,7 +328,8 @@ class AspectAnalysisSystem:
             # fixme !!! zapisywanie co jakis czas, bo kiedy wypierdzieli cos
             # to od nowa będzie trzeba jechać z API conceptnet
             for eduid, edu in edus.iteritems():
-                aspects, aspect_concepts = extractor.extract(edu)
+                aspects, aspect_concepts, aspect_keywords = extractor.extract(
+                    edu)
 
                 aspects_per_edu[eduid] = aspects
                 logging.debug(
@@ -345,6 +345,8 @@ class AspectAnalysisSystem:
 
                 documents_info[edu['source_document_id']][
                     'aspect_concepts'] = aspect_concepts
+                documents_info[edu['source_document_id']][
+                    'aspect_keywords'] = aspect_keywords
 
             self.serializer.save(aspects_per_edu, self.paths['aspects_per_edu'])
             self.serializer.save(documents_info, self.paths['documents_info'])
