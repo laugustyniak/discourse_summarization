@@ -2,12 +2,17 @@
 # author: Krzysztof xaru Rajda
 # update: Lukasz Augustyniak
 
+import logging
 import requests
+
+import RAKE
 
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
     SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS
 from aspects.enrichments.conceptnets import Sentic
+
+log = logging.getLogger(__name__)
 
 
 class AspectExtractor(object):
@@ -50,12 +55,15 @@ class AspectExtractor(object):
                                     u'customer', u'agent',
                                     u'unk',
                                     u'password',
+                                    u'don',
                                     ]
         if ner_types is None:
             self.ner_types = [u'PERSON', u'GPE', u'ORG',
                               u'PRODUCT', u'FAC', u'LOC']
         else:
             self.ner_types = ner_types
+
+        self.Rake = RAKE.Rake(RAKE.SmartStopList())
 
     def _is_interesting_main(self, token):
         return token['pos'] == 'NOUN'
@@ -91,6 +99,7 @@ class AspectExtractor(object):
 
         """
         tokens = input_text['tokens']
+        text = input_text['raw_text']
         aspect_sequence = []
         aspect_sequence_main_encountered = False
         aspect_sequence_enabled = False
@@ -156,4 +165,10 @@ class AspectExtractor(object):
                              'relation': relation})
             concept_aspects['conceptnet_io'] = concept_aspects_
 
-        return aspects, concept_aspects
+        # 5. keyword extraction
+        if text:
+            keyword_aspects = {'rake': self.Rake.run(text)}
+        else:
+            keyword_aspects = {'rake': [(None, None)]}
+
+        return aspects, concept_aspects, keyword_aspects
