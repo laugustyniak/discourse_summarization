@@ -7,15 +7,7 @@ import networkx as nx
 from collections import OrderedDict
 from operator import itemgetter
 
-root = logging.getLogger()
-root.setLevel(logging.DEBUG)
-
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - '
-                              '%(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-root.addHandler(ch)
+log = logging.getLogger(__name__)
 
 
 class AspectsGraphBuilder(object):
@@ -43,7 +35,7 @@ class AspectsGraphBuilder(object):
         graph = nx.DiGraph()
 
         for rule_id, rule in enumerate(rules):
-            # logging.debug('Rule: {}'.format(rule))
+            log.debug('Rule: {}'.format(rule))
             left_node, right_node, relations = rule
 
             for id1, aspect_left in enumerate(aspects_per_edu[left_node]):
