@@ -321,7 +321,7 @@ class AspectAnalysisSystem:
             edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
             documents_info = self.serializer.load(self.paths['documents_info'])
             n_edus = len(edus)
-            max_edu_id = max(documents_info.keys())
+            max_edu_id = max(edus.keys())
 
             logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
