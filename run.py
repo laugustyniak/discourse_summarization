@@ -59,7 +59,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
             else:
                 if parser is None:
                     parser = DiscourseParser(output_dir=edu_trees_dir,
-                                             # verbose=True,
+                                             verbose=True,
                                              # skip_parsing=True,
                                              # global_features=True,
                                              # save_preprocessed_doc=True,
@@ -70,11 +70,10 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
 
                 if exists(document_path):
                     parser.parse(document_path)
-                    # raise
                 else:
                     logging.warning(
-                        'Document #{} does not exist! Skipping to next one.'.format(
-                            document_id))
+                        'Document #{} does not exist! Skipping '
+                        'to next one.'.format(document_id))
                     errors += 1
 
                 processed += 1
