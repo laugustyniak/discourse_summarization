@@ -9,7 +9,8 @@ import RAKE
 
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
-    SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS
+    SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS, \
+    CONCEPTNET_LANG
 from aspects.enrichments.conceptnets import Sentic
 
 log = logging.getLogger(__name__)
@@ -158,10 +159,15 @@ class AspectExtractor(object):
                 cn_edges = requests.get(CONCEPTNET_URL + asp).json()['edges']
                 for edge in cn_edges:
                     relation = edge['rel']['label']
-                    if relation in CONCEPTNET_RELATIONS:
+                    if relation in CONCEPTNET_RELATIONS \
+                            and (edge['start']['language'] == CONCEPTNET_LANG
+                                 and edge['end'][
+                                    'language'] == CONCEPTNET_LANG):
                         concept_aspects_[asp].append(
                             {'start': edge['start']['label'].lower(),
+                             'start-lang': edge['start']['language'],
                              'end': edge['end']['label'].lower(),
+                             'end-lang': edge['end']['language'],
                              'relation': relation})
             concept_aspects['conceptnet_io'] = concept_aspects_
 
