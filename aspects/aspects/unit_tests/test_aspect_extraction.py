@@ -105,6 +105,20 @@ class AspectExtractionTest(unittest.TestCase):
                 self.assertEqual(True, CONCEPTNET_LANG == c['start-lang'])
                 self.assertEqual(True, CONCEPTNET_LANG == c['end-lang'])
 
+    def test_conceptnet_io_concept_extraction_en_filtered_phone(self):
+        concept = 'phone'
+        preprocesser = Preprocesser()
+        raw_text = u'i wonder if you can propose for me better phone'
+        text = preprocesser.preprocess(raw_text)
+        if CONCEPTNET_ASPECTS:
+            aspects_extractor = AspectExtractor()
+            _, concepts_obtained, _ = aspects_extractor.extract(text)
+            concepts = concepts_obtained['conceptnet_io'][concept]
+
+            for c in concepts:
+                self.assertEqual(True, CONCEPTNET_LANG == c['start-lang'])
+                self.assertEqual(True, CONCEPTNET_LANG == c['end-lang'])
+
     def test_keyword_aspect_extraction(self):
         keywords_expected_rake = [(u'propose', 1.0), (u'screen', 1.0)]
         preprocesser = Preprocesser()

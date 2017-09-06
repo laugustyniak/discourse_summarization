@@ -168,7 +168,8 @@ class AspectExtractor(object):
                              'start-lang': edge['start']['language'],
                              'end': edge['end']['label'].lower(),
                              'end-lang': edge['end']['language'],
-                             'relation': relation})
+                             'relation': relation,
+                             'weight': edge['weight']})
             concept_aspects['conceptnet_io'] = concept_aspects_
 
         # 5. keyword extraction
