@@ -22,7 +22,7 @@ from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.results_analysis.results_analyzer import ResultsAnalyzer
 from aspects.io.serializer import Serializer
-from aspects.utils.utils_multiprocess import batch_with_indexes
+from aspects.utilities.utils_multiprocess import batch_with_indexes
 
 sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
@@ -321,7 +321,7 @@ class AspectAnalysisSystem:
             edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
             documents_info = self.serializer.load(self.paths['documents_info'])
             n_edus = len(edus)
-            max_edu_id = max(documents_info.keys())
+            max_edu_id = max(edus.keys())
 
             logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
@@ -442,7 +442,7 @@ class AspectAnalysisSystem:
 
             analyzer.analyze(documentInfo['aspects'], gold_standard[documentId])
 
-        measures = analyzer.getAnalyzisResults()
+        measures = analyzer.get_analysis_results()
 
         self.serializer.append_serialized(
             ';'.join(str(x) for x in [threshold] + measures) + '\n',
