@@ -1,33 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from os.path import basename, join, exists
-from os import system, makedirs
-from glob import glob
-from pprint import pprint
-
-from IPython.display import Image, display
-from nltk.draw import TreeWidget
-from nltk.draw.util import CanvasFrame
-from nltk.tree import Tree
-
 import sys
-import re
+from glob import glob
+from os.path import basename, join
 
-from wordcloud import WordCloud
-from bs4 import BeautifulSoup
-
-import requests
-import simplejson
-import numpy as np
-import pandas as pd
-import networkx as nx
-import matplotlib.pyplot as plt
+from aspects.utilities.transformations import load_serialized
 
 sys.path.append("../edu_dependency_parser/src")
-
 from trees.parse_tree import ParseTree
-
-from utils import load_serialized, flatten_list
 
 data_path = '../results/ipod'
 # data_path = '../results/Canon_S100'
@@ -39,7 +19,9 @@ tree_names = [basename(x) for x in glob(join(data_path_trees, '*.tree.ser'))]
 n_docs = len(tree_names)
 
 documents_info = load_serialized(join(data_path, 'documents_info'))
-document_info_at_least_2_aspects_accepted = {k: v for k, v in documents_info.items() if len(v['accepted_edus']) > 1}
+document_info_at_least_2_aspects_accepted = {k: v for k, v in
+                                             documents_info.items() if
+                                             len(v['accepted_edus']) > 1}
 n_at_least_two_aspects_per_doc = len(document_info_at_least_2_aspects_accepted)
 
 
@@ -65,7 +47,8 @@ class EDUTreeRulesExtractor(object):
             # recursively until leaf
             else:
                 # relation = tree.node
-                # leaf, parent/current subtree, child_index of leaf in the tree, relation type of tree/parent
+                # leaf, parent/current subtree, child_index of leaf in
+                # the tree, relation type of tree/parent
                 self._traverse_parent(child, tree, child_index)
 
     def _traverse_parent(self, leaf, parent, child_index):
@@ -86,7 +69,8 @@ class EDUTreeRulesExtractor(object):
 
     def __make_rules(self, leaf_left, tree):
 
-        # int oznacza, że rekursywnie doszliśmy do liścia w drzewie pod aktualnym liście analizowanym
+        # int oznacza, że rekursywnie doszliśmy do liścia w
+        # drzewie pod aktualnym liście analizowanym
         if isinstance(tree, int):
             if tree in self.accepted_edus and leaf_left in self.accepted_edus:
                 # find common nearest parent
@@ -111,13 +95,16 @@ class EDUTreeRulesExtractor(object):
         #   Jeśli olejemy wartość relacji, reguły mogą być budowane od danego numeru do konca numerków:
         #   k -> k+1, k -> k+2, ... k -> n
 
+
 for doc_number in document_info_at_least_2_aspects_accepted.keys()[11:]:
     rules_extractor = EDUTreeRulesExtractor()
-    document_info = load_serialized(join(data_path, 'documents_info'))[doc_number]
-#     print(document_info)
+    document_info = load_serialized(join(data_path, 'documents_info'))[
+        doc_number]
+    #     print(document_info)
     link_tree = load_serialized(join(data_path_link_tree, str(doc_number)))
     print(link_tree)
-    print('====='*20)
-    extracted_rules = rules_extractor.extract(link_tree, document_info['accepted_edus'])
+    print('=====' * 20)
+    extracted_rules = rules_extractor.extract(link_tree,
+                                              document_info['accepted_edus'])
     print(extracted_rules)
     break
