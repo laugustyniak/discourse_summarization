@@ -39,17 +39,19 @@ RUN cd gCRF_dist/tools/crfsuite && \
 	cp $HOME/local/bin/crfsuite crfsuite-stdin \
 	&& chmod +x crfsuite-stdin
 
+# test CRF
 RUN cd gCRF_dist/tools/crfsuite \
 	&& ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
 
-USER root
+# Patch crfsuite wrapper
+ADD subprocess.patch .
+RUN patch /gCRF_dist/src/classifiers/crf_classifier.py < /subprocess.patch
 
-# Graph-tool install
-#RUN echo "deb http://downloads.skewed.de/apt/trusty trusty universe" >> /etc/apt/sources.list
-#RUN echo "deb-src http://downloads.skewed.de/apt/trusty trusty universe" >> /etc/apt/sources.list
-#RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 92F371361A7ECE03
-#RUN apt-get update -y
-#RUN apt-get install software-properties-common python-rsvg wget -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Test discourse parser
+RUN cd gCRF_dist/src \
+	&& python sanity_check.py
+
+USER root
 
 # SSH
 RUN apt-get update && apt-get install -y openssh-server
@@ -99,11 +101,15 @@ RUN pip install networkx \
  matplotlib \
  scikit-learn
 RUN pip install spacy
-#RUN python -m spacy download en
 
-# install Morfeusz - Polish Lang Lemmatizer
-#RUN cd /tmp &&  wget -O - http://sgjp.pl/apt/sgjp.gpg.key|sudo apt-key add - && sudo add-apt-repository 'deb http://sgjp.pl/apt/ubuntu trusty main'
-#RUN sudo apt-get update
-#RUN sudo apt-get install python-morfeusz2 -y
+RUN pip install -U gunicorn falcon
+EXPOSE 5000 8000 80
+COPY ./app /app
+WORKDIR /app
+
+# run the API
+# IMPOIRTANT look out for complex models timeout of 120 seconds could not be enough for load model
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers", "1", "--timeout", "120", "sentimentAPI:app"]
+
 
 CMD ["/bin/sh"]

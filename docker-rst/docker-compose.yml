@@ -1,0 +1,8 @@
+jupyter_lab:
+  user: root
+  build: .
+  ports:
+    - 8877:8888
+    - 8822:22
+  volumes:
+    - "/home/lukasz:/notebooks"
