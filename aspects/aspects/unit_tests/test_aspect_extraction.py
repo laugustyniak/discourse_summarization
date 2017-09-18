@@ -132,6 +132,19 @@ class AspectExtractionTest(unittest.TestCase):
 
             self.assertGreater(len(concepts), 20)
 
+    def test_conceptnet_io_concept_extraction_paggination_same_concepts(self):
+        concept = 'device'
+        preprocesser = Preprocesser()
+        raw_text = u'this device is really good device, but this phone'
+        text = preprocesser.preprocess(raw_text)
+        if CONCEPTNET_ASPECTS:
+            aspects_extractor = AspectExtractor()
+            _, concepts_obtained, _ = aspects_extractor.extract(
+                text)
+            concepts = concepts_obtained['conceptnet_io'][concept]
+
+            self.assertGreater(len(concepts), 20)
+
     def test_keyword_aspect_extraction(self):
         keywords_expected_rake = [(u'propose', 1.0), (u'screen', 1.0)]
         preprocesser = Preprocesser()

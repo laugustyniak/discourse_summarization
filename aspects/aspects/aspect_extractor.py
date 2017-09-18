@@ -3,15 +3,15 @@
 # update: Lukasz Augustyniak
 
 import logging
-import requests
 
 import RAKE
+import requests
 
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
     SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS, \
     CONCEPTNET_LANG, CONCEPTNET_API_URL
-from aspects.enrichments.conceptnets import Sentic
+from aspects.enrichments.conceptnets import Sentic, ConceptNetIO
 
 log = logging.getLogger(__name__)
 
@@ -152,37 +152,57 @@ class AspectExtractor(object):
             concept_aspects['sentic'] = concept_aspects_
 
         # 4. ConceptNet.io
+        # load concepts
+        cn = ConceptNetIO()
+        cn.load_cnio()
         if CONCEPTNET_ASPECTS:
             concept_aspects_ = {}
             for asp in aspects:
-                concept_aspects_[asp] = []
-                next_page = CONCEPTNET_URL + asp + u'?offset=0&limit=20'
-                while next_page:
-                    response = requests.get(next_page).json()
-                    cn_view = response['view']
-                    cn_edges = response['edges']
-                    try:
-                        next_page = CONCEPTNET_API_URL + cn_view['nextPage']
-                        log.info(
-                            'Next page from ConceptNet.io: {}'.format(
-                                next_page))
-                    except KeyError:
-                        next_page = None
-
-                    for edge in cn_edges:
-                        relation = edge['rel']['label']
-                        if relation in CONCEPTNET_RELATIONS \
-                                and (edge['start'][
-                                         'language'] == CONCEPTNET_LANG
-                                     and edge['end'][
-                                        'language'] == CONCEPTNET_LANG):
-                            concept_aspects_[asp].append(
-                                {'start': edge['start']['label'].lower(),
-                                 'start-lang': edge['start']['language'],
-                                 'end': edge['end']['label'].lower(),
-                                 'end-lang': edge['end']['language'],
-                                 'relation': relation,
-                                 'weight': edge['weight']})
+                if asp not in cn.concepts_io:
+                    concept_aspects_[asp] = []
+                    next_page = CONCEPTNET_URL + asp + u'?offset=0&limit=20'
+                    n_pages = 1
+                    while next_page:
+                        next_page = next_page.replace(' ', '_')
+                        log.info('#{} pages for {}'.format(n_pages, asp))
+                        n_pages += 1
+                        response = requests.get(next_page).json()
+                        try:
+                            cn_edges = response['edges']
+                            cn_view = response['view']
+                            next_page = CONCEPTNET_API_URL + cn_view['nextPage']
+                            log.info(
+                                'Next page from ConceptNet.io: {}'.format(
+                                    next_page))
+                            for edge in cn_edges:
+                                relation = edge['rel']['label']
+                                if relation in CONCEPTNET_RELATIONS \
+                                        and (edge['start'][
+                                                 'language'] == CONCEPTNET_LANG
+                                             and edge['end'][
+                                                'language'] == CONCEPTNET_LANG):
+                                    concept_aspects_[asp].append(
+                                        {'start': edge['start'][
+                                            'label'].lower(),
+                                         'start-lang': edge['start'][
+                                             'language'],
+                                         'end': edge['end']['label'].lower(),
+                                         'end-lang': edge['end']['language'],
+                                         'relation': relation,
+                                         'weight': edge['weight']})
+                        except KeyError:
+                            log.error(
+                                'Next page url: {} will be set to None'.format(
+                                    next_page))
+                            if 'error' in response.keys():
+                                log.error(response['error']['details'])
+                            next_page = None
+                    cn.concepts_io.update(concept_aspects_)
+                    cn.save_cnio()
+                else:
+                    log.info(
+                        'We have already stored this concept: {}'.format(asp))
+                    concept_aspects_[asp] = cn.concepts_io[asp]
             concept_aspects['conceptnet_io'] = concept_aspects_
 
         # 5. keyword extraction
