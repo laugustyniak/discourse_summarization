@@ -27,11 +27,7 @@ from aspects.utilities.utils_multiprocess import batch_with_indexes
 sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
 
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
+log = logging.getLogger(__name__)
 
 
 def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
