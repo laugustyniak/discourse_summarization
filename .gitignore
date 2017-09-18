@@ -21,3 +21,5 @@ rhetorical-installation/nltk-2\.0b9\.tar\.gz
 /data/sentic/affectnet/affectnet.csv
 
 external-libs/
+
+conceptnet_io\.pkl

@@ -1,7 +1,10 @@
+import logging
+import pickle
 import pandas as pd
 
 from data.sentic.senticnet4.senticnet4 import senticnet
 
+log = logging.getLogger(__name__)
 
 class Sentic(object):
     def __init__(self):
@@ -52,3 +55,21 @@ class Sentic(object):
                 related_concepts.append(row[1][col])
             concepts[row[0]] = related_concepts
         return concepts
+
+
+class ConceptNetIO(object):
+    def __init__(self, concepts_io_path='conceptnet_io.pkl'):
+        self.concepts_io = {}
+        self.concepts_io_path = concepts_io_path
+
+    def save_cnio(self):
+        with open(self.concepts_io_path, 'w') as f:
+            pickle.dump(self.concepts_io, f)
+
+    def load_cnio(self):
+        try:
+            with open(self.concepts_io_path, 'r') as f:
+                self.concepts_io = pickle.load(f)
+        except IOError as err:
+            log.error(str(err))
+            self.concepts_io
