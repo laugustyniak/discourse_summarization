@@ -4,7 +4,7 @@ __pycache__/
 
 # ignore this folders
 texts/*
-results/*
+logs/*
 .idea/
 results/
 .ipynb_checkpoints/
