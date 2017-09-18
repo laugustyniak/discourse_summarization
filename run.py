@@ -28,8 +28,9 @@ sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
 
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(relativeCreated)6d %(threadName)s %(message)s',
-                    datefmt='%m-%d %H:%M',
+                    format='%(asctime)s %(relativeCreated)6d '
+                           '%(threadName)s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
                     filename='logs/run.log',
                     filemode='w',
                     )
