@@ -6,6 +6,7 @@ from data.sentic.senticnet4.senticnet4 import senticnet
 
 log = logging.getLogger(__name__)
 
+
 class Sentic(object):
     def __init__(self):
         self.sentic_df = pd.DataFrame.from_dict(senticnet, orient='index')

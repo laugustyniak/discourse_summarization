@@ -164,14 +164,14 @@ class AspectExtractor(object):
                     n_pages = 1
                     while next_page:
                         next_page = next_page.replace(' ', '_')
-                        log.info('#{} pages for {}'.format(n_pages, asp))
+                        log.debug('#{} pages for {}'.format(n_pages, asp))
                         n_pages += 1
                         response = requests.get(next_page).json()
                         try:
                             cn_edges = response['edges']
                             cn_view = response['view']
                             next_page = CONCEPTNET_API_URL + cn_view['nextPage']
-                            log.info(
+                            log.debug(
                                 'Next page from ConceptNet.io: {}'.format(
                                     next_page))
                             for edge in cn_edges:
@@ -200,7 +200,7 @@ class AspectExtractor(object):
                     cn.concepts_io.update(concept_aspects_)
                     cn.save_cnio()
                 else:
-                    log.info(
+                    log.debug(
                         'We have already stored this concept: {}'.format(asp))
                     concept_aspects_[asp] = cn.concepts_io[asp]
             concept_aspects['conceptnet_io'] = concept_aspects_
