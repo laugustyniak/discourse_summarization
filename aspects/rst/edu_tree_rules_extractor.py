@@ -26,7 +26,7 @@ class EDUTreeRulesExtractor(object):
         self.right_child_parent = None
         self.right_leaf = None
         self.weight_type = [w.lower() for w in weight_type]
-        self.weight_mapping = {'geranini': self.geranini,
+        self.weight_mapping = {'geranini': self.gerani,
                                'relation_type_count': self.rst_relation_type}
 
     def _process_tree(self, tree):
@@ -84,7 +84,7 @@ class EDUTreeRulesExtractor(object):
         #   Jeśli olejemy wartość relacji, reguły mogą być budowane od danego numeru do konca numerków:
         #   k -> k+1, k -> k+2, ... k -> n
 
-    def geranini(self):
+    def gerani(self):
         """ Calculate weights for edu realtions based on Geranini and Mehdad paper """
         # calculate how many edus are between analyzed leaf, leaf are integers hence we may substrct them
         n_edus_between_analyzed_edus = self.right_leaf - self.left_leaf - 1
