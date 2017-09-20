@@ -10,4 +10,4 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
