@@ -1,8 +1,10 @@
 import logging
 import pickle
 import pandas as pd
+from os.path import join
 
 from data.sentic.senticnet4.senticnet4 import senticnet
+from aspects.project_path import CNIO_PATH
 
 log = logging.getLogger(__name__)
 
@@ -59,18 +61,23 @@ class Sentic(object):
 
 
 class ConceptNetIO(object):
-    def __init__(self, concepts_io_path='conceptnet_io.pkl'):
+    def __init__(self, f_name_concepts_io='conceptnet_io.pkl'):
         self.concepts_io = {}
-        self.concepts_io_path = concepts_io_path
+        self.concepts_io_path = join(CNIO_PATH, f_name_concepts_io)
 
     def save_cnio(self):
-        with open(self.concepts_io_path, 'w') as f:
+        log.info('ConceptNet.io temp files will be stored in: {}'.format(
+            self.concepts_io_path))
+        with open(self.concepts_io_path, 'wb') as f:
             pickle.dump(self.concepts_io, f)
+            log.info('ConceptNet.io temp file loaded correctly')
 
     def load_cnio(self):
         try:
-            with open(self.concepts_io_path, 'r') as f:
+            log.info('ConceptNet.io temp files will be load from: {}'.format(
+                self.concepts_io_path))
+            with open(self.concepts_io_path, 'rb') as f:
                 self.concepts_io = pickle.load(f)
-        except IOError as err:
+        except (IOError, EOFError) as err:
             log.error(str(err))
-            self.concepts_io
+            raise Exception()
