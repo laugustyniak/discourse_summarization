@@ -337,8 +337,8 @@ class AspectAnalysisSystem:
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(
                     edu)
                 aspects_per_edu[eduid] = aspects
-                # logging.debug(
-                #     '{}/{} aspects: {}'.format(eduid, max_edu_id, aspects))
+                logging.debug(
+                    '{}/{} aspects: {}'.format(eduid, max_edu_id, aspects))
 
                 if 'aspects' not in doc_info:
                     doc_info['aspects'] = []
