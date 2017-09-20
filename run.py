@@ -315,43 +315,49 @@ class AspectAnalysisSystem:
 
     def _extract_aspects_from_edu(self):
         """ extract aspects from EDU and serialize them """
-        if not exists(self.paths['aspects_per_edu']):
+        try:
+            aspects_per_edu = self.serializer.load(
+                self.paths['aspects_per_edu'])
+        except IOError:
+            logging.info('No aspects extracted, starting from beginning!')
             aspects_per_edu = {}
-            extractor = EDUAspectExtractor()
+        extractor = EDUAspectExtractor()
 
-            # edus = self.serializer.load(self.paths['raw_edu_list'])
-            edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
-            documents_info = self.serializer.load(self.paths['documents_info'])
-            n_edus = len(edus)
-            max_edu_id = max(edus.keys())
+        edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
+        documents_info = self.serializer.load(self.paths['documents_info'])
+        n_edus = len(edus)
+        max_edu_id = max(edus.keys())
 
-            logging.info('# of document with sentiment edus: {}'.format(n_edus))
+        logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
-            # fixme !!! zapisywanie co jakis czas, bo kiedy wypierdzieli cos
-            # to od nowa będzie trzeba jechać z API conceptnet
-            for eduid, edu in edus.iteritems():
+        for eduid, edu in edus.iteritems():
+            if eduid not in documents_info:
+                doc_info = documents_info[edu['source_document_id']]
+
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(
                     edu)
-
                 aspects_per_edu[eduid] = aspects
-                logging.debug(
-                    '{}/{} aspects: {}'.format(eduid, max_edu_id, aspects))
+                # logging.debug(
+                #     '{}/{} aspects: {}'.format(eduid, max_edu_id, aspects))
 
-                if 'aspects' not in documents_info[edu['source_document_id']]:
-                    documents_info[edu['source_document_id']]['aspects'] = []
+                if 'aspects' not in doc_info:
+                    doc_info['aspects'] = []
 
-                documents_info[edu['source_document_id']][
-                    'aspects'] = extractor.get_aspects_in_document(
-                    documents_info[edu['source_document_id']]['aspects'],
-                    aspects_per_edu[eduid])
+                doc_info['aspects'] = extractor.get_aspects_in_document(
+                    doc_info['aspects'], aspects_per_edu[eduid])
+                doc_info['aspect_concepts'] = aspect_concepts
+                documents_info['aspect_keywords'] = aspect_keywords
 
-                documents_info[edu['source_document_id']][
-                    'aspect_concepts'] = aspect_concepts
-                documents_info[edu['source_document_id']][
-                    'aspect_keywords'] = aspect_keywords
+                if not eduid % 100:
+                    logging.info(
+                        'Save partial aspects, edu_id {}'.format(eduid))
+                    self.serializer.save(aspects_per_edu,
+                                         self.paths['aspects_per_edu'])
+                    self.serializer.save(documents_info,
+                                         self.paths['documents_info'])
 
-            self.serializer.save(aspects_per_edu, self.paths['aspects_per_edu'])
-            self.serializer.save(documents_info, self.paths['documents_info'])
+        self.serializer.save(aspects_per_edu, self.paths['aspects_per_edu'])
+        self.serializer.save(documents_info, self.paths['documents_info'])
 
     def _extract_edu_dependency_rules(self):
         """Extract association rules to RST trees"""
@@ -380,7 +386,7 @@ class AspectAnalysisSystem:
             self.serializer.save(rules, self.paths['edu_dependency_rules'])
 
     def _build_aspect_dependency_graph(self):
-        """Budowa grafu zależności aspektów"""
+        """Build dependency graph"""
 
         if not (exists(self.paths['aspects_graph']) and exists(
                 self.paths['aspects_importance'])):
@@ -388,9 +394,13 @@ class AspectAnalysisSystem:
                 self.paths['edu_dependency_rules'])
             aspects_per_edu = self.serializer.load(
                 self.paths['aspects_per_edu'])
+            documents_info = self.serializer.load(
+                self.paths['documents_info'])
 
             builder = AspectsGraphBuilder()
-            graph, page_ranks = builder.build(dependency_rules, aspects_per_edu)
+            graph, page_ranks = builder.build(dependency_rules,
+                                              aspects_per_edu,
+                                              documents_info)
 
             self.serializer.save(graph, self.paths['aspects_graph'])
             self.serializer.save(page_ranks, self.paths['aspects_importance'])
@@ -422,8 +432,6 @@ class AspectAnalysisSystem:
 
             documents_info[documentId]['aspects'] = aspects
 
-        # print '--------------------'
-        # pprint(documents_info)
         self.serializer.save(documents_info, self.paths['final_documents_info'])
 
     def _analyze_results(self, threshold):
