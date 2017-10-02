@@ -53,6 +53,7 @@ class AspectsGraphBuilder(object):
         for edge in graph.edges():
             edge_support = graph[edge[0]][edge[1]]['support']
             first_node_support = graph.node[edge[0]]['support']
+            # todo:
             graph[edge[0]][edge[1]]['weight'] = \
                 edge_support / float(first_node_support)
 
@@ -75,11 +76,34 @@ class AspectsGraphBuilder(object):
 
         return page_ranks
 
-    def build(self, rules, aspects_per_edu):
+    def build(self, rules, aspects_per_edu, documents_info,
+              conceptnet_io=False):
+        """
+        Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
+        relation
+        :param rules: tuple (node_1, node_2, weight)
+        :param aspects_per_edu:
+        :param documents_info: dictionary with information about each edu
+        :param conceptnet_io: do we use ConcetNet.io relation in graph?
+        :return:
+        """
 
         graph = self._build_aspects_graph(rules, aspects_per_edu)
         graph = self._calculate_edges_weight(graph)
         graph = self._delete_temporary_info(graph)
+
+        if conceptnet_io:
+            # add relation from conceptnet
+            for doc in documents_info.values():
+                try:
+                    cnio = doc['aspect_concepts']['conceptnet_io']
+                    for aspect, concepts in cnio.iteritems():
+                        log.info(aspect)
+                        for concept in concepts:
+                            graph.add_edge(concept['start'], concept['end'],
+                                           relation_type=concept['relation'])
+                except KeyError:
+                    log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
 
         page_ranks = self._calculate_page_ranks(graph)
 

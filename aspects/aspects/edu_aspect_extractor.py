@@ -15,15 +15,3 @@ class EDUAspectExtractor(object):
         :return:
         """
         return self.extractor.extract(edu)
-
-    def get_aspects_in_document(self, documents_aspects, aspects):
-
-        if documents_aspects is None:
-            return aspects
-        else:
-            doc_asp = documents_aspects + aspects
-
-            # wymuszamy unikalnosc
-            doc_asp = list(set(doc_asp))
-
-            return doc_asp

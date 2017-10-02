@@ -164,14 +164,14 @@ class AspectExtractor(object):
                     n_pages = 1
                     while next_page:
                         next_page = next_page.replace(' ', '_')
-                        log.debug('#{} pages for {}'.format(n_pages, asp))
+                        log.info('#{} pages for {}'.format(n_pages, asp))
                         n_pages += 1
                         response = requests.get(next_page).json()
                         try:
                             cn_edges = response['edges']
                             cn_view = response['view']
                             next_page = CONCEPTNET_API_URL + cn_view['nextPage']
-                            log.debug(
+                            log.info(
                                 'Next page from ConceptNet.io: {}'.format(
                                     next_page))
                             for edge in cn_edges:

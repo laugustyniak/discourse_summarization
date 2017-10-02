@@ -28,8 +28,8 @@ sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
 
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(relativeCreated)6d '
-                           '%(threadName)s %(message)s',
+                    format='%(asctime)s;%(filename)s:%(lineno)s;'
+                           '%(funcName)20s();%(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     filename='logs/run.log',
                     filemode='w',
@@ -292,14 +292,16 @@ class AspectAnalysisSystem:
 
                 if not edu['source_document_id'] in documents_info:
                     documents_info[edu['source_document_id']] = {
-                        'sentiment': [],
+                        'sentiment': {},
                         'EDUs': [],
                         'accepted_edus': [],
+                        'aspects': {},
                         'aspect_concepts': {},
-                        'aspect_keywords': {}}
+                        'aspect_keywords': {},
+                    }
 
-                documents_info[edu['source_document_id']]['sentiment'].append(
-                    sentiment)
+                documents_info[edu['source_document_id']]['sentiment'].update(
+                    {edu_id: sentiment})
                 documents_info[edu['source_document_id']]['EDUs'].append(edu_id)
 
                 if sentiment:
@@ -318,11 +320,12 @@ class AspectAnalysisSystem:
         try:
             aspects_per_edu = self.serializer.load(
                 self.paths['aspects_per_edu'])
+            logging.info('Aspect per EDU loaded.')
         except IOError:
             logging.info('No aspects extracted, starting from beginning!')
             aspects_per_edu = {}
-        extractor = EDUAspectExtractor()
 
+        extractor = EDUAspectExtractor()
         edus = self.serializer.load(self.paths['sentiment_filtered_edus'])
         documents_info = self.serializer.load(self.paths['documents_info'])
         n_edus = len(edus)
@@ -333,7 +336,6 @@ class AspectAnalysisSystem:
         for eduid, edu in edus.iteritems():
             if eduid not in documents_info:
                 doc_info = documents_info[edu['source_document_id']]
-
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(
                     edu)
                 aspects_per_edu[eduid] = aspects
@@ -345,10 +347,9 @@ class AspectAnalysisSystem:
                 if 'aspects' not in doc_info:
                     doc_info['aspects'] = []
 
-                doc_info['aspects'] = extractor.get_aspects_in_document(
-                    doc_info['aspects'], aspects_per_edu[eduid])
-                doc_info['aspect_concepts'] = aspect_concepts
-                documents_info['aspect_keywords'] = aspect_keywords
+                doc_info['aspects'].update({eduid: aspects})
+                doc_info['aspect_concepts'].update({eduid: aspect_concepts})
+                doc_info['aspect_keywords'].update({eduid: aspect_keywords})
 
                 if not eduid % 100:
                     logging.info(
@@ -385,6 +386,7 @@ class AspectAnalysisSystem:
                 if len(extracted_rules) > 0:
                     rules += extracted_rules
 
+            logging.info('Rules extracted.')
             self.serializer.save(rules, self.paths['edu_dependency_rules'])
 
     def _build_aspect_dependency_graph(self):

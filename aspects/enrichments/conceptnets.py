@@ -78,6 +78,6 @@ class ConceptNetIO(object):
                 self.concepts_io_path))
             with open(self.concepts_io_path, 'rb') as f:
                 self.concepts_io = pickle.load(f)
-        except (IOError, EOFError) as err:
+        except IOError as err:
             log.error(str(err))
-            raise Exception()
+            self.concepts_io = {}

@@ -1,4 +1,7 @@
 import cPickle
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class Serializer(object):
@@ -9,9 +12,12 @@ class Serializer(object):
         """Load serialized data"""
         try:
             with open(filepath, "rb") as fo:
-                return cPickle.load(fo)
+                pkl = cPickle.load(fo)
+                log.info('File loaded: {}'.format(filepath))
+                return pkl
         except IOError as err:
-            print('Error {}'.format(str(err)))
+            log.error('Error {}'.format(str(err)))
+            raise IOError(str(err))
 
     def save(self, data, filename):
         """Save serialized data"""

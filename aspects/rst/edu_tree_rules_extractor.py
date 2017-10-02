@@ -9,14 +9,15 @@ from trees.parse_tree import ParseTree
 
 
 class EDUTreeRulesExtractor(object):
-    def __init__(self, weight_type=['geranini']):
+    def __init__(self, weight_type=['gerani']):
         """
         rules - list of rules extracted from Discourse Trees
         tree - Discource Tree
         accepted_edus - list of edu ids that consist of aspect
         left_child_parent - parent of actually analyzed left leaf
         right_child_parent - parent of actually analyzed right leaf
-        weight_type - list of weights calculated for discourse tree and their relations
+        weight_type - list of weights calculated for discourse tree and their
+            relations
         """
         self.rules = []
         self.tree = None
@@ -26,8 +27,8 @@ class EDUTreeRulesExtractor(object):
         self.right_child_parent = None
         self.right_leaf = None
         self.weight_type = [w.lower() for w in weight_type]
-        self.weight_mapping = {'geranini': self.gerani,
-                               'relation_type_count': self.rst_relation_type}
+        self.weight_mapping = {'gerani': self.gerani,
+                               'relation_type': self.rst_relation_type}
 
     def _process_tree(self, tree):
         for child_index, child in enumerate(tree):
@@ -60,14 +61,17 @@ class EDUTreeRulesExtractor(object):
                 self._traverse_parent(leaf, parent.parent, parent.parent_index)
 
     def _make_rules(self, leaf_left, tree):
-
         # if int we got leaf level
         if isinstance(tree, int):
             if tree in self.accepted_edus and leaf_left in self.accepted_edus:
                 self.left_leaf = leaf_left
                 self.right_leaf = tree
-                weights = {k: v() for k, v in self.weight_mapping.iteritems() if k in self.weight_type}
-                self.rules.append((self.left_leaf, self.right_leaf, weights))
+                weights = {k: v for k, v in self.weight_mapping.iteritems() if
+                           k in self.weight_type}
+                # todo: !!! get N-S info
+                # todo: !!! add relation_type to tuple
+                self.rules.append((self.left_leaf, self.right_leaf,
+                                   self.rst_relation_type(), weights))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
@@ -80,13 +84,17 @@ class EDUTreeRulesExtractor(object):
 
         return self.rules
 
-        # INFO: reguly są determinowane przez kolejnosc odwiedzania węzłów przy preprocessingu
-        #   Jeśli olejemy wartość relacji, reguły mogą być budowane od danego numeru do konca numerków:
+        # INFO: reguly są determinowane przez kolejnosc
+        # odwiedzania węzłów przy preprocessingu
+        #   Jeśli olejemy wartość relacji, reguły mogą
+        # być budowane od danego numeru do konca numerków:
         #   k -> k+1, k -> k+2, ... k -> n
 
     def gerani(self):
-        """ Calculate weights for edu realtions based on Geranini and Mehdad paper """
-        # calculate how many edus are between analyzed leaf, leaf are integers hence we may substrct them
+        """ Calculate weights for edu relations based on
+        Gerani and Mehdad paper """
+        # calculate how many edus are between analyzed leaf,
+        # leaf are integers hence we may substrct them
         n_edus_between_analyzed_edus = self.right_leaf - self.left_leaf - 1
         n_edus_in_tree = len(self.tree.leaves())
 
@@ -95,11 +103,13 @@ class EDUTreeRulesExtractor(object):
             sub_tree_height = self.left_child_parent.height()
         else:
             sub_tree_height = self.right_child_parent.height()
-        return 1 - 0.5 * (float(n_edus_between_analyzed_edus) / n_edus_in_tree) - 0.5 * (float(tree_height)
-                                                                                         / sub_tree_height)
+        return 1 - 0.5 * (
+        float(n_edus_between_analyzed_edus) / n_edus_in_tree) - 0.5 * (
+        float(tree_height) / sub_tree_height)
 
     def rst_relation_type(self):
-        """ find common nearest parent and take relation from heigher parse tree """
+        """ find common nearest parent and take relation
+        from heigher parse tree """
         if self.left_child_parent.height() > self.right_child_parent.height():
             return self.left_child_parent.node
         else:
