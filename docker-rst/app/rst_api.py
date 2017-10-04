@@ -13,47 +13,32 @@ from parse import DiscourseParser
 logger = logging.getLogger('simple_example')
 logger.setLevel(logging.DEBUG)
 
-print('test')
 try:
-    parser = DiscourseParser(output_dir=edu_trees_dir,
+    parser = DiscourseParser(output_dir='/tmp',
                              # verbose=True,
                              # skip_parsing=True,
                              # global_features=True,
                              # save_preprocessed_doc=True,
                              # preprocesser=None
                              )
-    # print('sent: {}'.format(sent.classify('awesome staff')))
 except Exception as e:
     print('Error: {}'.format(str(e)))
     raise Exception
 
 
-# Main Class
-class SentimentAPI(object):
-
-    # def __init__(self):
-    #     logger.info('initializin sentiment')
-    #     Sentiment.__init__(self)
-
-    # def __init__(self):
-    #     # pass
-    #     try:
-    #         # self.model = joblib.load(
-    #         #     '/models/Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-Electronics.pkl')
-    #         logging.info('Sentiment model loaded')
-    #     except Exception as e:
-    #         logging.error('Model not loaded, {}'.format(str(e)))
-
+class RSTAPI(object):
     def max_body(limit):
         """
         method for limiting request size
         """
+
         def hook(req, resp, resource, params):
             length = req.content_length
             if length is not None and length > limit:
-                msg = ('The size of the request is too large. The body must not '
-                       'exceed ' + str(limit) + ' bytes in length.')
-                raise falcon.HTTPRequestEntityTooLarge('Request body is too large', msg)
+                msg = ('The size of the request is too large. The body '
+                       'must not exceed ' + str(limit) + ' bytes in length.')
+                raise falcon.HTTPRequestEntityTooLarge(
+                    'Request body is too large', msg)
 
         return hook
 
@@ -64,9 +49,12 @@ class SentimentAPI(object):
         """
         try:
             text = req.context['doc']['text']
-            resp.body = json.dumps(rst.classify(text))
+            resp.body = json.dumps(parser.classify(text))
         except Exception as ex:
-            raise falcon.HTTPServiceUnavailable('Error', 'Service error, try again later', 30)
+            raise falcon.HTTPServiceUnavailable('Error',
+                                                'Service error, try '
+                                                'again later',
+                                                30)
 
         resp.status = falcon.HTTP_200  # This is the default status
         resp.set_header('X-Powered-By', 'sentimentAPI')
@@ -80,7 +68,10 @@ class SentimentAPI(object):
             resp.body = "Testujemy!"
         except Exception as ex:
             logger.error(repr(ex))
-            raise falcon.HTTPServiceUnavailable('Error', 'Service error, try again later: {}'.format(repr(ex)), 30)
+            raise falcon.HTTPServiceUnavailable('Error',
+                                                'Service error, '
+                                                'try again later: {}'.format(
+                                                    repr(ex)), 30)
 
         resp.status = falcon.HTTP_200  # This is the default status
         resp.set_header('X-Powered-By', 'sentimentAPI')
@@ -100,9 +91,11 @@ class RequireJSON(object):
     """
     forces json
     """
+
     def process_request(self, req, resp):
         if not req.client_accepts_json:
-            raise falcon.HTTPNotAcceptable('This API only supports responses encoded as JSON.')
+            raise falcon.HTTPNotAcceptable(
+                'This API only supports responses encoded as JSON.')
 
 
 class JSONTranslator(object):
@@ -110,6 +103,7 @@ class JSONTranslator(object):
     early processor makes sure the data we get from client is valid
     and json with all fields before sent to post accepter
     """
+
     def process_request(self, req, resp):
         if req.content_length in (None, 0):
             # Nothing to do
@@ -153,12 +147,10 @@ app = falcon.API(middleware=[
     RequireJSON(),
     JSONTranslator(),
 ])
-# app = falcon.API()
 
 app.add_error_handler(ErrorHandler, ErrorHandler.handle)
 
 # long-lived class instances
-sentimentAPI = SentimentAPI()
+rstAPI = RSTAPI()
 
-# handle requests at /api/sentiment/v1
-app.add_route('/api/sentiment/v1', sentimentAPI)
+app.add_route('/api/rst/parse', rstAPI)

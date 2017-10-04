@@ -1,3 +1,7 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:508b0652a1b15dadf4c6f4ecc1cf0210efc7ac6cad4e0865b7ca493608dfd942
-size 397
+Thank you for using SenticNet 4!
+
+Please acknowledge the authors by citing the following publication
+in any research work or presentation containing results obtained
+in whole or in part through the use of SenticNet 4:
+
+E. Cambria, S. Poria, R. Bajpai, and B. Schuller. SenticNet 4: A semantic resource for sentiment analysis based on conceptual primitives. In: COLING, pp. 2666-2677, Osaka (2016)
