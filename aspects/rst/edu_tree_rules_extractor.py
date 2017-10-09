@@ -69,8 +69,8 @@ class EDUTreeRulesExtractor(object):
             if tree in self.accepted_edus and leaf_left in self.accepted_edus:
                 self.left_leaf = leaf_left
                 self.right_leaf = tree
-                weights = {k: v for k, v in self.weight_mapping.iteritems() if
-                           k in self.weight_type}
+                weights = {k: v() for k, v in self.weight_mapping.iteritems()
+                           if k in self.weight_type}
                 self.rules.append((self.left_leaf, self.right_leaf,
                                    self.rst_relation_type(), weights))
         # do deeper into tree
@@ -92,21 +92,24 @@ class EDUTreeRulesExtractor(object):
         #   k -> k+1, k -> k+2, ... k -> n
 
     def gerani(self):
-        """ Calculate weights for edu relations based on
-        Gerani and Mehdad paper """
-        # calculate how many edus are between analyzed leaf,
-        # leaf are integers hence we may substrct them
-        n_edus_between_analyzed_edus = self.right_leaf - self.left_leaf - 1
-        n_edus_in_tree = len(self.tree.leaves())
-
-        tree_height = self.tree.height()
-        if self.left_child_parent.height() > self.right_child_parent.height():
-            sub_tree_height = self.left_child_parent.height()
-        else:
-            sub_tree_height = self.right_child_parent.height()
-        return 1 - 0.5 * (
-        float(n_edus_between_analyzed_edus) / n_edus_in_tree) - 0.5 * (
-        float(tree_height) / sub_tree_height)
+        """
+        Calculate weights for edu relations based on Gerani and
+        Mehdad paper
+        """
+        if self.right_leaf is not None or self.left_leaf is not None:
+            # calculate how many edus are between analyzed leaf,
+            # leaf are integers hence we may substract them
+            n_edus_between_analyzed_edus = self.right_leaf - self.left_leaf - 1
+            n_edus_in_tree = len(self.tree.leaves())
+            tree_height = self.tree.height()
+            if self.left_child_parent.height() > self.right_child_parent.height():
+                sub_tree_height = self.left_child_parent.height()
+            else:
+                sub_tree_height = self.right_child_parent.height()
+            return 1 - 0.5 * (
+                float(n_edus_between_analyzed_edus) / n_edus_in_tree) - 0.5 * (
+                float(tree_height) / sub_tree_height)
+        return
 
     def rst_relation_type(self):
         """
