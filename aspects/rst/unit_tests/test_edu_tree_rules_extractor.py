@@ -47,3 +47,11 @@ class AspectExtractionTest(unittest.TestCase):
                               516, 517, 'Joint[N][N]',
                               {'gerani': 0.16666666666666663})]
         self.assertEqual(rules, expected_rules)
+
+    def test_get_nucleus_and_satellite(self):
+        nucleus_satellite_pairs = {'same-unit[N][N]': ('N', 'N'),
+                                   'Elaboration[N][S]': ('N', 'S'),
+                                   'Joint[N][N]': ('N', 'N')}
+        for rel, ns in nucleus_satellite_pairs.iteritems():
+            self.assertEqual(
+                self.rules_extractor.get_nucleus_and_satellite(rel), ns)

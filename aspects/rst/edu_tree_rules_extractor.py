@@ -120,3 +120,14 @@ class EDUTreeRulesExtractor(object):
             return self.left_child_parent.node
         else:
             return self.right_child_parent.node
+
+    def get_nucleus_and_satellite(self, relation):
+        """
+        Get nucleus/satellite pairs from RST relation.
+
+        :param relation: string
+            Relation name with nucleus and satellite
+        :return:
+        """
+        relation = relation[-5:-1].replace('][', '')
+        return relation[0], relation[1]
