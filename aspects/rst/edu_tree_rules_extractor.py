@@ -11,13 +11,16 @@ from trees.parse_tree import ParseTree
 class EDUTreeRulesExtractor(object):
     def __init__(self, weight_type=['gerani']):
         """
+        Extracting rules from RST tress.
+
         rules - list of rules extracted from Discourse Trees
         tree - Discource Tree
         accepted_edus - list of edu ids that consist of aspect
         left_child_parent - parent of actually analyzed left leaf
         right_child_parent - parent of actually analyzed right leaf
-        weight_type - list of weights calculated for discourse tree and their
-            relations
+
+        :param weight_type - list of weights calculated for discourse tree and
+        their relations
         """
         self.rules = []
         self.tree = None
@@ -68,8 +71,6 @@ class EDUTreeRulesExtractor(object):
                 self.right_leaf = tree
                 weights = {k: v for k, v in self.weight_mapping.iteritems() if
                            k in self.weight_type}
-                # todo: !!! get N-S info
-                # todo: !!! add relation_type to tuple
                 self.rules.append((self.left_leaf, self.right_leaf,
                                    self.rst_relation_type(), weights))
         # do deeper into tree
@@ -108,8 +109,10 @@ class EDUTreeRulesExtractor(object):
         float(tree_height) / sub_tree_height)
 
     def rst_relation_type(self):
-        """ find common nearest parent and take relation
-        from heigher parse tree """
+        """
+        Find common nearest parent and take relation from heigher
+        parse tree. In additin, check if relation if
+        """
         if self.left_child_parent.height() > self.right_child_parent.height():
             return self.left_child_parent.node
         else:
