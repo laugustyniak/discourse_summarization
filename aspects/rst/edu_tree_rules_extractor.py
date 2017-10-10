@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-
 import sys
 import os
 
@@ -85,10 +82,10 @@ class EDUTreeRulesExtractor(object):
 
         return self.rules
 
-        # INFO: reguly są determinowane przez kolejnosc
-        # odwiedzania węzłów przy preprocessingu
-        #   Jeśli olejemy wartość relacji, reguły mogą
-        # być budowane od danego numeru do konca numerków:
+        # INFO: reguly sa determinowane przez kolejnosc
+        # odwiedzania wezlow przy preprocessingu
+        #   Jesli olejemy wartosc relacji, reguly moga
+        # byc budowane od danego numeru do konca numerkow:
         #   k -> k+1, k -> k+2, ... k -> n
 
     def gerani(self):
