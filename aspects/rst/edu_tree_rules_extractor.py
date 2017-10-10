@@ -109,7 +109,7 @@ class EDUTreeRulesExtractor(object):
             return 1 - 0.5 * (
                 float(n_edus_between_analyzed_edus) / n_edus_in_tree) - 0.5 * (
                 float(tree_height) / sub_tree_height)
-        return
+        return 0
 
     def rst_relation_type(self):
         """
