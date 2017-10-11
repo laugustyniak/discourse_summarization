@@ -6,7 +6,7 @@ from trees.parse_tree import ParseTree
 
 
 class EDUTreeRulesExtractor(object):
-    def __init__(self, weight_type=['gerani'],
+    def __init__(self, weight_type=None,
                  only_hierarchical_relations=True):
         """
         Extracting rules from RST tress.
@@ -21,8 +21,14 @@ class EDUTreeRulesExtractor(object):
             Do we want only hierarchical type of relations (especially from
             RST), True as default
         :param weight_type - list of weights calculated for discourse tree and
-                their relations
+                their relations.
+                'gerani' - weight according to publication  Gerani, S., Mehdad,
+                    Y., Carenini, G., Ng, R. T., & Nejat, B. (2014).
+                    Abstractive Summarization of Product Reviews Using
+                    Discourse Structure. Emnlp, 1602-1613.
         """
+        if weight_type is None:
+            weight_type = ['gerani']
         self.rules = []
         self.tree = None
         self.accepted_edus = None
