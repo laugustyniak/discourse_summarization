@@ -93,6 +93,24 @@ class AspectGraphBuilderTest(unittest.TestCase):
         graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
                                                        None, False)
         self.assertEqual(len(rules), 1)
-        self.assertGreaterEqual(graph.nodes(), 1)
-        self.assertGreaterEqual(graph.edges(), 1)
+        self.assertGreaterEqual(len(graph.nodes()), 1)
+        self.assertGreaterEqual(len(graph.edges()), 1)
+        self.assertEqual(graph['test']['thing']['relation_type'], 'Elaboration')
+
+    def test_build_exemplary_arrg_graph_sample_tree_189_multiaspects(self):
+        self._setup_link_parse_tree_189()
+        aspects_graph_builder = AspectsGraphBuilder()
+        rules_extractor = EDUTreeRulesExtractor()
+        rules = rules_extractor.extract(self.link_tree, [559, 560, 562])
+        aspects_per_edu = [(559, [u'test', u'test2']),  # test added manually
+                           (560, [u'thing', u'test2']),
+                           (561, []),
+                           (562,
+                            [u'store clerk', u'apple', u'teenager', u'advice']),
+                           (563, [])]
+        graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
+                                                       None, False)
+        self.assertEqual(len(rules), 1)
+        self.assertEqual(len(graph.nodes()), 3)
+        self.assertEqual(len(graph.edges()), 4)
         self.assertEqual(graph['test']['thing']['relation_type'], 'Elaboration')
