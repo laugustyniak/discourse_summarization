@@ -23,8 +23,20 @@ class AspectExtractionTest(unittest.TestCase):
         rules = self.rules_extractor.extract(self.link_tree, [])
         self.assertEqual(len(rules), 0)
 
-    def test_tree_parsing_and_get_rules(self):
-        rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'])
+    def test_tree_parsing_and_get_rules_hierarchical(self):
+        rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
+                                                only_hierarchical_relations=True)
+        rules = rules_extractor.extract(self.link_tree,
+                                        [513, 514, 515, 516, 517])
+        expected_rules = [(513, 514, 'Elaboration[N][S]', {'gerani': -0.25}),
+                          (515, 516, 'Elaboration[N][S]', {'gerani': 0.375}),
+                          (515, 517, 'Elaboration[N][S]',
+                           {'gerani': 0.29166666666666663})]
+        self.assertEqual(rules, expected_rules)
+
+    def test_tree_parsing_and_get_rules_all(self):
+        rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
+                                                only_hierarchical_relations=False)
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517])
         expected_rules = [(513, 514, 'Elaboration[N][S]', {'gerani': -0.25}),
@@ -55,3 +67,14 @@ class AspectExtractionTest(unittest.TestCase):
         for rel, ns in nucleus_satellite_pairs.iteritems():
             self.assertEqual(
                 self.rules_extractor.get_nucleus_and_satellite(rel), ns)
+
+    def test_check_if_hierarchical_rst_relation(self):
+        to_check_hierarchicality = {('N', 'N'): False,
+                                    ('N', 'S'): True,
+                                    ('S', 'N'): True,
+                                    }
+        for (rel_1, rel_2), expected in to_check_hierarchicality.iteritems():
+            self.assertEqual(
+                self.rules_extractor.check_hierarchical_rst_relation(rel_1,
+                                                                     rel_2),
+                expected)

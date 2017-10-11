@@ -6,7 +6,8 @@ from trees.parse_tree import ParseTree
 
 
 class EDUTreeRulesExtractor(object):
-    def __init__(self, weight_type=['gerani']):
+    def __init__(self, weight_type=['gerani'],
+                 only_hierarchical_relations=True):
         """
         Extracting rules from RST tress.
 
@@ -16,8 +17,11 @@ class EDUTreeRulesExtractor(object):
         left_child_parent - parent of actually analyzed left leaf
         right_child_parent - parent of actually analyzed right leaf
 
+        :param only_hierarchical_relations: bool
+            Do we want only hierarchical type of relations (especially from
+            RST), True as default
         :param weight_type - list of weights calculated for discourse tree and
-        their relations
+                their relations
         """
         self.rules = []
         self.tree = None
@@ -29,6 +33,7 @@ class EDUTreeRulesExtractor(object):
         self.weight_type = [w.lower() for w in weight_type]
         self.weight_mapping = {'gerani': self.gerani,
                                'relation_type': self.rst_relation_type}
+        self.only_hierarchical_relations = only_hierarchical_relations
 
     def _process_tree(self, tree):
         for child_index, child in enumerate(tree):
@@ -68,8 +73,15 @@ class EDUTreeRulesExtractor(object):
                 self.right_leaf = tree
                 weights = {k: v() for k, v in self.weight_mapping.iteritems()
                            if k in self.weight_type}
-                self.rules.append((self.left_leaf, self.right_leaf,
-                                   self.rst_relation_type(), weights))
+                relation = self.rst_relation_type()
+                rels = self.get_nucleus_and_satellite(relation)
+                if self.only_hierarchical_relations \
+                        and not self.check_hierarchical_rst_relation(rels[0],
+                                                                     rels[1]):
+                    return
+                else:
+                    self.rules.append((self.left_leaf, self.right_leaf,
+                                       relation, weights))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
@@ -111,7 +123,7 @@ class EDUTreeRulesExtractor(object):
     def rst_relation_type(self):
         """
         Find common nearest parent and take relation from heigher
-        parse tree. In additin, check if relation if
+        parse tree
         """
         if self.left_child_parent.height() > self.right_child_parent.height():
             return self.left_child_parent.node
@@ -124,7 +136,24 @@ class EDUTreeRulesExtractor(object):
 
         :param relation: string
             Relation name with nucleus and satellite
-        :return:
+        :return: tuple
+            Nucleus or satellite indicators, ex. ('N', 'S')
         """
         relation = relation[-5:-1].replace('][', '')
         return relation[0], relation[1]
+
+    def check_hierarchical_rst_relation(self, rel_1, rel_2):
+        """
+        Check if relation between analyzed parts of RST tree is hierarchical,
+        relation between Nucleus and Satellite or no such as Nucleus-Nucleus
+        relation
+
+        :param rel_1: str
+            Nucleus 'N' or satellite 'S' indicator
+        :param rel_2: str
+            Nucleus 'N' or satellite 'S' indicator
+
+        :return bool
+            True if hierarchical, False otherwise
+        """
+        return False if rel_1 == rel_2 else True
