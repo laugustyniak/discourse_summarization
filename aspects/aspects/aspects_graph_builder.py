@@ -22,12 +22,15 @@ class AspectsGraphBuilder(object):
 
         return graph
 
-    def _add_edge_to_graph(self, graph, node_left, node_right):
+    def _add_edge_to_graph(self, graph, node_left, node_right,
+                           relation_type='None'):
         if graph.has_edge(node_left, node_right):
             graph[node_left][node_right]['support'] += 1
         else:
             graph.add_edge(node_left, node_right)
             graph[node_left][node_right]['support'] = 1
+
+        graph[node_left][node_right]['relation_type'] = relation_type
 
         return graph
 
@@ -41,21 +44,26 @@ class AspectsGraphBuilder(object):
         :param aspects_per_edu:
 
         :return: networkx.DiGraph()
-            Graph with aspect-aspect relations.
+            Graph with aspect-aspect relation.
         """
         graph = nx.DiGraph()
 
         for rule_id, rule in enumerate(rules):
             log.debug('Rule: {}'.format(rule))
-            left_node, right_node, relations, weigths = rule
+            left_node, right_node, relation, weigths = rule
 
-            for id1, aspect_left in enumerate(aspects_per_edu[left_node]):
-                for id2, aspect_right in enumerate(aspects_per_edu[right_node]):
+            aspects_per_edu = dict(aspects_per_edu)
+
+            # for all aspects from one edu list
+            for aspect_left in [a for a in aspects_per_edu[left_node]]:
+                # and for all aspects from the other edu list
+                for aspect_right in [b for b in
+                                     aspects_per_edu[right_node]]:
                     graph = self._add_node_to_graph(graph, aspect_left)
                     graph = self._add_node_to_graph(graph, aspect_right)
-
                     graph = self._add_edge_to_graph(graph, aspect_left,
-                                                    aspect_right)
+                                                    aspect_right,
+                                                    relation_type=relation)
 
         return graph
 
@@ -64,7 +72,8 @@ class AspectsGraphBuilder(object):
         for edge in graph.edges():
             edge_support = graph[edge[0]][edge[1]]['support']
             first_node_support = graph.node[edge[0]]['support']
-            # todo: describe method and lines, add reference to paper and equations
+            # todo: describe method and lines
+            # todo: add reference to paper and equations
             graph[edge[0]][edge[1]]['weight'] = \
                 edge_support / float(first_node_support)
 
@@ -72,7 +81,7 @@ class AspectsGraphBuilder(object):
 
         return graph
 
-    def _delete_temporary_info(self, graph):
+    def _delete_temporary_support_info(self, graph):
 
         for node in graph.nodes():
             del graph.node[node]['support']
@@ -101,7 +110,9 @@ class AspectsGraphBuilder(object):
 
         graph = self._build_aspects_graph(rules, aspects_per_edu)
         graph = self._calculate_edges_weight(graph)
-        graph = self._delete_temporary_info(graph)
+        graph = self._delete_temporary_support_info(graph)
+
+        aspect = None
 
         if conceptnet_io:
             # add relation from conceptnet

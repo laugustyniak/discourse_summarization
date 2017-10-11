@@ -86,8 +86,14 @@ class EDUTreeRulesExtractor(object):
                                                                      rels[1]):
                     return
                 else:
-                    self.rules.append((self.left_leaf, self.right_leaf,
-                                       relation, weights))
+                    if rels[0] == 'N':
+                        # [N][S] or [N][N]
+                        self.rules.append((self.left_leaf, self.right_leaf,
+                                           relation, weights))
+                    else:
+                        # [S][N]
+                        self.rules.append((self.right_leaf, self.left_leaf,
+                                           relation, weights))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):

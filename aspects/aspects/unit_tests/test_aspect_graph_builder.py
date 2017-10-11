@@ -3,7 +3,9 @@ import sys
 
 import networkx as nx
 
+from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
+from aspects.io.serializer import Serializer
 from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
 
 sys.path.append("../edu_dependency_parser/src")
@@ -12,6 +14,14 @@ from trees.parse_tree import ParseTree
 
 
 class AspectGraphBuilderTest(unittest.TestCase):
+    def setUp(self):
+        self.serializer = Serializer()
+
+    def _setup_link_parse_tree_177(self):
+        self.link_tree = self.serializer.load(sample_tree_177)
+
+    def _setup_link_parse_tree_189(self):
+        self.link_tree = self.serializer.load(sample_tree_189)
 
     def _set_rst_rules_document_info(self):
         self.rest_rules = [(u'a movie', u'a film', u'Elaboration')]
@@ -60,7 +70,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                          [517, 518])])])])
 
     def test_build_arrg_graph_rst_conceptnnet_io(self):
-        self._set_rst_rules_document_info()
+        # self._set_rst_rules_document_info()
         aspects_graph_builder = AspectsGraphBuilder()
         graph_obtained = None
 
@@ -69,4 +79,17 @@ class AspectGraphBuilderTest(unittest.TestCase):
     def test_rst_relation_type(self):
         self._set_parse_tree()
 
-    def build_exemplary_arrg_graph_sample_tree_177(self):
+    def test_build_exemplary_arrg_graph_sample_tree_189(self):
+        self._setup_link_parse_tree_189()
+        aspects_graph_builder = AspectsGraphBuilder()
+        rules_extractor = EDUTreeRulesExtractor()
+        rules = rules_extractor.extract(self.link_tree, [559, 560, 562])
+        aspects_per_edu = [(559, [u'test']),  # test added manually
+                           (560, [u'thing']),
+                           (561, []),
+                           (562,
+                            [u'store clerk', u'apple', u'teenager', u'advice']),
+                           (563, [])]
+        graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
+                                                       None, False)
+        self.assertEqual(len(rules), 1)
