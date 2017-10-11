@@ -32,9 +32,9 @@ class AspectExtractionTest(unittest.TestCase):
                                                 only_hierarchical_relations=True)
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517])
-        expected_rules = [(513, 514, 'Elaboration[N][S]', {'gerani': -0.25}),
-                          (515, 516, 'Elaboration[N][S]', {'gerani': 0.375}),
-                          (515, 517, 'Elaboration[N][S]',
+        expected_rules = [(513, 514, 'Elaboration', {'gerani': -0.25}),
+                          (515, 516, 'Elaboration', {'gerani': 0.375}),
+                          (515, 517, 'Elaboration',
                            {'gerani': 0.29166666666666663})]
         self.assertEqual(rules, expected_rules)
 
@@ -43,34 +43,36 @@ class AspectExtractionTest(unittest.TestCase):
                                                 only_hierarchical_relations=False)
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517])
-        expected_rules = [(513, 514, 'Elaboration[N][S]', {'gerani': -0.25}),
-                          (513, 515, 'same-unit[N][N]',
+        expected_rules = [(513, 514, 'Elaboration', {'gerani': -0.25}),
+                          (513, 515, 'same-unit',
                            {'gerani': 0.41666666666666663}), (
-                              513, 516, 'same-unit[N][N]',
+                              513, 516, 'same-unit',
                               {'gerani': 0.33333333333333337}), (
-                              513, 517, 'same-unit[N][N]',
+                              513, 517, 'same-unit',
                               {'gerani': 0.25}),
-                          (514, 515, 'same-unit[N][N]',
+                          (514, 515, 'same-unit',
                            {'gerani': 0.5}),
-                          (514, 516, 'same-unit[N][N]',
+                          (514, 516, 'same-unit',
                            {'gerani': 0.41666666666666663}), (
-                              514, 517, 'same-unit[N][N]',
+                              514, 517, 'same-unit',
                               {'gerani': 0.33333333333333337}), (
-                              515, 516, 'Elaboration[N][S]',
+                              515, 516, 'Elaboration',
                               {'gerani': 0.375}),
-                          (515, 517, 'Elaboration[N][S]',
+                          (515, 517, 'Elaboration',
                            {'gerani': 0.29166666666666663}), (
-                              516, 517, 'Joint[N][N]',
+                              516, 517, 'Joint',
                               {'gerani': 0.16666666666666663})]
         self.assertEqual(rules, expected_rules)
 
     def test_get_nucleus_and_satellite(self):
-        nucleus_satellite_pairs = {'same-unit[N][N]': ('N', 'N'),
-                                   'Elaboration[N][S]': ('N', 'S'),
-                                   'Joint[N][N]': ('N', 'N')}
+        nucleus_satellite_pairs = {'same-unit[N][N]': ('same-unit', 'N', 'N'),
+                                   'Elaboration[N][S]': (
+                                       'Elaboration', 'N', 'S'),
+                                   'Joint[N][N]': ('Joint', 'N', 'N')}
         for rel, ns in nucleus_satellite_pairs.iteritems():
             self.assertEqual(
-                self.rules_extractor.get_nucleus_and_satellite(rel), ns)
+                self.rules_extractor.get_nucleus_satellite_and_relation_type(
+                    rel), ns)
 
     def test_check_if_hierarchical_rst_relation(self):
         to_check_hierarchicality = {('N', 'N'): False,
@@ -88,9 +90,9 @@ class AspectExtractionTest(unittest.TestCase):
                                                 only_hierarchical_relations=True)
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517])
-        expected_rules = [(513, 514, 'Elaboration[N][S]', {'gerani': -0.25}),
-                          (515, 516, 'Elaboration[N][S]', {'gerani': 0.375}),
-                          (515, 517, 'Elaboration[N][S]',
+        expected_rules = [(513, 514, 'Elaboration', {'gerani': -0.25}),
+                          (515, 516, 'Elaboration', {'gerani': 0.375}),
+                          (515, 517, 'Elaboration',
                            {'gerani': 0.29166666666666663})]
         self.assertEqual(rules, expected_rules)
 
@@ -101,14 +103,14 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [559, 560, 561, 562, 563])
         expected_rules = [
-            (559, 560, 'Elaboration[N][S]', {'gerani': 0.33333333333333337}),
-            (559, 561, 'Elaboration[N][S]', {'gerani': 0.2333333333333334}),
-            (559, 562, 'same-unit[N][N]', {'gerani': 0.30000000000000004}),
-            (559, 563, 'same-unit[N][N]', {'gerani': 0.19999999999999996}),
-            (560, 561, 'Elaboration[N][S]', {'gerani': 0.0}),
-            (560, 562, 'same-unit[N][N]', {'gerani': 0.4}),
-            (560, 563, 'same-unit[N][N]', {'gerani': 0.30000000000000004}),
-            (561, 562, 'same-unit[N][N]', {'gerani': 0.5}),
-            (561, 563, 'same-unit[N][N]', {'gerani': 0.4}),
-            (562, 563, 'Elaboration[N][S]', {'gerani': 0.0})]
+            (559, 560, 'Elaboration', {'gerani': 0.33333333333333337}),
+            (559, 561, 'Elaboration', {'gerani': 0.2333333333333334}),
+            (559, 562, 'same-unit', {'gerani': 0.30000000000000004}),
+            (559, 563, 'same-unit', {'gerani': 0.19999999999999996}),
+            (560, 561, 'Elaboration', {'gerani': 0.0}),
+            (560, 562, 'same-unit', {'gerani': 0.4}),
+            (560, 563, 'same-unit', {'gerani': 0.30000000000000004}),
+            (561, 562, 'same-unit', {'gerani': 0.5}),
+            (561, 563, 'same-unit', {'gerani': 0.4}),
+            (562, 563, 'Elaboration', {'gerani': 0.0})]
         self.assertEqual(rules, expected_rules)

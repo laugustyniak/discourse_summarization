@@ -80,20 +80,21 @@ class EDUTreeRulesExtractor(object):
                 weights = {k: v() for k, v in self.weight_mapping.iteritems()
                            if k in self.weight_type}
                 relation = self.rst_relation_type()
-                rels = self.get_nucleus_and_satellite(relation)
+                rel_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(
+                    relation)
                 if self.only_hierarchical_relations \
-                        and not self.check_hierarchical_rst_relation(rels[0],
-                                                                     rels[1]):
+                        and not self.check_hierarchical_rst_relation(nuc_sat_1,
+                                                                     nuc_sat_2):
                     return
                 else:
-                    if rels[0] == 'N':
+                    if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
                         self.rules.append((self.left_leaf, self.right_leaf,
-                                           relation, weights))
+                                           rel_name, weights))
                     else:
                         # [S][N]
                         self.rules.append((self.right_leaf, self.left_leaf,
-                                           relation, weights))
+                                           rel_name, weights))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
@@ -152,17 +153,18 @@ class EDUTreeRulesExtractor(object):
         else:
             return self.right_child_parent.node
 
-    def get_nucleus_and_satellite(self, relation):
+    def get_nucleus_satellite_and_relation_type(self, relation):
         """
-        Get nucleus/satellite pairs from RST relation.
+        Get nucleus/satellite pairs from RST relation and relation type name.
 
         :param relation: string
             Relation name with nucleus and satellite
         :return: tuple
-            Nucleus or satellite indicators, ex. ('N', 'S')
+            Nucleus or satellite indicators, ex. ('Elaboration', 'N', 'S')
         """
+        relation_name = relation.split('[')[0]
         relation = relation[-5:-1].replace('][', '')
-        return relation[0], relation[1]
+        return relation_name, relation[0], relation[1]
 
     def check_hierarchical_rst_relation(self, rel_1, rel_2):
         """

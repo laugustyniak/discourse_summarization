@@ -93,3 +93,6 @@ class AspectGraphBuilderTest(unittest.TestCase):
         graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
                                                        None, False)
         self.assertEqual(len(rules), 1)
+        self.assertGreaterEqual(graph.nodes(), 1)
+        self.assertGreaterEqual(graph.edges(), 1)
+        self.assertEqual(graph['test']['thing']['relation_type'], 'Elaboration')
