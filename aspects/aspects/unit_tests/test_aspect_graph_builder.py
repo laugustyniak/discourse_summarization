@@ -70,9 +70,49 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                          [517, 518])])])])
 
     def test_build_arrg_graph_rst_conceptnnet_io(self):
-        # self._set_rst_rules_document_info()
+        self._setup_link_parse_tree_189()
         aspects_graph_builder = AspectsGraphBuilder()
-        graph_obtained = None
+        rules_extractor = EDUTreeRulesExtractor()
+        rules = rules_extractor.extract(self.link_tree, [559, 560, 562])
+        aspects_per_edu = [(559, [u'phone']),  # test added manually
+                           (560, [u'apple']),
+                           (561, []),
+                           (562,
+                            [u'store clerk', u'apple', u'teenager', u'advice']),
+                           (563, [])]
+        documents_info = {189:
+                              {'EDUs': [559, 560, 561, 562, 563],
+                               'accepted_edus': [559, 560, 561, 562, 563],
+                               'aspect_concepts':
+                                   {
+                                       559: {'conceptnet_io': {}, 'sentic': {}},
+                                       560: {'conceptnet_io': {
+                                           u'thing': [{'end': u'thing',
+                                                       'end-lang': u'en',
+                                                       'relation': u'IsA',
+                                                       'start': u'object',
+                                                       'start-lang': u'en',
+                                                       'weight': 2.8284271},
+                                                      {'end': u'stuff',
+                                                       'end-lang': u'en',
+                                                       'relation': u'Synonym',
+                                                       'start': u'thing',
+                                                       'start-lang': u'en',
+                                                       'weight': 2.8284271}
+                                                      ]}
+                                       }
+                                   }
+                               }
+                          }
+        graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
+                                                       documents_info, True)
+        self.assertEqual(len(rules), 1)
+        self.assertGreaterEqual(len(graph.nodes()), 4)
+        self.assertGreaterEqual(len(graph.edges()), 3)
+        self.assertEqual(graph['phone']['apple']['relation_type'],
+                         'Elaboration')
+        self.assertEqual(graph['object']['thing']['relation_type'], 'IsA')
+        self.assertEqual(graph['thing']['stuff']['relation_type'], 'Synonym')
 
         # self.assertEqual(aspects_obtained, aspects_expected)
 
