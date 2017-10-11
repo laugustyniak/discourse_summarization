@@ -32,11 +32,22 @@ class AspectsGraphBuilder(object):
         return graph
 
     def _build_aspects_graph(self, rules, aspects_per_edu):
+        """
+        Build graph based on list of tuples with apsects ids.
+
+        :param rules: list
+            (aspect_id_1, aspect_id_2, relation, weight_dict)
+
+        :param aspects_per_edu:
+
+        :return: networkx.DiGraph()
+            Graph with aspect-aspect relations.
+        """
         graph = nx.DiGraph()
 
         for rule_id, rule in enumerate(rules):
             log.debug('Rule: {}'.format(rule))
-            left_node, right_node, relations = rule
+            left_node, right_node, relations, weigths = rule
 
             for id1, aspect_left in enumerate(aspects_per_edu[left_node]):
                 for id2, aspect_right in enumerate(aspects_per_edu[right_node]):
@@ -53,7 +64,7 @@ class AspectsGraphBuilder(object):
         for edge in graph.edges():
             edge_support = graph[edge[0]][edge[1]]['support']
             first_node_support = graph.node[edge[0]]['support']
-            # todo:
+            # todo: describe method and lines, add reference to paper and equations
             graph[edge[0]][edge[1]]['weight'] = \
                 edge_support / float(first_node_support)
 

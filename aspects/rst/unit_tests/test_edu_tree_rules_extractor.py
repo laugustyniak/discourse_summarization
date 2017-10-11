@@ -3,6 +3,7 @@ import sys
 
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
+from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
 
 sys.path.append("../../../edu_dependency_parser/src")
 
@@ -13,7 +14,10 @@ class AspectExtractionTest(unittest.TestCase):
     def setUp(self):
         self.serializer = Serializer()
         self.rules_extractor = EDUTreeRulesExtractor()
-        self.link_tree = self.serializer.load('../sample_trees/177')
+        self.link_tree = self.serializer.load(sample_tree_177)
+
+    def _multi_aspect_per_edu_tree(self):
+        self.link_tree = self.serializer.load(sample_tree_189)
 
     def test_load_serialized_tree(self):
         self.assertEqual(isinstance(self.link_tree, ParseTree), True)
@@ -88,4 +92,23 @@ class AspectExtractionTest(unittest.TestCase):
                           (515, 516, 'Elaboration[N][S]', {'gerani': 0.375}),
                           (515, 517, 'Elaboration[N][S]',
                            {'gerani': 0.29166666666666663})]
+        self.assertEqual(rules, expected_rules)
+
+    def test_multi_aspects_per_edu(self):
+        self._multi_aspect_per_edu_tree()
+        rules_extractor = EDUTreeRulesExtractor(
+            only_hierarchical_relations=False)
+        rules = rules_extractor.extract(self.link_tree,
+                                        [559, 560, 561, 562, 563])
+        expected_rules = [
+            (559, 560, 'Elaboration[N][S]', {'gerani': 0.33333333333333337}),
+            (559, 561, 'Elaboration[N][S]', {'gerani': 0.2333333333333334}),
+            (559, 562, 'same-unit[N][N]', {'gerani': 0.30000000000000004}),
+            (559, 563, 'same-unit[N][N]', {'gerani': 0.19999999999999996}),
+            (560, 561, 'Elaboration[N][S]', {'gerani': 0.0}),
+            (560, 562, 'same-unit[N][N]', {'gerani': 0.4}),
+            (560, 563, 'same-unit[N][N]', {'gerani': 0.30000000000000004}),
+            (561, 562, 'same-unit[N][N]', {'gerani': 0.5}),
+            (561, 563, 'same-unit[N][N]', {'gerani': 0.4}),
+            (562, 563, 'Elaboration[N][S]', {'gerani': 0.0})]
         self.assertEqual(rules, expected_rules)

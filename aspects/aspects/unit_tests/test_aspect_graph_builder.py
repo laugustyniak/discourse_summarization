@@ -4,6 +4,7 @@ import sys
 import networkx as nx
 
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
+from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
 
 sys.path.append("../edu_dependency_parser/src")
 
@@ -11,6 +12,7 @@ from trees.parse_tree import ParseTree
 
 
 class AspectGraphBuilderTest(unittest.TestCase):
+
     def _set_rst_rules_document_info(self):
         self.rest_rules = [(u'a movie', u'a film', u'Elaboration')]
         self.document_info = [{'EDUs': [0, 1, 2],
@@ -66,3 +68,5 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def test_rst_relation_type(self):
         self._set_parse_tree()
+
+    def build_exemplary_arrg_graph_sample_tree_177(self):
