@@ -94,17 +94,27 @@ class EDUTreeRulesExtractor(object):
                 self._make_rules(leaf_left, child)
 
     def extract(self, tree, accepted_edus):
-        self.accepted_edus = accepted_edus
+        """
+        Extract RST relation with BFS approach.
+
+        :param tree: ParseTree object
+            RST Tree that will be parsed and relation will be extracted from it
+        :param accepted_edus: list
+            A list of aspect's ids.
+
+        :return: list
+            A lsit of tuples with nodes and metadata (relations and weights)
+        """
+        if len(accepted_edus) > 1:
+            self.accepted_edus = accepted_edus
+        else:
+            # if there are not any aspects it's not needed to extract relations
+            return []
+
         self.tree = tree
         self._process_tree(tree)
 
         return self.rules
-
-        # INFO: reguly sa determinowane przez kolejnosc
-        # odwiedzania wezlow przy preprocessingu
-        #   Jesli olejemy wartosc relacji, reguly moga
-        # byc budowane od danego numeru do konca numerkow:
-        #   k -> k+1, k -> k+2, ... k -> n
 
     def gerani(self):
         """

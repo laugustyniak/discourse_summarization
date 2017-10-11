@@ -78,3 +78,14 @@ class AspectExtractionTest(unittest.TestCase):
                 self.rules_extractor.check_hierarchical_rst_relation(rel_1,
                                                                      rel_2),
                 expected)
+
+    def test_bfs_for_several_aspects_in_one_edu(self):
+        rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
+                                                only_hierarchical_relations=True)
+        rules = rules_extractor.extract(self.link_tree,
+                                        [513, 514, 515, 516, 517])
+        expected_rules = [(513, 514, 'Elaboration[N][S]', {'gerani': -0.25}),
+                          (515, 516, 'Elaboration[N][S]', {'gerani': 0.375}),
+                          (515, 517, 'Elaboration[N][S]',
+                           {'gerani': 0.29166666666666663})]
+        self.assertEqual(rules, expected_rules)
