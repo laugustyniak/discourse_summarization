@@ -317,11 +317,11 @@ class AspectAnalysisSystem:
 
     def _extract_aspects_from_edu(self):
         """ extract aspects from EDU and serialize them """
-        try:
+        if exists(self.paths['aspects_per_edu']):
             aspects_per_edu = self.serializer.load(
                 self.paths['aspects_per_edu'])
             logging.info('Aspect per EDU loaded.')
-        except IOError:
+        else:
             logging.info('No aspects extracted, starting from beginning!')
             aspects_per_edu = {}
 

@@ -17,7 +17,7 @@ class Serializer(object):
                 return pkl
         except IOError as err:
             log.error('Error {}'.format(str(err)))
-            raise IOError(str(err))
+            # raise IOError(str(err))
 
     def save(self, data, filename):
         """Save serialized data"""
