@@ -80,29 +80,25 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, [])]
-        documents_info = {189:
-                              {'EDUs': [559, 560, 561, 562, 563],
-                               'accepted_edus': [559, 560, 561, 562, 563],
-                               'aspect_concepts':
-                                   {
-                                       559: {'conceptnet_io': {}, 'sentic': {}},
-                                       560: {'conceptnet_io': {
-                                           u'thing': [{'end': u'thing',
-                                                       'end-lang': u'en',
-                                                       'relation': u'IsA',
-                                                       'start': u'object',
-                                                       'start-lang': u'en',
-                                                       'weight': 2.8284271},
-                                                      {'end': u'stuff',
-                                                       'end-lang': u'en',
-                                                       'relation': u'Synonym',
-                                                       'start': u'thing',
-                                                       'start-lang': u'en',
-                                                       'weight': 2.8284271}
-                                                      ]}
-                                       }
-                                   }
-                               }
+        documents_info = {189: {'EDUs': [559, 560, 561, 562, 563],
+                                'accepted_edus': [559, 560, 561, 562, 563],
+                                'aspect_concepts':
+                                    {'conceptnet_io': {
+                                        u'thing': [{'end': u'thing',
+                                                    'end-lang': u'en',
+                                                    'relation': u'IsA',
+                                                    'start': u'object',
+                                                    'start-lang': u'en',
+                                                    'weight': 2.8284271},
+                                                   {'end': u'stuff',
+                                                    'end-lang': u'en',
+                                                    'relation': u'Synonym',
+                                                    'start': u'thing',
+                                                    'start-lang': u'en',
+                                                    'weight': 2.8284271}
+                                                   ]}
+                                    }
+                                }
                           }
         graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
                                                        documents_info, True)
