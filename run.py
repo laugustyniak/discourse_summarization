@@ -290,14 +290,15 @@ class AspectAnalysisSystem:
                 logging.debug('edu: {}'.format(edu))
                 sentiment = analyzer.analyze(edu['raw_text'])[0]
 
+                # todo add to readme strucutre of docuemnt info and other dicts
                 if not edu['source_document_id'] in documents_info:
                     documents_info[edu['source_document_id']] = {
-                        'sentiment': {},
                         'EDUs': [],
                         'accepted_edus': [],
                         'aspects': {},
                         'aspect_concepts': {},
                         'aspect_keywords': {},
+                        'sentiment': {},
                     }
 
                 documents_info[edu['source_document_id']]['sentiment'].update(

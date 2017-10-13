@@ -24,6 +24,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.link_tree = self.serializer.load(sample_tree_189)
 
     def _set_rst_rules_document_info(self):
+        # todo check document info structure
         self.rest_rules = [(u'a movie', u'a film', u'Elaboration')]
         self.document_info = [{'EDUs': [0, 1, 2],
                                'accepted_edus': [2],
@@ -40,16 +41,16 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                'aspect_keywords': {
                                    'rake': [(u'perfect', 1.0),
                                             (u'pretty', 1.0)]},
-                               'aspects': [],
-                               'sentiment': [0, 0, 1]},
+                               'aspects': {2: [u'film']},
+                               'sentiment': {0: 0, 1: 0, 2: 1}},
                               {'EDUs': [3, 4],
                                'accepted_edus': [3, 4],
                                'aspect_concepts': {'conceptnet_io': {},
                                                    'sentic': {}},
                                'aspect_keywords': {
                                    'rake': [(u'browsing', 1.0)]},
-                               'aspects': [],
-                               'sentiment': [-1, 1]},
+                               'aspects': {},
+                               'sentiment': {3: -1, 4: 1}},
                               ]
         self.graph = nx.DiGraph()
         self.graph.add_edge(u'a movie', u'a film', relation_type=u'Elaboration')
@@ -97,7 +98,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                     'start-lang': u'en',
                                                     'weight': 2.8284271}
                                                    ]}
-                                    }
+                                    },
+                                # the rest of document info is skipped
                                 }
                           }
         graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
@@ -105,6 +107,9 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 4)
         self.assertGreaterEqual(len(graph.edges()), 3)
+        print(graph.nodes())
+        # todo check how to get nodes info or edge from networkx graph
+        # problem with graph[][] format
         self.assertEqual(graph['phone']['apple']['relation_type'],
                          'Elaboration')
         self.assertEqual(graph['object']['thing']['relation_type'], 'IsA')
