@@ -75,14 +75,14 @@ class AspectExtractor(object):
                or token['pos'] == 'NOUN' \
                or token['pos'] == 'ADJ'
 
-    def extract(self, input_text):
+    def extract(self, text_processed_spacy):
         """
         Extracts all possible aspects - NER, NOUN and NOUN PHRASES,
         potentially other dictionary based aspects.
 
         Parameters
         ----------
-        input_text : dictionary
+        text_processed_spacy : dictionary
             Dictionary with raw text and spacy object with each
             token information.
 
@@ -99,8 +99,8 @@ class AspectExtractor(object):
                     {'screen': ['display', 'pixel', ...]}}
 
         """
-        tokens = input_text['tokens']
-        text = input_text['raw_text']
+        tokens = text_processed_spacy['tokens']
+        text = text_processed_spacy['raw_text']
         aspect_sequence = []
         aspect_sequence_main_encountered = False
         aspect_sequence_enabled = False
@@ -108,9 +108,7 @@ class AspectExtractor(object):
 
         # todo add config with NER flag
         # 1. look for NER examples
-        # aspects = [ent.text for ent in tokens.ents
-        # if ent.label_ in self.ner_types]
-        aspects = input_text['entities']
+        aspects = text_processed_spacy['entities']
 
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
