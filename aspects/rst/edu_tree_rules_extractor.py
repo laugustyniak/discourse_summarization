@@ -89,11 +89,11 @@ class EDUTreeRulesExtractor(object):
                 else:
                     if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
-                        self.rules.append((self.left_leaf, self.right_leaf,
+                        self.rules.append((self.right_leaf, self.left_leaf,
                                            rel_name, weights))
                     else:
                         # [S][N]
-                        self.rules.append((self.right_leaf, self.left_leaf,
+                        self.rules.append((self.left_leaf, self.right_leaf,
                                            rel_name, weights))
         # do deeper into tree
         else:
