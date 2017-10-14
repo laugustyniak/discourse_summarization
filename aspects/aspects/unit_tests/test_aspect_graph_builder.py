@@ -25,7 +25,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def _set_rst_rules_document_info(self):
         # todo check document info structure
-        self.rest_rules = [(u'a movie', u'a film', u'Elaboration')]
+        self.rst_rules = [(u'a movie', u'a film', u'Elaboration')]
         self.document_info = [{'EDUs': [0, 1, 2],
                                'accepted_edus': [2],
                                'aspect_concepts': {

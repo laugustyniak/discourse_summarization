@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types=None, aspects_to_skip=None):
+    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True):
         """
         Initialize extractor aspect extractor.
 
@@ -33,7 +33,11 @@ class AspectExtractor(object):
 
         aspects_to_skip : list
             List of aspects that should be removed.
+
+        is_ner : bool
+            Do we want to extract Named Entity as aspects?
         """
+        self.is_ner = is_ner
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
         else:
@@ -105,10 +109,11 @@ class AspectExtractor(object):
         aspect_sequence_main_encountered = False
         aspect_sequence_enabled = False
         concept_aspects = {}
+        aspects = []
 
-        # todo add config with NER flag
         # 1. look for NER examples
-        aspects = text_processed_spacy['entities']
+        if self.is_ner:
+            aspects = text_processed_spacy['entities']
 
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
