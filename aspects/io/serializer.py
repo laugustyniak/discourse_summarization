@@ -5,8 +5,6 @@ log = logging.getLogger(__name__)
 
 
 class Serializer(object):
-    def __init__(self):
-        pass
 
     def load(self, filepath):
         """Load serialized data"""
