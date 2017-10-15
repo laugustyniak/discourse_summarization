@@ -3,6 +3,7 @@
 # update: Lukasz Augustyniak
 
 import logging
+import sys
 
 import RAKE
 import requests
@@ -12,6 +13,9 @@ from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
     SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS, \
     CONCEPTNET_LANG, CONCEPTNET_API_URL
 from aspects.enrichments.conceptnets import Sentic, ConceptNetIO
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 log = logging.getLogger(__name__)
 
