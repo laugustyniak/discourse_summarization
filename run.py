@@ -447,14 +447,13 @@ class AspectAnalysisSystem:
 
         analyzer = ResultsAnalyzer()
 
-        for documentId, documentInfo in documents_info.iteritems():
+        for document_id, document_info in documents_info.iteritems():
+            # todo: why document is never used?
             document = self.serializer.load(
-                self.paths['extracted_documents_dir'] + str(documentId))
-
-            analyzer.analyze(documentInfo['aspects'], gold_standard[documentId])
-
+                self.paths['extracted_documents_dir'] + str(document_id))
+            analyzer.analyze(document_info['aspects'],
+                             gold_standard[document_id])
         measures = analyzer.get_analysis_results()
-
         self.serializer.append_serialized(
             ';'.join(str(x) for x in [threshold] + measures) + '\n',
             self.paths['results'])
