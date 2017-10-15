@@ -17,14 +17,15 @@ class Serializer(object):
                 return pkl
         except IOError as err:
             log.error('Error {}'.format(str(err)))
-            # raise IOError(str(err))
 
     def save(self, data, filename):
         """Save serialized data"""
         with open(filename, "wb") as fo:
+            log.info('File {} will be serialized.'.format(filename))
             cPickle.dump(data, fo, protocol=cPickle.HIGHEST_PROTOCOL)
 
     def append_serialized(self, string_data, filename):
         """Append serialized data"""
         with open(filename, "a") as fo:
+            log.info('File {} will be serialized (appended).'.format(filename))
             fo.write(string_data)
