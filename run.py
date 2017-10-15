@@ -29,7 +29,7 @@ from parse import DiscourseParser
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s;%(filename)s:%(lineno)s;'
-                           '%(funcName)20s();%(message)s',
+                           '%(funcName)s();%(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     filename='logs/run.log',
                     filemode='w',
@@ -111,6 +111,7 @@ class AspectAnalysisSystem:
 
         self.sent_model_path = sent_model_path
 
+        #  todo paths moved to separate module
         self.paths = {}
         self.paths['input'] = input_path
 
@@ -181,6 +182,7 @@ class AspectAnalysisSystem:
         documents_count = len(existing_documents_list)
 
         # FIXME: disambiguate file loading and metadata information storing
+        # todo why metadata is not stored?
         if documents_count == 0:
             f_extension = basename(self.input_file_path).split('.')[-1]
             logging.debug('Input file extension: {}'.format(f_extension))
@@ -217,6 +219,7 @@ class AspectAnalysisSystem:
                             'extracted_documents_metadata'] + str(idx))
                         documents_count += 1
             else:
+                # todo: rewrite custom exception
                 raise 'Wrong file type -> extension'
             logging.info('Number of all documents to analyse: {}'.format(
                 len(raw_documents)))
@@ -317,7 +320,7 @@ class AspectAnalysisSystem:
             self.serializer.save(documents_info, self.paths['documents_info'])
 
     def _extract_aspects_from_edu(self):
-        """ extract aspects from EDU and serialize them """
+        """ Extract aspects from EDU and serialize them """
         if exists(self.paths['aspects_per_edu']):
             aspects_per_edu = self.serializer.load(
                 self.paths['aspects_per_edu'])
@@ -335,7 +338,7 @@ class AspectAnalysisSystem:
         logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
         for eduid, edu in edus.iteritems():
-            if eduid not in documents_info:
+            if eduid not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(
                     edu)
@@ -360,6 +363,7 @@ class AspectAnalysisSystem:
                     self.serializer.save(documents_info,
                                          self.paths['documents_info'])
 
+        logging.info('Serializing aspect per edu and document info objects.')
         self.serializer.save(aspects_per_edu, self.paths['aspects_per_edu'])
         self.serializer.save(documents_info, self.paths['documents_info'])
 
@@ -411,8 +415,7 @@ class AspectAnalysisSystem:
             self.serializer.save(page_ranks, self.paths['aspects_importance'])
 
     def _filter_aspects(self, threshold):
-        """Odsiewamy śmieciowe aspekty na podsawie informacji o ich ważnosci"""
-
+        """Filter out aspects according to threshold"""
         aspects_importance = self.serializer.load(
             self.paths['aspects_importance'])
         documents_info = self.serializer.load(self.paths['documents_info'])
@@ -420,23 +423,16 @@ class AspectAnalysisSystem:
         aspects_count = len(aspects_importance)
         aspects_list = list(aspects_importance)
 
-        # """
-        for documentId, documentInfo in documents_info.iteritems():
-
+        for documentId, document_info in documents_info.iteritems():
             aspects = []
-
-            if 'aspects' in documentInfo:
-
-                for aspect in documentInfo['aspects']:
+            if 'aspects' in document_info:
+                for aspect in document_info['aspects']:
                     if aspect in aspects_importance:
                         aspect_position = float(
                             aspects_list.index(aspect) + 1) / aspects_count
-
                         if aspect_position < threshold:
                             aspects.append(aspect)
-
             documents_info[documentId]['aspects'] = aspects
-
         self.serializer.save(documents_info, self.paths['final_documents_info'])
 
     def _analyze_results(self, threshold):

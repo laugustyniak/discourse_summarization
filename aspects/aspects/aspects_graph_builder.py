@@ -55,15 +55,18 @@ class AspectsGraphBuilder(object):
             aspects_per_edu = dict(aspects_per_edu)
 
             # for all aspects from one edu list
-            for aspect_left in aspects_per_edu[left_node]:
-                # and for all aspects from the other edu list
-                for aspect_right in aspects_per_edu[right_node]:
-                    graph = self._add_node_to_graph(graph, aspect_left)
-                    graph = self._add_node_to_graph(graph, aspect_right)
-                    graph = self._add_edge_to_graph(graph, aspect_left,
-                                                    aspect_right,
-                                                    relation_type=relation)
-
+            try:
+                for aspect_left in aspects_per_edu[left_node]:
+                    # and for all aspects from the other edu list
+                    for aspect_right in aspects_per_edu[right_node]:
+                        graph = self._add_node_to_graph(graph, aspect_left)
+                        graph = self._add_node_to_graph(graph, aspect_right)
+                        graph = self._add_edge_to_graph(graph, aspect_left,
+                                                        aspect_right,
+                                                        relation_type=relation)
+            except KeyError as err:
+                log.info('Lack of aspect: {}'.format(str(err)))
+                
         return graph
 
     def _calculate_edges_weight(self, graph):
