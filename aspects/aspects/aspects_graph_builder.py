@@ -13,6 +13,19 @@ class AspectsGraphBuilder(object):
         pass
 
     def _add_node_to_graph(self, graph, node):
+        """
+        Add node with attributes to graph.
+
+        :param graph: networkx.Graph
+            Aspect-aspect graph.
+
+        :param node: str
+            node name
+
+        :return:
+            graph: networkx.Graph
+                Aspect-aspect graph with extended nodes attributes.
+        """
         if graph.has_node(node):
             graph.node[node]['support'] += 1
         else:

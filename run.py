@@ -21,6 +21,7 @@ from aspects.sentiment.sentiment_analyzer import \
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.results_analysis.results_analyzer import ResultsAnalyzer
+from aspects.results_analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.io.serializer import Serializer
 from aspects.utilities.utils_multiprocess import batch_with_indexes
 from aspects.utilities.custom_exceptions import WrongTypeException
@@ -458,6 +459,14 @@ class AspectAnalysisSystem:
             ';'.join(str(x) for x in [threshold] + measures) + '\n',
             self.paths['results'])
 
+    def _add_sentiment_to_graph_adn_dir_moi(self):
+        aspects_per_edu = self.serializer.load(self.paths['aspects_per_edu'])
+        documents_info = self.serializer.load(self.paths['documents_info'])
+        aspect_graph = self.serializer.load(self.paths['aspects_graph'])
+        aspect_graph = get_dir_moi_for_node(aspect_graph, aspects_per_edu,
+                                            documents_info)
+        self.serializer.save(aspect_graph, self.paths['aspects_graph'])
+
     def run(self):
 
         total_timer_start = time()
@@ -545,7 +554,18 @@ class AspectAnalysisSystem:
             "Aspects graph building succeeded in {:.2f} seconds".format(
                 timer_end - timer_start))
 
-        # filter aspects
+        # add sentiments to nodes/aspects and count Gerani dir-moi weight
+        logging.info('--------------------------------------')
+        logging.info("Sentiments to nodes/aspects and Gerani dir-moi weight...")
+
+        timer_start = time()
+        self._add_sentiment_to_graph_adn_dir_moi()
+        timer_end = time()
+
+        logging.info(
+            "Graph extended with sentiments for nodes and dir-moi in "
+            "{:.2f} seconds".format(timer_end - timer_start))
+
         logging.info('--------------------------------------')
         total_timer_end = time()
 
