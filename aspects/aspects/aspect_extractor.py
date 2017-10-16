@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-# update: Lukasz Augustyniak
 
 import logging
 import sys
 
 import RAKE
 import requests
+from simplejson import JSONDecodeError
 
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
@@ -173,7 +172,12 @@ class AspectExtractor(object):
                         next_page = next_page.replace(' ', '_')
                         log.info('#{} pages for {}'.format(n_pages, asp))
                         n_pages += 1
-                        response = requests.get(next_page).json()
+                        try:
+                            response = requests.get(next_page).json()
+                        except JSONDecodeError as err:
+                            log.error(
+                                'Response parsing error: {}'.format(str(err)))
+                            raise JSONDecodeError(str(err))
                         try:
                             cn_edges = response['edges']
                             cn_view = response['view']

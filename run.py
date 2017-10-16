@@ -23,6 +23,7 @@ from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.results_analysis.results_analyzer import ResultsAnalyzer
 from aspects.io.serializer import Serializer
 from aspects.utilities.utils_multiprocess import batch_with_indexes
+from aspects.utilities.custom_exceptions import WrongTypeException
 
 sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
@@ -219,8 +220,7 @@ class AspectAnalysisSystem:
                             'extracted_documents_metadata'] + str(idx))
                         documents_count += 1
             else:
-                # todo: rewrite custom exception
-                raise 'Wrong file type -> extension'
+                raise WrongTypeException()
             logging.info('Number of all documents to analyse: {}'.format(
                 len(raw_documents)))
         return documents_count
