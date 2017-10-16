@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
 import logging
 
 from collections import OrderedDict
@@ -41,7 +39,8 @@ class AspectsGraphBuilder(object):
         :param rules: list
             (aspect_id_1, aspect_id_2, relation, weight_dict)
 
-        :param aspects_per_edu:
+        :param aspects_per_edu: dict
+            Dict with id of edu and aspects extracted to this edu.
 
         :return: networkx.DiGraph()
             Graph with aspect-aspect relation.
@@ -102,12 +101,27 @@ class AspectsGraphBuilder(object):
               conceptnet_io=False):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
-        relation
-        :param rules: tuple (node_1, node_2, weight)
-        :param aspects_per_edu:
-        :param documents_info: dictionary with information about each edu
-        :param conceptnet_io: do we use ConcetNet.io relation in graph?
+        relation.
+
+        :param rules: tuple
+            List of rules that will be used to create aspect-aspect graph,
+            list elements: (node_1, node_2, weight).
+
+        :param aspects_per_edu: dict
+            Dictionary with edu id and it's aspects.
+
+        :param documents_info: dict
+            Dictionary with information about each edu.
+
+        :param conceptnet_io: bool
+            Do we use ConcetNet.io relation in graph?
+
         :return:
+            graph: networkx.Graph
+                Graph with aspect-aspect relations
+
+            page_rank: networkx.PageRank
+                PageRank counted for aspect-aspect graph.
         """
 
         graph = self._build_aspects_graph(rules, aspects_per_edu)
