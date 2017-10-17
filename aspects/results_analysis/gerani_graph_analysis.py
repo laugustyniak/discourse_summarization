@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -27,8 +26,10 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
 
     for aspect, sentiments in aspect_sentiments.iteritems():
         try:
-            graph.node[aspect]['sentiment'] = sentiments
-            graph.node[aspect]['dir_moi'] = np.sum([x ** 2 for x in sentiments])
+            # fixme GEXF write error with list
+            # graph.node[aspect]['sentiment'] = sentiments
+            graph.node[aspect]['dir_moi'] = int(
+                sum([x ** 2 for x in sentiments]))
             n_aspects_updated += 1
         except KeyError as err:
             n_aspects_not_in_graph += 1
