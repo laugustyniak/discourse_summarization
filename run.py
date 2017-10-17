@@ -27,6 +27,7 @@ from aspects.io.serializer import Serializer
 from aspects.utilities.utils_multiprocess import batch_with_indexes
 from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
+from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 
 sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
@@ -367,7 +368,8 @@ class AspectAnalysisSystem:
             builder = AspectsGraphBuilder()
             graph, page_ranks = builder.build(dependency_rules,
                                               aspects_per_edu,
-                                              documents_info)
+                                              documents_info,
+                                              CONCEPTNET_ASPECTS)
 
             self.serializer.save(graph, self.paths.aspects_graph)
             self.serializer.save(page_ranks, self.paths.aspects_importance)
