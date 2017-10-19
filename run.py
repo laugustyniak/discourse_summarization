@@ -335,17 +335,18 @@ class AspectAnalysisSystem:
             rules_extractor = EDUTreeRulesExtractor()
             rules = []
 
-            documents_info = self.serializer.load(self.paths.docs_info)
+            docs_info = self.serializer.load(self.paths.docs_info)
 
-            for document_id, document_info in documents_info.iteritems():
+            for doc_id, doc_info in docs_info.iteritems():
 
-                if len(document_info['accepted_edus']) > 0:
+                if len(doc_info['accepted_edus']) > 0:
                     link_tree = self.serializer.load(
-                        join(self.paths.link_trees, str(document_id)))
+                        join(self.paths.link_trees, str(doc_id)))
 
                 extracted_rules = rules_extractor.extract(link_tree,
-                                                          document_info[
-                                                              'accepted_edus'])
+                                                          doc_info[
+                                                              'accepted_edus'],
+                                                          doc_id)
 
                 if len(extracted_rules) > 0:
                     rules += extracted_rules

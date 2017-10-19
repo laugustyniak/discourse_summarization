@@ -72,15 +72,15 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def test_build_arrg_graph_rst_conceptnnet_io(self):
         self._setup_link_parse_tree_189()
-        aspects_graph_builder = AspectsGraphBuilder()
-        rules_extractor = EDUTreeRulesExtractor()
-        rules = rules_extractor.extract(self.link_tree, [559, 560, 562])
         aspects_per_edu = [(559, [u'phone']),  # test added manually
                            (560, [u'apple']),
                            (561, []),
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, [])]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_extractor = EDUTreeRulesExtractor()
+        rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
         documents_info = {189: {'EDUs': [559, 560, 561, 562, 563],
                                 'accepted_edus': [559, 560, 561, 562, 563],
                                 'aspect_concepts':
@@ -107,10 +107,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 4)
         self.assertGreaterEqual(len(graph.edges()), 3)
-        print(graph.nodes())
-        # todo check how to get nodes info or edge from networkx graph
-        # problem with graph[][] format
-        self.assertEqual(graph['phone']['apple']['relation_type'],
+        self.assertEqual(graph['apple']['phone']['relation_type'],
                          'Elaboration')
         self.assertEqual(graph['object']['thing']['relation_type'], 'IsA')
         self.assertEqual(graph['thing']['stuff']['relation_type'], 'Synonym')
@@ -122,36 +119,36 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def test_build_exemplary_arrg_graph_sample_tree_189(self):
         self._setup_link_parse_tree_189()
-        aspects_graph_builder = AspectsGraphBuilder()
-        rules_extractor = EDUTreeRulesExtractor()
-        rules = rules_extractor.extract(self.link_tree, [559, 560, 562])
         aspects_per_edu = [(559, [u'test']),  # test added manually
                            (560, [u'thing']),
                            (561, []),
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, [])]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_extractor = EDUTreeRulesExtractor()
+        rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
         graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
                                                        None, False)
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 1)
         self.assertGreaterEqual(len(graph.edges()), 1)
-        self.assertEqual(graph['test']['thing']['relation_type'], 'Elaboration')
+        self.assertEqual(graph['thing']['test']['relation_type'], 'Elaboration')
 
     def test_build_exemplary_arrg_graph_sample_tree_189_multiaspects(self):
         self._setup_link_parse_tree_189()
-        aspects_graph_builder = AspectsGraphBuilder()
-        rules_extractor = EDUTreeRulesExtractor()
-        rules = rules_extractor.extract(self.link_tree, [559, 560, 562])
         aspects_per_edu = [(559, [u'test', u'test2']),  # test added manually
                            (560, [u'thing', u'test2']),
                            (561, []),
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, [])]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_extractor = EDUTreeRulesExtractor()
+        rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
         graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
                                                        None, False)
         self.assertEqual(len(rules), 1)
         self.assertEqual(len(graph.nodes()), 3)
         self.assertEqual(len(graph.edges()), 4)
-        self.assertEqual(graph['test']['thing']['relation_type'], 'Elaboration')
+        self.assertEqual(graph['thing']['test']['relation_type'], 'Elaboration')

@@ -40,6 +40,7 @@ class EDUTreeRulesExtractor(object):
         self.weight_mapping = {'gerani': self.gerani,
                                'relation_type': self.rst_relation_type}
         self.only_hierarchical_relations = only_hierarchical_relations
+        self.doc_id = None
 
     def _process_tree(self, tree):
         for child_index, child in enumerate(tree):
@@ -89,18 +90,20 @@ class EDUTreeRulesExtractor(object):
                 else:
                     if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
-                        self.rules.append((self.right_leaf, self.left_leaf,
-                                           rel_name, weights))
+                        self.rules.append(
+                            (self.doc_id, self.right_leaf, self.left_leaf,
+                             rel_name, weights))
                     else:
                         # [S][N]
-                        self.rules.append((self.left_leaf, self.right_leaf,
-                                           rel_name, weights))
+                        self.rules.append(
+                            (self.doc_id, self.left_leaf, self.right_leaf,
+                             rel_name, weights))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
                 self._make_rules(leaf_left, child)
 
-    def extract(self, tree, accepted_edus):
+    def extract(self, tree, accepted_edus, doc_id):
         """
         Extract RST relation with BFS approach.
 
@@ -108,6 +111,8 @@ class EDUTreeRulesExtractor(object):
             RST Tree that will be parsed and relation will be extracted from it
         :param accepted_edus: list
             A list of aspect's ids.
+        :param doc_id : int
+            Document/tree id.
 
         :return: list
             A lsit of tuples with nodes and metadata (relations and weights)
@@ -118,6 +123,7 @@ class EDUTreeRulesExtractor(object):
             # if there are not any aspects it's not needed to extract relations
             return []
 
+        self.doc_id = doc_id
         self.tree = tree
         self._process_tree(tree)
 
@@ -138,9 +144,9 @@ class EDUTreeRulesExtractor(object):
                 sub_tree_height = self.left_child_parent.height()
             else:
                 sub_tree_height = self.right_child_parent.height()
-            return 1 - 0.5 * (
+            return round(1 - 0.5 * (
                 float(n_edus_between_analyzed_edus) / n_edus_in_tree) - 0.5 * (
-                float(tree_height) / sub_tree_height)
+                             float(tree_height) / sub_tree_height), 2)
         return 0
 
     def rst_relation_type(self):

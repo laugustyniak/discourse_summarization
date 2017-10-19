@@ -9,8 +9,10 @@ log = logging.getLogger(__name__)
 
 
 class AspectsGraphBuilder(object):
-    def __init__(self):
-        pass
+    def __init__(self, aspects_per_edu=None):
+        if aspects_per_edu is None:
+            aspects_per_edu = []
+        self.aspects_per_edu = dict(aspects_per_edu)
 
     def _add_node_to_graph(self, graph, node):
         """
@@ -35,6 +37,7 @@ class AspectsGraphBuilder(object):
 
     def _add_edge_to_graph(self, graph, node_left, node_right,
                            relation_type='None'):
+        #
         if graph.has_edge(node_left, node_right):
             graph[node_left][node_right]['support'] += 1
         else:
@@ -62,23 +65,15 @@ class AspectsGraphBuilder(object):
 
         for rule_id, rule in enumerate(rules):
             log.debug('Rule: {}'.format(rule))
-            left_node, right_node, relation, weigths = rule
+            doc_id, left_node, right_node, relation, weigths = rule
 
-            aspects_per_edu = dict(aspects_per_edu)
-
-            # for all aspects from one edu list
-            try:
-                for aspect_left in aspects_per_edu[left_node]:
-                    # and for all aspects from the other edu list
-                    for aspect_right in aspects_per_edu[right_node]:
-                        graph = self._add_node_to_graph(graph, aspect_left)
-                        graph = self._add_node_to_graph(graph, aspect_right)
-                        graph = self._add_edge_to_graph(graph, aspect_left,
-                                                        aspect_right,
-                                                        relation_type=relation)
-            except KeyError as err:
-                log.info('Lack of aspect: {}'.format(str(err)))
-                
+            for aspect_left, aspect_right in self.aspects_iterator(
+                    left_node, right_node):
+                graph = self._add_node_to_graph(graph, aspect_left)
+                graph = self._add_node_to_graph(graph, aspect_right)
+                graph = self._add_edge_to_graph(graph, aspect_left,
+                                                aspect_right,
+                                                relation_type=relation)
         return graph
 
     def _calculate_edges_weight(self, graph):
@@ -158,3 +153,18 @@ class AspectsGraphBuilder(object):
         page_ranks = self._calculate_page_ranks(graph)
 
         return graph, page_ranks
+
+    def aspects_iterator(self, edu_id_1, edu_id_2):
+        """
+        Generator for aspects pairs for provided pair of edu id. 
+        :param edu_id_1: int
+            Left 
+        :param edu_id_2: int
+        :return:
+        """
+        try:
+            for aspect_left in self.aspects_per_edu[edu_id_1]:
+                for aspect_right in self.aspects_per_edu[edu_id_2]:
+                    yield (aspect_left, aspect_right)
+        except KeyError as err:
+            log.info('Lack of aspect: {}'.format(str(err)))

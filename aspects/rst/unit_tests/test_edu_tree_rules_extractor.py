@@ -24,44 +24,46 @@ class AspectExtractionTest(unittest.TestCase):
         self.assertEqual(self.link_tree.height(), 5)
 
     def test_tree_parsing_and_get_empty_rules(self):
-        rules = self.rules_extractor.extract(self.link_tree, [])
+        rules = self.rules_extractor.extract(self.link_tree, [], 0)
         self.assertEqual(len(rules), 0)
 
     def test_tree_parsing_and_get_rules_hierarchical(self):
         rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
                                                 only_hierarchical_relations=True)
         rules = rules_extractor.extract(self.link_tree,
-                                        [513, 514, 515, 516, 517])
-        expected_rules = [(513, 514, 'Elaboration', {'gerani': -0.25}),
-                          (515, 516, 'Elaboration', {'gerani': 0.375}),
-                          (515, 517, 'Elaboration',
-                           {'gerani': 0.29166666666666663})]
+                                        [513, 514, 515, 516, 517],
+                                        1)
+        expected_rules = [(1, 514, 513, 'Elaboration', {'gerani': -0.25}),
+                          (1, 516, 515, 'Elaboration', {'gerani': 0.38}),
+                          (1, 517, 515, 'Elaboration',
+                           {'gerani': 0.29})]
         self.assertEqual(rules, expected_rules)
 
     def test_tree_parsing_and_get_rules_all(self):
         rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
                                                 only_hierarchical_relations=False)
         rules = rules_extractor.extract(self.link_tree,
-                                        [513, 514, 515, 516, 517])
-        expected_rules = [(513, 514, 'Elaboration', {'gerani': -0.25}),
-                          (513, 515, 'same-unit',
-                           {'gerani': 0.41666666666666663}), (
-                              513, 516, 'same-unit',
-                              {'gerani': 0.33333333333333337}), (
-                              513, 517, 'same-unit',
+                                        [513, 514, 515, 516, 517],
+                                        1)
+        expected_rules = [(1, 514, 513, 'Elaboration', {'gerani': -0.25}),
+                          (1, 515, 513, 'same-unit',
+                           {'gerani': 0.42}), (
+                              1, 516, 513, 'same-unit',
+                              {'gerani': 0.33}), (
+                              1, 517, 513, 'same-unit',
                               {'gerani': 0.25}),
-                          (514, 515, 'same-unit',
+                          (1, 515, 514, 'same-unit',
                            {'gerani': 0.5}),
-                          (514, 516, 'same-unit',
-                           {'gerani': 0.41666666666666663}), (
-                              514, 517, 'same-unit',
-                              {'gerani': 0.33333333333333337}), (
-                              515, 516, 'Elaboration',
-                              {'gerani': 0.375}),
-                          (515, 517, 'Elaboration',
-                           {'gerani': 0.29166666666666663}), (
-                              516, 517, 'Joint',
-                              {'gerani': 0.16666666666666663})]
+                          (1, 516, 514, 'same-unit',
+                           {'gerani': 0.42}), (
+                              1, 517, 514, 'same-unit',
+                              {'gerani': 0.33}), (
+                              1, 516, 515, 'Elaboration',
+                              {'gerani': 0.38}),
+                          (1, 517, 515, 'Elaboration',
+                           {'gerani': 0.29}), (
+                              1, 517, 516, 'Joint',
+                              {'gerani': 0.17})]
         self.assertEqual(rules, expected_rules)
 
     def test_get_nucleus_and_satellite(self):
@@ -89,11 +91,12 @@ class AspectExtractionTest(unittest.TestCase):
         rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
                                                 only_hierarchical_relations=True)
         rules = rules_extractor.extract(self.link_tree,
-                                        [513, 514, 515, 516, 517])
-        expected_rules = [(513, 514, 'Elaboration', {'gerani': -0.25}),
-                          (515, 516, 'Elaboration', {'gerani': 0.375}),
-                          (515, 517, 'Elaboration',
-                           {'gerani': 0.29166666666666663})]
+                                        [513, 514, 515, 516, 517],
+                                        1)
+        expected_rules = [(1, 514, 513, 'Elaboration', {'gerani': -0.25}),
+                          (1, 516, 515, 'Elaboration', {'gerani': 0.38}),
+                          (1, 517, 515, 'Elaboration',
+                           {'gerani': 0.29})]
         self.assertEqual(rules, expected_rules)
 
     def test_multi_aspects_per_edu(self):
@@ -101,16 +104,17 @@ class AspectExtractionTest(unittest.TestCase):
         rules_extractor = EDUTreeRulesExtractor(
             only_hierarchical_relations=False)
         rules = rules_extractor.extract(self.link_tree,
-                                        [559, 560, 561, 562, 563])
+                                        [559, 560, 561, 562, 563],
+                                        doc_id=1)
         expected_rules = [
-            (559, 560, 'Elaboration', {'gerani': 0.33333333333333337}),
-            (559, 561, 'Elaboration', {'gerani': 0.2333333333333334}),
-            (559, 562, 'same-unit', {'gerani': 0.30000000000000004}),
-            (559, 563, 'same-unit', {'gerani': 0.19999999999999996}),
-            (560, 561, 'Elaboration', {'gerani': 0.0}),
-            (560, 562, 'same-unit', {'gerani': 0.4}),
-            (560, 563, 'same-unit', {'gerani': 0.30000000000000004}),
-            (561, 562, 'same-unit', {'gerani': 0.5}),
-            (561, 563, 'same-unit', {'gerani': 0.4}),
-            (562, 563, 'Elaboration', {'gerani': 0.0})]
+            (1, 560, 559, 'Elaboration', {'gerani': 0.33}),
+            (1, 561, 559, 'Elaboration', {'gerani': 0.23}),
+            (1, 562, 559, 'same-unit', {'gerani': 0.3}),
+            (1, 563, 559, 'same-unit', {'gerani': 0.2}),
+            (1, 561, 560, 'Elaboration', {'gerani': 0.0}),
+            (1, 562, 560, 'same-unit', {'gerani': 0.4}),
+            (1, 563, 560, 'same-unit', {'gerani': 0.3}),
+            (1, 562, 561, 'same-unit', {'gerani': 0.5}),
+            (1, 563, 561, 'same-unit', {'gerani': 0.4}),
+            (1, 563, 562, 'Elaboration', {'gerani': 0.0})]
         self.assertEqual(rules, expected_rules)
