@@ -155,10 +155,6 @@ class AspectsGraphBuilder(object):
                                            relation_type=concept['relation'])
                 except KeyError:
                     log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
-
         page_ranks = self._calculate_page_ranks(graph)
-
-        # todo
-        # Gerani's dir-moi(a) = sentiment^2 -> importance of node/aspect
 
         return graph, page_ranks
