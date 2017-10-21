@@ -102,8 +102,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                 # the rest of document info is skipped
                                 }
                           }
-        graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
-                                                       documents_info, True)
+        graph, page_rank = aspects_graph_builder.build(rules, documents_info,
+                                                       True)
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 4)
         self.assertGreaterEqual(len(graph.edges()), 3)
@@ -128,8 +128,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
-        graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
-                                                       None, False)
+        graph, page_rank = aspects_graph_builder.build(rules, None, False)
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 1)
         self.assertGreaterEqual(len(graph.edges()), 1)
@@ -146,8 +145,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
-        graph, page_rank = aspects_graph_builder.build(rules, aspects_per_edu,
-                                                       None, False)
+        graph, page_rank = aspects_graph_builder.build(rules, None, False)
         self.assertEqual(len(rules), 1)
         self.assertEqual(len(graph.nodes()), 3)
         self.assertEqual(len(graph.edges()), 4)

@@ -48,15 +48,12 @@ class AspectsGraphBuilder(object):
 
         return graph
 
-    def _build_aspects_graph(self, rules, aspects_per_edu):
+    def _build_aspects_graph(self, rules):
         """
         Build graph based on list of tuples with apsects ids.
 
         :param rules: list
             (aspect_id_1, aspect_id_2, relation, weight_dict)
-
-        :param aspects_per_edu: dict
-            Dict with id of edu and aspects extracted to this edu.
 
         :return: networkx.DiGraph()
             Graph with aspect-aspect relation.
@@ -105,7 +102,7 @@ class AspectsGraphBuilder(object):
 
         return page_ranks
 
-    def build(self, rules, aspects_per_edu, documents_info,
+    def build(self, rules, documents_info,
               conceptnet_io=False):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
@@ -114,9 +111,6 @@ class AspectsGraphBuilder(object):
         :param rules: tuple
             List of rules that will be used to create aspect-aspect graph,
             list elements: (node_1, node_2, weight).
-
-        :param aspects_per_edu: dict
-            Dictionary with edu id and it's aspects.
 
         :param documents_info: dict
             Dictionary with information about each edu.
@@ -132,7 +126,7 @@ class AspectsGraphBuilder(object):
                 PageRank counted for aspect-aspect graph.
         """
 
-        graph = self._build_aspects_graph(rules, aspects_per_edu)
+        graph = self._build_aspects_graph(rules)
         graph = self._calculate_edges_weight(graph)
         graph = self._delete_temporary_support_info(graph)
 

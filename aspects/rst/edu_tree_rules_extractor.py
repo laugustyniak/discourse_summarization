@@ -11,7 +11,8 @@ class EDUTreeRulesExtractor(object):
         """
         Extracting rules from RST tress.
 
-        rules - list of rules extracted from Discourse Trees
+        rules - dictionaty of rules extracted from Discourse Trees, key is
+            document id, value lsit of rules for tree
         tree - Discource Tree
         accepted_edus - list of edu ids that consist of aspect
         left_child_parent - parent of actually analyzed left leaf
@@ -29,7 +30,7 @@ class EDUTreeRulesExtractor(object):
         """
         if weight_type is None:
             weight_type = ['gerani']
-        self.rules = []
+        self.rules = {}
         self.tree = None
         self.accepted_edus = None
         self.left_child_parent = None
@@ -90,14 +91,14 @@ class EDUTreeRulesExtractor(object):
                 else:
                     if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
-                        self.rules.append(
-                            (self.doc_id, self.right_leaf, self.left_leaf,
-                             rel_name, weights))
+                        self.rules[self.doc_id] += [(self.right_leaf,
+                                                     self.left_leaf,
+                                                     rel_name, weights)]
                     else:
                         # [S][N]
-                        self.rules.append(
-                            (self.doc_id, self.left_leaf, self.right_leaf,
-                             rel_name, weights))
+                        self.rules[self.doc_id] += [(self.left_leaf,
+                                                     self.right_leaf,
+                                                     rel_name, weights)]
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
@@ -114,8 +115,9 @@ class EDUTreeRulesExtractor(object):
         :param doc_id : int
             Document/tree id.
 
-        :return: list
-            A lsit of tuples with nodes and metadata (relations and weights)
+        :return: dict
+            Dictionary with document id and list of tuples with nodes and
+            metadata (relations and weights)
         """
         if len(accepted_edus) > 1:
             self.accepted_edus = accepted_edus
@@ -124,6 +126,7 @@ class EDUTreeRulesExtractor(object):
             return []
 
         self.doc_id = doc_id
+        self.rules[self.doc_id] = []
         self.tree = tree
         self._process_tree(tree)
 

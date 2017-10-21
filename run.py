@@ -333,7 +333,7 @@ class AspectAnalysisSystem:
 
             link_tree = None
             rules_extractor = EDUTreeRulesExtractor()
-            rules = []
+            rules = {}
 
             docs_info = self.serializer.load(self.paths.docs_info)
 
@@ -348,8 +348,8 @@ class AspectAnalysisSystem:
                                                               'accepted_edus'],
                                                           doc_id)
 
-                if len(extracted_rules) > 0:
-                    rules += extracted_rules
+                # if len(extracted_rules) > 0:
+                rules.update(extracted_rules)
 
             logging.info('Rules extracted.')
             self.serializer.save(rules, self.paths.edu_dependency_rules)
@@ -366,9 +366,8 @@ class AspectAnalysisSystem:
             documents_info = self.serializer.load(
                 self.paths.docs_info)
 
-            builder = AspectsGraphBuilder()
+            builder = AspectsGraphBuilder(aspects_per_edu)
             graph, page_ranks = builder.build(dependency_rules,
-                                              aspects_per_edu,
                                               documents_info,
                                               CONCEPTNET_ASPECTS)
 
