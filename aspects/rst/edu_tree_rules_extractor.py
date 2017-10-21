@@ -1,6 +1,8 @@
 import sys
 import os
 
+from collections import defaultdict
+
 sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
 from trees.parse_tree import ParseTree
 
@@ -91,14 +93,14 @@ class EDUTreeRulesExtractor(object):
                 else:
                     if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
-                        self.rules[self.doc_id] += [(self.right_leaf,
-                                                     self.left_leaf,
-                                                     rel_name, weights)]
+                        self.rules[self.doc_id].append((self.right_leaf,
+                                                        self.left_leaf,
+                                                        rel_name, weights))
                     else:
                         # [S][N]
-                        self.rules[self.doc_id] += [(self.left_leaf,
-                                                     self.right_leaf,
-                                                     rel_name, weights)]
+                        self.rules[self.doc_id].append((self.left_leaf,
+                                                        self.right_leaf,
+                                                        rel_name, weights))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
@@ -126,7 +128,7 @@ class EDUTreeRulesExtractor(object):
             return []
 
         self.doc_id = doc_id
-        self.rules[self.doc_id] = []
+        self.rules = defaultdict(list)
         self.tree = tree
         self._process_tree(tree)
 
