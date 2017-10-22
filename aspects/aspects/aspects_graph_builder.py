@@ -13,10 +13,84 @@ Relation = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani')
 
 
 class AspectsGraphBuilder(object):
+
     def __init__(self, aspects_per_edu=None):
+        """
+
+        Parameters
+        ----------
+        aspects_per_edu : list
+            List of rules aspect, aspect, relation and weights.
+
+        """
         if aspects_per_edu is None:
             aspects_per_edu = []
         self.aspects_per_edu = dict(aspects_per_edu)
+
+    def build(self, rules, documents_info=None,
+              conceptnet_io=False, filter_multi_rules=False,
+              filter_confidence=None):
+        """
+        Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
+        relation.
+
+        Parameters
+        ----------
+        filter_confidence : int
+            How many top rules based on confidence do we want to
+            extract/filtered. If none then skipped filtering. None as default.
+
+        filter_multi_rules: bool
+            Do we want to get only max weight if there are more than one
+            rule with the same node_1, node_2 and relation type in processed
+            RST Tree? False as default.
+
+        rules: dict
+            Dictionary with document id and list of rules that will be used to
+            create aspect-aspect graph, list elements: (node_1, node_2,
+            relation type, weight).
+
+        documents_info: dict
+            Dictionary with information about each edu.
+
+        conceptnet_io: bool
+            Do we use ConcetNet.io relation in graph?
+
+        Returns
+        -------
+        graph: networkx.Graph
+            Graph with aspect-aspect relations
+
+        page_rank: networkx.PageRank
+            PageRank counted for aspect-aspect graph.
+
+        """
+        if filter_multi_rules:
+            rules = self.filter_only_max_gerani_weight_multi_rules(rules)
+        if filter_confidence:
+            rules = self.get_maximum_confidence_rule_per_doc(rules,
+                                                             filter_confidence)
+        graph = self._build_aspects_graph(rules)
+        graph = self._calculate_edges_support(graph)
+        # graph = self._delete_nodes_attribute(graph, 'support')
+
+        aspect = None
+
+        if conceptnet_io:
+            # add relation from conceptnet
+            for doc in documents_info.values():
+                try:
+                    cnio = doc['aspect_concepts']['conceptnet_io']
+                    for aspect, concepts in cnio.iteritems():
+                        log.info(aspect)
+                        for concept in concepts:
+                            graph.add_edge(concept['start'], concept['end'],
+                                           relation_type=concept['relation'])
+                except KeyError:
+                    log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
+        page_ranks = self._calculate_page_ranks(graph)
+
+        return graph, page_ranks
 
     def _add_node_to_graph(self, graph, node):
         """
@@ -144,63 +218,6 @@ class AspectsGraphBuilder(object):
                                         reverse=True))
 
         return page_ranks
-
-    def build(self, rules, documents_info=None,
-              conceptnet_io=False, filter_multi_rules=False):
-        """
-        Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
-        relation.
-
-        Parameters
-        ----------
-        filter_multi_rules: bool
-            Do we want to get only max weight if there are more than one
-            rule with the same node_1, node_2 and relation type in processed
-            RST Tree? False as default.
-
-        rules: dict
-            Dictionary with document id and list of rules that will be used to
-            create aspect-aspect graph, list elements: (node_1, node_2,
-            relation type, weight).
-
-        documents_info: dict
-            Dictionary with information about each edu.
-
-        conceptnet_io: bool
-            Do we use ConcetNet.io relation in graph?
-
-        Returns
-        -------
-        graph: networkx.Graph
-            Graph with aspect-aspect relations
-
-        page_rank: networkx.PageRank
-            PageRank counted for aspect-aspect graph.
-
-        """
-        if filter_multi_rules:
-            rules = self.filter_only_max_gerani_weight_multi_rules(rules)
-        graph = self._build_aspects_graph(rules)
-        graph = self._calculate_edges_support(graph)
-        # graph = self._delete_nodes_attribute(graph, 'support')
-
-        aspect = None
-
-        if conceptnet_io:
-            # add relation from conceptnet
-            for doc in documents_info.values():
-                try:
-                    cnio = doc['aspect_concepts']['conceptnet_io']
-                    for aspect, concepts in cnio.iteritems():
-                        log.info(aspect)
-                        for concept in concepts:
-                            graph.add_edge(concept['start'], concept['end'],
-                                           relation_type=concept['relation'])
-                except KeyError:
-                    log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
-        page_ranks = self._calculate_page_ranks(graph)
-
-        return graph, page_ranks
 
     def aspects_iterator(self, edu_id_1, edu_id_2):
         """
