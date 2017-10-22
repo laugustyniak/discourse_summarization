@@ -1,11 +1,15 @@
 import logging
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict, Counter, namedtuple
+from itertools import groupby
 from operator import itemgetter
 
 import networkx as nx
+import operator
 
 log = logging.getLogger(__name__)
+
+Relation = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani')
 
 
 class AspectsGraphBuilder(object):
@@ -29,9 +33,9 @@ class AspectsGraphBuilder(object):
                 Aspect-aspect graph with extended nodes attributes.
         """
         if graph.has_node(node):
-            graph.node[node]['support'] += 1
+            graph.node[node]['counter'] += 1
         else:
-            graph.add_node(node, {'support': 1})
+            graph.add_node(node, {'counter': 1})
 
         return graph
 
@@ -39,10 +43,10 @@ class AspectsGraphBuilder(object):
                            relation_type='None'):
         #
         if graph.has_edge(node_left, node_right):
-            graph[node_left][node_right]['support'] += 1
+            graph[node_left][node_right]['counter'] += 1
         else:
             graph.add_edge(node_left, node_right)
-            graph[node_left][node_right]['support'] = 1
+            graph[node_left][node_right]['counter'] = 1
 
         graph[node_left][node_right]['relation_type'] = relation_type
 
@@ -60,75 +64,125 @@ class AspectsGraphBuilder(object):
         """
         graph = nx.DiGraph()
 
-        for rule_id, rule in enumerate(rules):
-            log.debug('Rule: {}'.format(rule))
-            doc_id, left_node, right_node, relation, weigths = rule
+        for doc_id, rules in rules.iteritems():
+            for rule in rules:
+                log.debug('Rule: {}'.format(rule))
+                left_node, right_node, relation, weigths = rule
 
-            for aspect_left, aspect_right in self.aspects_iterator(
-                    left_node, right_node):
-                graph = self._add_node_to_graph(graph, aspect_left)
-                graph = self._add_node_to_graph(graph, aspect_right)
-                graph = self._add_edge_to_graph(graph, aspect_left,
-                                                aspect_right,
-                                                relation_type=relation)
+                for aspect_left, aspect_right in self.aspects_iterator(
+                        left_node, right_node):
+                    graph = self._add_node_to_graph(graph, aspect_left)
+                    graph = self._add_node_to_graph(graph, aspect_right)
+                    graph = self._add_edge_to_graph(graph, aspect_left,
+                                                    aspect_right,
+                                                    relation_type=relation)
         return graph
 
-    def _calculate_edges_weight(self, graph):
+    def _calculate_edges_support(self, graph):
+        """
+        Calculate confidence/weight of each node/aspect
+        Parameters
+        ----------
+        graph : networkx.Graph
+            Graph of aspect-aspect relation ARRG.
 
+        Returns
+        -------
+        graph : networkx.Graph
+            Graph of aspect-aspect relation ARRG with calculated confidence.
+
+        """
+        attribute = 'counter'
         for edge in graph.edges():
-            edge_support = graph[edge[0]][edge[1]]['support']
-            first_node_support = graph.node[edge[0]]['support']
-            # todo: describe method and lines
-            # todo: add reference to paper and equations
-            graph[edge[0]][edge[1]]['weight'] = \
+            edge_support = graph[edge[0]][edge[1]][attribute]
+            first_node_support = graph.node[edge[0]][attribute]
+            graph[edge[0]][edge[1]]['support'] = \
                 edge_support / float(first_node_support)
-
-            del graph[edge[0]][edge[1]]['support']
+            del graph[edge[0]][edge[1]][attribute]
 
         return graph
 
-    def _delete_temporary_support_info(self, graph):
+    def _delete_nodes_attribute(self, graph, attibute):
+        """
+        Remove atttibute from all nodes.
 
+        Parameters
+        ----------
+        graph : networkx.Graph
+            Graph of aspect-aspect relation ARRG.
+
+        attibute : str
+            Name of attibute to be removed from all nodes.
+
+        Returns
+        -------
+        graph : networkx.Graph
+            Graph of aspect-aspect relation ARRG without attribute in nodes.
+        """
         for node in graph.nodes():
-            del graph.node[node]['support']
+            del graph.node[node][attibute]
 
         return graph
 
     def _calculate_page_ranks(self, graph):
+        """
+        Calculate Page Rank for ARRG.
 
+        Parameters
+        ----------
+        graph : networkx.Graph
+            Graph of aspect-aspect relation ARRG.
+
+        Returns
+        -------
+        page_ranks : OrderedDict
+            PAge Rank values for ARRG.
+
+        """
         page_ranks = nx.pagerank(graph)
         page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1),
                                         reverse=True))
 
         return page_ranks
 
-    def build(self, rules, documents_info,
-              conceptnet_io=False):
+    def build(self, rules, documents_info=None,
+              conceptnet_io=False, filter_multi_rules=False):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
         relation.
 
-        :param rules: tuple
-            List of rules that will be used to create aspect-aspect graph,
-            list elements: (node_1, node_2, weight).
+        Parameters
+        ----------
+        filter_multi_rules: bool
+            Do we want to get only max weight if there are more than one
+            rule with the same node_1, node_2 and relation type in processed
+            RST Tree? False as default.
 
-        :param documents_info: dict
+        rules: dict
+            Dictionary with document id and list of rules that will be used to
+            create aspect-aspect graph, list elements: (node_1, node_2,
+            relation type, weight).
+
+        documents_info: dict
             Dictionary with information about each edu.
 
-        :param conceptnet_io: bool
+        conceptnet_io: bool
             Do we use ConcetNet.io relation in graph?
 
-        :return:
-            graph: networkx.Graph
-                Graph with aspect-aspect relations
+        Returns
+        -------
+        graph: networkx.Graph
+            Graph with aspect-aspect relations
 
-            page_rank: networkx.PageRank
-                PageRank counted for aspect-aspect graph.
+        page_rank: networkx.PageRank
+            PageRank counted for aspect-aspect graph.
+
         """
-
+        if filter_multi_rules:
+            rules = self.filter_only_max_gerani_weight_multi_rules(rules)
         graph = self._build_aspects_graph(rules)
-        graph = self._calculate_edges_weight(graph)
-        graph = self._delete_temporary_support_info(graph)
+        graph = self._calculate_edges_support(graph)
+        # graph = self._delete_nodes_attribute(graph, 'support')
 
         aspect = None
 
@@ -150,11 +204,19 @@ class AspectsGraphBuilder(object):
 
     def aspects_iterator(self, edu_id_1, edu_id_2):
         """
-        Generator for aspects pairs for provided pair of edu id. 
-        :param edu_id_1: int
-            Left 
-        :param edu_id_2: int
-        :return:
+        Generator for aspect pairs of provided edu id pairs.
+
+        Parameters
+        ----------
+        edu_id_1 : int
+            EDU ID
+        edu_id_2 : int
+            EDU ID
+
+        Returns
+        -------
+        tuple
+            (aspect, aspect)
         """
         try:
             for aspect_left in self.aspects_per_edu[edu_id_1]:
@@ -162,3 +224,78 @@ class AspectsGraphBuilder(object):
                     yield (aspect_left, aspect_right)
         except KeyError as err:
             log.info('Lack of aspect: {}'.format(str(err)))
+
+    def filter_only_max_gerani_weight_multi_rules(self, rules):
+        """
+        Filter rules that are dupliates and got only these with max weight.
+
+        Parameters
+        ----------
+        rules : dict
+            Dictionary of document id and list of rules
+
+
+        Returns
+        -------
+        rules : dict
+            Dictionary of document id and list of rules
+        """
+        rules_filtered = defaultdict(list)
+        for doc_id, rules in rules.iteritems():
+            for rule in rules:
+                log.debug('Rule: {}'.format(rule))
+                left_node, right_node, relation, weigths = rule
+
+                for aspect_left, aspect_right in self.aspects_iterator(
+                        left_node, right_node):
+                    rules_filtered[doc_id].append((aspect_left, aspect_right,
+                                                   relation, weigths))
+
+        for doc_id, rls in rules_filtered.iteritems():
+            rules_filtered[doc_id] = [max(v, key=lambda x: x[3])
+                                      for
+                                      g, v in
+                                      groupby(sorted(rls), key=lambda x: x[:3])]
+        return rules_filtered
+
+    def get_maximum_confidence_rule_per_doc(self, rules, top_n_rules=1):
+        """
+
+
+        Parameters
+        ----------
+        rules : dict
+            Dictionary of document id and list of rules.
+
+        top_n_rules : int
+            How many rules with highest confidence do we want to extract? 1 as
+            default.
+
+        Returns
+        -------
+        rules_filtered : defaultdict
+            Dictionary of document id and list of rules.
+
+        """
+        rules_filtered = defaultdict(list)
+        for doc_id, rules_list in rules.iteritems():
+            rules_confidence = defaultdict(list)
+            for left_node, right_node, relation, gerani in rules_list:
+                for aspect_left, aspect_right in self.aspects_iterator(
+                        left_node, right_node):
+                    rules_confidence[doc_id].append(Relation(aspect_left,
+                                                             aspect_right,
+                                                             relation, gerani))
+            # count aspect, aspect, relation tuples
+            relation_counter = Counter(
+                [x[:3] for x in rules_confidence[doc_id]])
+            # count confidence, dict {(asp1, asp2, rel): confidence}
+            rules_confidence = {rel: float(freq) / len(rules_confidence) for
+                                rel, freq in
+                                relation_counter.iteritems()}
+            # sort by confidence
+            rules_confidence = sorted(rules_confidence,
+                                      key=operator.itemgetter(1), reverse=True)
+            # filter top n rules by confidence
+            rules_filtered[doc_id].extend(rules_confidence[:top_n_rules])
+        return rules_filtered

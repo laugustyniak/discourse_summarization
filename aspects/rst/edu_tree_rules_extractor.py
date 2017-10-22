@@ -1,10 +1,12 @@
 import sys
 import os
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
 from trees.parse_tree import ParseTree
+
+Relation = namedtuple('Relation', 'edu1 edu2 relation_type gerani')
 
 
 class EDUTreeRulesExtractor(object):
@@ -40,8 +42,6 @@ class EDUTreeRulesExtractor(object):
         self.right_child_parent = None
         self.right_leaf = None
         self.weight_type = [w.lower() for w in weight_type]
-        self.weight_mapping = {'gerani': self.gerani,
-                               'relation_type': self.rst_relation_type}
         self.only_hierarchical_relations = only_hierarchical_relations
         self.doc_id = None
 
@@ -81,9 +81,8 @@ class EDUTreeRulesExtractor(object):
             if tree in self.accepted_edus and leaf_left in self.accepted_edus:
                 self.left_leaf = leaf_left
                 self.right_leaf = tree
-                weights = {k: v() for k, v in self.weight_mapping.iteritems()
-                           if k in self.weight_type}
                 relation = self.rst_relation_type()
+                # relation name, nucleus/satellite, nucleus/satellite
                 rel_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(
                     relation)
                 if self.only_hierarchical_relations \
@@ -93,14 +92,14 @@ class EDUTreeRulesExtractor(object):
                 else:
                     if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
-                        self.rules[self.doc_id].append((self.right_leaf,
-                                                        self.left_leaf,
-                                                        rel_name, weights))
+                        self.rules[self.doc_id].append(
+                            Relation(self.right_leaf, self.left_leaf, rel_name,
+                                     self.gerani()))
                     else:
                         # [S][N]
-                        self.rules[self.doc_id].append((self.left_leaf,
-                                                        self.right_leaf,
-                                                        rel_name, weights))
+                        self.rules[self.doc_id].append(
+                            Relation(self.left_leaf, self.right_leaf, rel_name,
+                                     self.gerani()))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):

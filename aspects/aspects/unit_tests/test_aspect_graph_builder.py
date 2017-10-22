@@ -25,6 +25,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def _set_rst_rules_document_info(self):
         # todo check document info structure
+        # fixme udpate rules structure
         self.rst_rules = [(u'a movie', u'a film', u'Elaboration')]
         self.document_info = [{'EDUs': [0, 1, 2],
                                'accepted_edus': [2],
@@ -77,7 +78,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (561, []),
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
-                           (563, [])]
+                           (563, []),
+                           ]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
@@ -96,7 +98,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                     'relation': u'Synonym',
                                                     'start': u'thing',
                                                     'start-lang': u'en',
-                                                    'weight': 2.8284271}
+                                                    'weight': 2.8284271},
                                                    ]}
                                     },
                                 # the rest of document info is skipped
@@ -145,8 +147,110 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
-        graph, page_rank = aspects_graph_builder.build(rules, None, False)
+        graph, page_rank = aspects_graph_builder.build(rules,
+                                                       conceptnet_io=False)
         self.assertEqual(len(rules), 1)
         self.assertEqual(len(graph.nodes()), 3)
         self.assertEqual(len(graph.edges()), 4)
         self.assertEqual(graph['thing']['test']['relation_type'], 'Elaboration')
+
+    def test_filter_only_max_weight(self):
+        rules = {1: [(514, 513, 'Elaboration', -0.25),
+                     (514, 513, 'Elaboration', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (514, 513, 'Elaboration', 124124.38),
+                     (516, 515, 'Elaboration', 0.29)],
+                 }
+        aspects_per_edu = [(513, [u'513']),  # test added manually
+                           (514, [u'514']),
+                           (515, [u'515']),
+                           (516, [u'516'])]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules(
+            rules)
+        rules_expected = {
+            1: [('514', '513', 'Elaboration', 124124.38),
+                ('516', '515', 'Elaboration', 0.29)]}
+        self.assertEqual(rules_obtained, rules_expected)
+
+    def test_filter_only_max_weight_different_relation_type(self):
+        rules = {1: [(514, 513, 'Elaboration', -0.25),
+                     (514, 513, 'Contrast', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (514, 513, 'Contrast', 124124.38),
+                     (516, 515, 'Elaboration', 0.29)],
+                 }
+        aspects_per_edu = [(513, [u'513']),  # test added manually
+                           (514, [u'514']),
+                           (515, [u'515']),
+                           (516, [u'516'])]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules(
+            rules)
+        rules_expected = {
+            1: [('514', '513', 'Contrast', 124124.38),
+                ('514', '513', 'Elaboration', 1.38),
+                ('516', '515', 'Elaboration', 0.29),
+                ]}
+        self.assertEqual(rules_obtained, rules_expected)
+
+    def test_filter_only_max_weight_multiaspects(self):
+        rules = {1: [(514, 513, 'Elaboration', -0.25),
+                     (514, 513, 'Elaboration', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (517, 513, 'Elaboration', 94.38),
+                     (516, 515, 'Elaboration', 0.29),
+                     (516, 513, 'Elaboration', 0.2),
+                     ]
+                 }
+        aspects_per_edu = [(513, [u'513', u'test13']),  # test added manually
+                           (514, [u'514', u'test14']),
+                           (515, [u'515']),
+                           (516, [u'516']),
+                           (517, [u'test17']),
+                           ]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules(
+            rules)
+        rules_expected = {
+            1: [(u'514', u'513', u'Elaboration', 1.38),
+                (u'514', u'test13', u'Elaboration', 1.38),
+                (u'516', u'513', u'Elaboration', 0.2),
+                (u'516', u'515', u'Elaboration', 0.29),
+                (u'516', u'test13', u'Elaboration', 0.2),
+                (u'test14', u'513', u'Elaboration', 1.38),
+                (u'test14', u'test13', u'Elaboration', 1.38),
+                (u'test17', u'513', u'Elaboration', 94.38),
+                (u'test17', u'test13', u'Elaboration', 94.38),
+                ]
+        }
+        self.assertEqual(rules_obtained, rules_expected)
+
+    def test_get_maximum_confidence_rule_per_doc(self):
+        rules = {1: [(514, 513, 'Elaboration', -0.25),
+                     (514, 513, 'Elaboration', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (517, 513, 'Elaboration', 94.38),
+                     (516, 515, 'Elaboration', 0.29),
+                     (516, 513, 'Elaboration', 0.2),
+                     ],
+                 2: [(514, 513, 'same-unit', -0.25),
+                     (514, 513, 'same-unit', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (517, 513, 'Elaboration', 94.38),
+                     (516, 515, 'Elaboration', 0.29),
+                     (516, 513, 'Elaboration', 0.2),
+                     ],
+                 }
+        aspects_per_edu = [(513, [u'513', u'test13']),  # test added manually
+                           (514, [u'514', u'test14']),
+                           (515, [u'515']),
+                           (516, [u'516']),
+                           (517, [u'test17']),
+                           ]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_obtained = aspects_graph_builder.get_maximum_confidence_rule_per_doc(
+            rules, top_n_rules=1)
+        rules_expected = {1: [(u'test14', u'test13', 'Elaboration')],
+                          2: [(u'514', u'test13', 'Elaboration')]}
+        self.assertEqual(rules_obtained, rules_expected)

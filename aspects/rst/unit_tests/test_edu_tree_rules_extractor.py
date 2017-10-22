@@ -4,6 +4,7 @@ import sys
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
+from aspects.rst.edu_tree_rules_extractor import Relation
 
 sys.path.append("../../../edu_dependency_parser/src")
 
@@ -33,9 +34,13 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
-        expected_rules = {1: [(514, 513, 'Elaboration', {'gerani': -0.25}),
-                              (516, 515, 'Elaboration', {'gerani': 0.38}),
-                              (517, 515, 'Elaboration', {'gerani': 0.29})]}
+        expected_rules = {1: [
+            Relation(edu1=514, edu2=513, relation_type='Elaboration',
+                     gerani=-0.25),
+            Relation(edu1=516, edu2=515, relation_type='Elaboration',
+                     gerani=0.38),
+            Relation(edu1=517, edu2=515, relation_type='Elaboration',
+                     gerani=0.29)]}
         self.assertEqual(rules, expected_rules)
 
     def test_tree_parsing_and_get_rules_all(self):
@@ -44,16 +49,26 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
-        expected_rules = {1: [(514, 513, 'Elaboration', {'gerani': -0.25}),
-                              (515, 513, 'same-unit', {'gerani': 0.42}),
-                              (516, 513, 'same-unit', {'gerani': 0.33}),
-                              (517, 513, 'same-unit', {'gerani': 0.25}),
-                              (515, 514, 'same-unit', {'gerani': 0.5}),
-                              (516, 514, 'same-unit', {'gerani': 0.42}),
-                              (517, 514, 'same-unit', {'gerani': 0.33}),
-                              (516, 515, 'Elaboration', {'gerani': 0.38}),
-                              (517, 515, 'Elaboration', {'gerani': 0.29}),
-                              (517, 516, 'Joint', {'gerani': 0.17})]}
+        expected_rules = {1: [
+            Relation(edu1=514, edu2=513, relation_type='Elaboration',
+                     gerani=-0.25),
+            Relation(edu1=515, edu2=513, relation_type='same-unit',
+                     gerani=0.42),
+            Relation(edu1=516, edu2=513, relation_type='same-unit',
+                     gerani=0.33),
+            Relation(edu1=517, edu2=513, relation_type='same-unit',
+                     gerani=0.25),
+            Relation(edu1=515, edu2=514, relation_type='same-unit', gerani=0.5),
+            Relation(edu1=516, edu2=514, relation_type='same-unit',
+                     gerani=0.42),
+            Relation(edu1=517, edu2=514, relation_type='same-unit',
+                     gerani=0.33),
+            Relation(edu1=516, edu2=515, relation_type='Elaboration',
+                     gerani=0.38),
+            Relation(edu1=517, edu2=515, relation_type='Elaboration',
+                     gerani=0.29),
+            Relation(edu1=517, edu2=516, relation_type='Joint',
+                     gerani=0.17)]}
         self.assertEqual(rules, expected_rules)
 
     def test_get_nucleus_and_satellite(self):
@@ -83,9 +98,13 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
-        expected_rules = {1: [(514, 513, 'Elaboration', {'gerani': -0.25}),
-                              (516, 515, 'Elaboration', {'gerani': 0.38}),
-                              (517, 515, 'Elaboration', {'gerani': 0.29})]}
+        expected_rules = {1: [
+            Relation(edu1=514, edu2=513, relation_type='Elaboration',
+                     gerani=-0.25),
+            Relation(edu1=516, edu2=515, relation_type='Elaboration',
+                     gerani=0.38),
+            Relation(edu1=517, edu2=515, relation_type='Elaboration',
+                     gerani=0.29)]}
         self.assertEqual(rules, expected_rules)
 
     def test_multi_aspects_per_edu(self):
@@ -96,14 +115,18 @@ class AspectExtractionTest(unittest.TestCase):
                                         [559, 560, 561, 562, 563],
                                         doc_id=1)
         expected_rules = {1: [
-            (560, 559, 'Elaboration', {'gerani': 0.33}),
-            (561, 559, 'Elaboration', {'gerani': 0.23}),
-            (562, 559, 'same-unit', {'gerani': 0.3}),
-            (563, 559, 'same-unit', {'gerani': 0.2}),
-            (561, 560, 'Elaboration', {'gerani': 0.0}),
-            (562, 560, 'same-unit', {'gerani': 0.4}),
-            (563, 560, 'same-unit', {'gerani': 0.3}),
-            (562, 561, 'same-unit', {'gerani': 0.5}),
-            (563, 561, 'same-unit', {'gerani': 0.4}),
-            (563, 562, 'Elaboration', {'gerani': 0.0})]}
+            Relation(edu1=560, edu2=559, relation_type='Elaboration',
+                     gerani=0.33),
+            Relation(edu1=561, edu2=559, relation_type='Elaboration',
+                     gerani=0.23),
+            Relation(edu1=562, edu2=559, relation_type='same-unit', gerani=0.3),
+            Relation(edu1=563, edu2=559, relation_type='same-unit', gerani=0.2),
+            Relation(edu1=561, edu2=560, relation_type='Elaboration',
+                     gerani=0.0),
+            Relation(edu1=562, edu2=560, relation_type='same-unit', gerani=0.4),
+            Relation(edu1=563, edu2=560, relation_type='same-unit', gerani=0.3),
+            Relation(edu1=562, edu2=561, relation_type='same-unit', gerani=0.5),
+            Relation(edu1=563, edu2=561, relation_type='same-unit', gerani=0.4),
+            Relation(edu1=563, edu2=562, relation_type='Elaboration',
+                     gerani=0.0)]}
         self.assertEqual(rules, expected_rules)

@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from collections import defaultdict
 
 import RAKE
 import requests
@@ -162,7 +163,7 @@ class AspectExtractor(object):
         cn = ConceptNetIO()
         cn.load_cnio()
         if CONCEPTNET_ASPECTS:
-            concept_aspects_ = {}
+            concept_aspects_ = defaultdict(list)
             for asp in aspects:
                 if asp not in cn.concepts_io:
                     concept_aspects_[asp] = []
