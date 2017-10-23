@@ -369,7 +369,9 @@ class AspectAnalysisSystem:
             builder = AspectsGraphBuilder(aspects_per_edu)
             graph, page_ranks = builder.build(dependency_rules,
                                               documents_info,
-                                              CONCEPTNET_ASPECTS)
+                                              CONCEPTNET_ASPECTS,
+                                              filter_confidence=1,
+                                              )
 
             self.serializer.save(graph, self.paths.aspects_graph)
             self.serializer.save(page_ranks, self.paths.aspects_importance)

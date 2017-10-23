@@ -13,7 +13,6 @@ Relation = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani')
 
 
 class AspectsGraphBuilder(object):
-
     def __init__(self, aspects_per_edu=None):
         """
 
@@ -28,19 +27,14 @@ class AspectsGraphBuilder(object):
         self.aspects_per_edu = dict(aspects_per_edu)
 
     def build(self, rules, documents_info=None,
-              conceptnet_io=False, filter_multi_rules=False,
-              filter_confidence=None):
+              conceptnet_io=False, filter_gerani=False):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
         relation.
 
         Parameters
         ----------
-        filter_confidence : int
-            How many top rules based on confidence do we want to
-            extract/filtered. If none then skipped filtering. None as default.
-
-        filter_multi_rules: bool
+        filter_gerani: bool
             Do we want to get only max weight if there are more than one
             rule with the same node_1, node_2 and relation type in processed
             RST Tree? False as default.
@@ -65,11 +59,11 @@ class AspectsGraphBuilder(object):
             PageRank counted for aspect-aspect graph.
 
         """
-        if filter_multi_rules:
-            rules = self.filter_only_max_gerani_weight_multi_rules(rules)
-        if filter_confidence:
-            rules = self.get_maximum_confidence_rule_per_doc(rules,
-                                                             filter_confidence)
+        if documents_info is None:
+            documents_info = {}
+
+        if filter_gerani:
+            rules = self.filter_gerani(rules)
         graph = self._build_aspects_graph(rules)
         graph = self._calculate_edges_support(graph)
         # graph = self._delete_nodes_attribute(graph, 'support')
@@ -115,7 +109,6 @@ class AspectsGraphBuilder(object):
 
     def _add_edge_to_graph(self, graph, node_left, node_right,
                            relation_type='None'):
-        #
         if graph.has_edge(node_left, node_right):
             graph[node_left][node_right]['counter'] += 1
         else:
@@ -242,32 +235,32 @@ class AspectsGraphBuilder(object):
         except KeyError as err:
             log.info('Lack of aspect: {}'.format(str(err)))
 
-    def filter_only_max_gerani_weight_multi_rules(self, rules):
+    def filter_only_max_gerani_weight_multi_rules_per_doc(self, rules):
         """
         Filter rules that are dupliates and got only these with max weight.
 
         Parameters
         ----------
         rules : dict
-            Dictionary of document id and list of rules
-
+            Dictionary of document id and list of rules. Relation tuple
+            Relation(aspect_right, aspect, relation, gerani_weight)
 
         Returns
         -------
         rules : dict
-            Dictionary of document id and list of rules
+            Dictionary of document id and list of rules.
         """
         rules_filtered = defaultdict(list)
-        for doc_id, rules in rules.iteritems():
-            for rule in rules:
+        for doc_id, rules_list in rules.iteritems():
+            for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
-                left_node, right_node, relation, weigths = rule
-
+                left_node, right_node, relation, gerani_weight = rule
                 for aspect_left, aspect_right in self.aspects_iterator(
                         left_node, right_node):
-                    rules_filtered[doc_id].append((aspect_left, aspect_right,
-                                                   relation, weigths))
-
+                    rules_filtered[doc_id].append(Relation(aspect_left,
+                                                           aspect_right,
+                                                           relation,
+                                                           gerani_weight))
         for doc_id, rls in rules_filtered.iteritems():
             rules_filtered[doc_id] = [max(v, key=lambda x: x[3])
                                       for
@@ -275,9 +268,46 @@ class AspectsGraphBuilder(object):
                                       groupby(sorted(rls), key=lambda x: x[:3])]
         return rules_filtered
 
-    def get_maximum_confidence_rule_per_doc(self, rules, top_n_rules=1):
+    def filter_only_max_gerani_weight_multi_rules(self, rules):
         """
+        Filter rules that are dupliates and got only these with max weight.
 
+        Parameters
+        ----------
+        rules : dict
+            Dictionary of document id and list of rules. Relation tuple
+            Relation(aspect_right, aspect, relation, gerani_weight)
+
+        Returns
+        -------
+        rules : dict
+            Dictionary of document id and list of rules. The only key is -1
+            indicating that only one relation of each combination
+            (aspect, aspect, relation) with the highest gerani weight has been
+            choosen.
+
+        """
+        rules_filtered = []
+        for doc_id, rules_list in rules.iteritems():
+            for rule in rules_list:
+                log.debug('Rule: {}'.format(rule))
+                left_node, right_node, relation, gerani_weigth = rule
+                for aspect_left, aspect_right in self.aspects_iterator(
+                        left_node, right_node):
+                    rules_filtered.append(Relation(aspect_left, aspect_right,
+                                                   relation, gerani_weigth))
+        log.info('#{} rules in #{} documents'.format(len(rules_filtered),
+                                                     len(rules)))
+        rules_with_heighest_gerani_weight = {
+            -1: [max(v, key=lambda x: x[3]) for g, v in
+                 groupby(sorted(rules_filtered), key=lambda x: x[:3])]}
+        log.info('#{} rules after filtering'.format(
+            len(rules_with_heighest_gerani_weight[-1])))
+        return rules_with_heighest_gerani_weight
+
+    def filter_maximum_confidence_rule_per_doc(self, rules, top_n_rules=1):
+        """
+        Filter rules by its confidence,
 
         Parameters
         ----------
@@ -293,13 +323,14 @@ class AspectsGraphBuilder(object):
         rules_filtered : defaultdict
             Dictionary of document id and list of rules.
 
+
         """
         rules_filtered = defaultdict(list)
         for doc_id, rules_list in rules.iteritems():
             rules_confidence = defaultdict(list)
             for left_node, right_node, relation, gerani in rules_list:
                 for aspect_left, aspect_right in self.aspects_iterator(
-                        left_node, right_node):
+                        int(left_node), int(right_node)):
                     rules_confidence[doc_id].append(Relation(aspect_left,
                                                              aspect_right,
                                                              relation, gerani))
@@ -310,9 +341,17 @@ class AspectsGraphBuilder(object):
             rules_confidence = {rel: float(freq) / len(rules_confidence) for
                                 rel, freq in
                                 relation_counter.iteritems()}
+            print(
+                'Doc id: {} and rules; {}'.format(doc_id, rules_confidence))
             # sort by confidence
             rules_confidence = sorted(rules_confidence,
                                       key=operator.itemgetter(1), reverse=True)
             # filter top n rules by confidence
             rules_filtered[doc_id].extend(rules_confidence[:top_n_rules])
         return rules_filtered
+
+    def filter_gerani(self, rules):
+        rules = self.filter_only_max_gerani_weight_multi_rules_per_doc(rules)
+        rules = self.filter_maximum_confidence_rule_per_doc(rules)
+        rules = self.filter_only_max_gerani_weight_multi_rules(rules)
+        return rules

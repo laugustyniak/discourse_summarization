@@ -4,7 +4,7 @@ import sys
 import networkx as nx
 
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
+from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, Relation
 from aspects.io.serializer import Serializer
 from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
 
@@ -166,14 +166,14 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (515, [u'515']),
                            (516, [u'516'])]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
-        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules(
+        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules_per_doc(
             rules)
         rules_expected = {
             1: [('514', '513', 'Elaboration', 124124.38),
                 ('516', '515', 'Elaboration', 0.29)]}
         self.assertEqual(rules_obtained, rules_expected)
 
-    def test_filter_only_max_weight_different_relation_type(self):
+    def test_filter_only_max_weight_different_relation_type_per_doc(self):
         rules = {1: [(514, 513, 'Elaboration', -0.25),
                      (514, 513, 'Contrast', 0.38),
                      (514, 513, 'Elaboration', 1.38),
@@ -185,7 +185,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (515, [u'515']),
                            (516, [u'516'])]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
-        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules(
+        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules_per_doc(
             rules)
         rules_expected = {
             1: [('514', '513', 'Contrast', 124124.38),
@@ -210,7 +210,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (517, [u'test17']),
                            ]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
-        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules(
+        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules_per_doc(
             rules)
         rules_expected = {
             1: [(u'514', u'513', u'Elaboration', 1.38),
@@ -226,7 +226,56 @@ class AspectGraphBuilderTest(unittest.TestCase):
         }
         self.assertEqual(rules_obtained, rules_expected)
 
-    def test_get_maximum_confidence_rule_per_doc(self):
+    def test_filter_only_max_weight_different_relation_type(self):
+        rules = {1: [(514, 513, 'Elaboration', -0.25),
+                     (514, 513, 'Contrast', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (514, 513, 'Contrast', 124124.38),
+                     (516, 515, 'Elaboration', 0.29)],
+                 }
+        aspects_per_edu = [(513, [u'513']),  # test added manually
+                           (514, [u'514']),
+                           (515, [u'515']),
+                           (516, [u'516'])]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_obtained = aspects_graph_builder.filter_only_max_gerani_weight_multi_rules(
+            rules)
+        rules_expected = {-1: [Relation('514', '513', 'Contrast', 124124.38),
+                               Relation('514', '513', 'Elaboration', 1.38),
+                               Relation('516', '515', 'Elaboration', 0.29),
+                               ]}
+        self.assertEqual(rules_obtained, rules_expected)
+
+    def test_filter_gerani(self):
+        rules = {1: [(514, 513, 'Elaboration', -0.25),
+                     (514, 513, 'Elaboration', 1.38),
+                     (514, 513, 'Elaboration', 0.38),
+                     (517, 513, 'Elaboration', 94.38),
+                     (516, 515, 'Elaboration', 0.29),
+                     (516, 513, 'Elaboration', 0.2),
+                     ],
+                 2: [(514, 513, 'same-unit', -0.25),
+                     (514, 513, 'same-unit', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (517, 513, 'Elaboration', 94.38),
+                     (516, 515, 'Elaboration', 0.29),
+                     (516, 513, 'Elaboration', 0.2),
+                     ],
+                 }
+        aspects_per_edu = [(513, [u'513', u'test13']),  # test added manually
+                           (514, [u'514', u'test14']),
+                           (515, [u'515']),
+                           (516, [u'516']),
+                           (517, [u'test17']),
+                           ]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_obtained = aspects_graph_builder.filter_gerani(rules)
+        rules_expected = {1: [(u'test14', u'test13', 'Elaboration', 0.38)],
+                          2: [(u'516', u'test13', 'Elaboration', 0.2)]}
+        self.assertEqual(rules_obtained, rules_expected)
+
+    def test_build_without_conceptnet_multi_rules_filter_confidence_filter(
+            self):
         rules = {1: [(514, 513, 'Elaboration', -0.25),
                      (514, 513, 'Elaboration', 0.38),
                      (514, 513, 'Elaboration', 1.38),
@@ -249,8 +298,11 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (517, [u'test17']),
                            ]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
-        rules_obtained = aspects_graph_builder.get_maximum_confidence_rule_per_doc(
-            rules, top_n_rules=1)
+        rules_obtained = aspects_graph_builder.build(rules,
+                                                     documents_info={},
+                                                     conceptnet_io=False,
+                                                     filter_gerani=True,
+                                                     )
         rules_expected = {1: [(u'test14', u'test13', 'Elaboration')],
                           2: [(u'514', u'test13', 'Elaboration')]}
         self.assertEqual(rules_obtained, rules_expected)
