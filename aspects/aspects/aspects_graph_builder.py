@@ -7,9 +7,12 @@ from operator import itemgetter
 import networkx as nx
 import operator
 
+from aspects.utilities.transformations import flatten_list
+
 log = logging.getLogger(__name__)
 
-Relation = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani')
+RelationAspects = namedtuple('Relation',
+                             'aspect1 aspect2 relation_type gerani_weight')
 
 
 class AspectsGraphBuilder(object):
@@ -108,7 +111,7 @@ class AspectsGraphBuilder(object):
         return graph
 
     def _add_edge_to_graph(self, graph, node_left, node_right,
-                           relation_type='None'):
+                           relation_type='None', gerani_weight=0):
         if graph.has_edge(node_left, node_right):
             graph[node_left][node_right]['counter'] += 1
         else:
@@ -116,6 +119,7 @@ class AspectsGraphBuilder(object):
             graph[node_left][node_right]['counter'] = 1
 
         graph[node_left][node_right]['relation_type'] = relation_type
+        graph[node_left][node_right]['gerani_weight'] = gerani_weight
 
         return graph
 
@@ -131,18 +135,28 @@ class AspectsGraphBuilder(object):
         """
         graph = nx.DiGraph()
 
-        for doc_id, rules in rules.iteritems():
-            for rule in rules:
+        for doc_id, rules_list in rules.iteritems():
+            for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
-                left_node, right_node, relation, weigths = rule
 
-                for aspect_left, aspect_right in self.aspects_iterator(
-                        left_node, right_node):
+                if isinstance(rule, RelationAspects):
+                    aspect_left, aspect_right, relation, gerani_weigth = rule
                     graph = self._add_node_to_graph(graph, aspect_left)
                     graph = self._add_node_to_graph(graph, aspect_right)
                     graph = self._add_edge_to_graph(graph, aspect_left,
                                                     aspect_right,
-                                                    relation_type=relation)
+                                                    relation_type=relation,
+                                                    gerani_weight=gerani_weigth)
+                else:
+                    left_node, right_node, relation, gerani_weigth = rule
+                    for aspect_left, aspect_right in self.aspects_iterator(
+                            left_node, right_node):
+                        graph = self._add_node_to_graph(graph, aspect_left)
+                        graph = self._add_node_to_graph(graph, aspect_right)
+                        graph = self._add_edge_to_graph(graph, aspect_left,
+                                                        aspect_right,
+                                                        relation_type=relation,
+                                                        gerani_weight=gerani_weigth)
         return graph
 
     def _calculate_edges_support(self, graph):
@@ -235,123 +249,60 @@ class AspectsGraphBuilder(object):
         except KeyError as err:
             log.info('Lack of aspect: {}'.format(str(err)))
 
-    def filter_only_max_gerani_weight_multi_rules_per_doc(self, rules):
-        """
-        Filter rules that are dupliates and got only these with max weight.
-
-        Parameters
-        ----------
-        rules : dict
-            Dictionary of document id and list of rules. Relation tuple
-            Relation(aspect_right, aspect, relation, gerani_weight)
-
-        Returns
-        -------
-        rules : dict
-            Dictionary of document id and list of rules.
-        """
-        rules_filtered = defaultdict(list)
-        for doc_id, rules_list in rules.iteritems():
-            for rule in rules_list:
-                log.debug('Rule: {}'.format(rule))
-                left_node, right_node, relation, gerani_weight = rule
-                for aspect_left, aspect_right in self.aspects_iterator(
-                        left_node, right_node):
-                    rules_filtered[doc_id].append(Relation(aspect_left,
-                                                           aspect_right,
-                                                           relation,
-                                                           gerani_weight))
-        for doc_id, rls in rules_filtered.iteritems():
-            rules_filtered[doc_id] = [max(v, key=lambda x: x[3])
-                                      for
-                                      g, v in
-                                      groupby(sorted(rls), key=lambda x: x[:3])]
-        return rules_filtered
-
-    def filter_only_max_gerani_weight_multi_rules(self, rules):
-        """
-        Filter rules that are dupliates and got only these with max weight.
-
-        Parameters
-        ----------
-        rules : dict
-            Dictionary of document id and list of rules. Relation tuple
-            Relation(aspect_right, aspect, relation, gerani_weight)
-
-        Returns
-        -------
-        rules : dict
-            Dictionary of document id and list of rules. The only key is -1
-            indicating that only one relation of each combination
-            (aspect, aspect, relation) with the highest gerani weight has been
-            choosen.
-
-        """
-        rules_filtered = []
-        for doc_id, rules_list in rules.iteritems():
-            for rule in rules_list:
-                log.debug('Rule: {}'.format(rule))
-                left_node, right_node, relation, gerani_weigth = rule
-                for aspect_left, aspect_right in self.aspects_iterator(
-                        left_node, right_node):
-                    rules_filtered.append(Relation(aspect_left, aspect_right,
-                                                   relation, gerani_weigth))
-        log.info('#{} rules in #{} documents'.format(len(rules_filtered),
-                                                     len(rules)))
-        rules_with_heighest_gerani_weight = {
-            -1: [max(v, key=lambda x: x[3]) for g, v in
-                 groupby(sorted(rules_filtered), key=lambda x: x[:3])]}
-        log.info('#{} rules after filtering'.format(
-            len(rules_with_heighest_gerani_weight[-1])))
-        return rules_with_heighest_gerani_weight
-
-    def filter_maximum_confidence_rule_per_doc(self, rules, top_n_rules=1):
+    def filter_gerani(self, rules):
         """
         Filter rules by its confidence,
 
         Parameters
         ----------
         rules : dict
-            Dictionary of document id and list of rules.
-
-        top_n_rules : int
-            How many rules with highest confidence do we want to extract? 1 as
-            default.
+            Dictionary of document id and list of rules. Relation tuple
+            Relation(aspect_right, aspect, relation, gerani_weight)
 
         Returns
         -------
         rules_filtered : defaultdict
-            Dictionary of document id and list of rules.
+            Dictionary of document id (-1 as indicatior for all documents)
+            and list of rules/relations between aspects with their maximum
+            gerani weights.
 
-
+            Examples
+            {-1: [Relation(aspect1=u'screen', aspect2=u'phone',
+                                        relation_type='Elaboration',
+                                        gerani_weight=1.38),
+                               Relation(aspect1=u'speaker', aspect2=u'sound',
+                                        relation_type='Elaboration',
+                                        gerani_weight=0.29)]}
         """
-        rules_filtered = defaultdict(list)
-        for doc_id, rules_list in rules.iteritems():
-            rules_confidence = defaultdict(list)
-            for left_node, right_node, relation, gerani in rules_list:
-                for aspect_left, aspect_right in self.aspects_iterator(
-                        int(left_node), int(right_node)):
-                    rules_confidence[doc_id].append(Relation(aspect_left,
-                                                             aspect_right,
-                                                             relation, gerani))
-            # count aspect, aspect, relation tuples
-            relation_counter = Counter(
-                [x[:3] for x in rules_confidence[doc_id]])
-            # count confidence, dict {(asp1, asp2, rel): confidence}
-            rules_confidence = {rel: float(freq) / len(rules_confidence) for
-                                rel, freq in
-                                relation_counter.iteritems()}
-            print(
-                'Doc id: {} and rules; {}'.format(doc_id, rules_confidence))
-            # sort by confidence
-            rules_confidence = sorted(rules_confidence,
-                                      key=operator.itemgetter(1), reverse=True)
-            # filter top n rules by confidence
-            rules_filtered[doc_id].extend(rules_confidence[:top_n_rules])
-        return rules_filtered
 
-    def filter_gerani(self, rules):
-        rules = self.filter_only_max_gerani_weight_multi_rules_per_doc(rules)
-        rules = self.filter_maximum_confidence_rule_per_doc(rules)
-        rules = self.filter_only_max_gerani_weight_multi_rules(rules)
+        rule_per_doc = defaultdict(list)
+        for doc_id, rules_list in rules.iteritems():
+            rules_filtered = []
+            for rule in rules_list:
+                log.debug('Rule: {}'.format(rule))
+                left_node, right_node, relation, gerani_weight = rule
+                for aspect_left, aspect_right in self.aspects_iterator(
+                        left_node, right_node):
+                    rules_filtered.append(RelationAspects(aspect_left,
+                                                          aspect_right,
+                                                          relation,
+                                                          gerani_weight))
+            if len(rules_filtered):
+                relation_counter = Counter([x[:3] for x in rules_filtered])
+                rule_confidence = sorted(relation_counter,
+                                         key=operator.itemgetter(1),
+                                         reverse=True)[0]
+                rules_confidence = [r for r in rules_filtered
+                                    if rule_confidence == r[:3]]
+                rule_per_doc[doc_id].extend(
+                    [max(v, key=lambda rel: rel.gerani_weight) for g, v in
+                     groupby(sorted(rules_confidence),
+                             key=lambda rel: rel[:3])])
+            else:
+                log.info('Empty rule list for document {}'.format(doc_id))
+
+        rules = {-1: [max(v, key=lambda rel: rel.gerani_weight) for g, v in
+                      groupby(sorted(flatten_list(rule_per_doc.values())),
+                              key=lambda rel: rel[:3])]}
+
         return rules

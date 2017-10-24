@@ -74,6 +74,10 @@ class AspectExtractor(object):
 
         self.Rake = RAKE.Rake(RAKE.SmartStopList())
 
+        if CONCEPTNET_ASPECTS:
+            self.cn = ConceptNetIO()
+            self.cn.load_cnio()
+
     def _is_interesting_main(self, token):
         return token['pos'] == 'NOUN'
 
@@ -83,13 +87,16 @@ class AspectExtractor(object):
                or token['pos'] == 'NOUN' \
                or token['pos'] == 'ADJ'
 
-    def extract(self, text_processed_spacy):
+    def extract(self, text_processed_spacy, n_doc):
         """
         Extracts all possible aspects - NER, NOUN and NOUN PHRASES,
         potentially other dictionary based aspects.
 
         Parameters
         ----------
+        n_doc : int
+            Number of document already processed.
+
         text_processed_spacy : dictionary
             Dictionary with raw text and spacy object with each
             token information.
@@ -160,12 +167,10 @@ class AspectExtractor(object):
 
         # 4. ConceptNet.io
         # load concepts
-        cn = ConceptNetIO()
-        cn.load_cnio()
         if CONCEPTNET_ASPECTS:
             concept_aspects_ = defaultdict(list)
             for asp in aspects:
-                if asp not in cn.concepts_io:
+                if asp not in self.cn.concepts_io:
                     concept_aspects_[asp] = []
                     next_page = CONCEPTNET_URL + asp + u'?offset=0&limit=20'
                     n_pages = 1
@@ -209,12 +214,13 @@ class AspectExtractor(object):
                             if 'error' in response.keys():
                                 log.error(response['error']['details'])
                             next_page = None
-                    cn.concepts_io.update(concept_aspects_)
-                    cn.save_cnio()
+                    self.cn.concepts_io.update(concept_aspects_)
+                    if not n_doc % 100:
+                        self.cn.save_cnio()
                 else:
                     log.debug(
                         'We have already stored this concept: {}'.format(asp))
-                    concept_aspects_[asp] = cn.concepts_io[asp]
+                    concept_aspects_[asp] = self.cn.concepts_io[asp]
             concept_aspects['conceptnet_io'] = concept_aspects_
 
         # 5. keyword extraction

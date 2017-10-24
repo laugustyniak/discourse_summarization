@@ -296,27 +296,27 @@ class AspectAnalysisSystem:
 
         logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
-        for eduid, edu in edus.iteritems():
-            if eduid not in aspects_per_edu:
+        for n_doc, (edu_id, edu) in enumerate(edus.iteritems()):
+            if edu_id not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(
-                    edu)
-                aspects_per_edu[eduid] = aspects
+                    edu, n_doc)
+                aspects_per_edu[edu_id] = aspects
                 logging.info(
-                    'EDU ID/MAX EDU ID: {}/{}'.format(eduid, max_edu_id))
+                    'EDU ID/MAX EDU ID: {}/{}'.format(edu_id, max_edu_id))
                 logging.debug(
                     'aspects: {}'.format(aspects))
 
                 if 'aspects' not in doc_info:
                     doc_info['aspects'] = []
 
-                doc_info['aspects'].update({eduid: aspects})
-                doc_info['aspect_concepts'].update({eduid: aspect_concepts})
-                doc_info['aspect_keywords'].update({eduid: aspect_keywords})
+                doc_info['aspects'].update({edu_id: aspects})
+                doc_info['aspect_concepts'].update({edu_id: aspect_concepts})
+                doc_info['aspect_keywords'].update({edu_id: aspect_keywords})
 
-                if not eduid % 100:
+                if not edu_id % 100:
                     logging.info(
-                        'Save partial aspects, edu_id {}'.format(eduid))
+                        'Save partial aspects, edu_id {}'.format(edu_id))
                     self.serializer.save(aspects_per_edu,
                                          self.paths.aspects_per_edu)
                     self.serializer.save(documents_info,
@@ -370,7 +370,7 @@ class AspectAnalysisSystem:
             graph, page_ranks = builder.build(dependency_rules,
                                               documents_info,
                                               CONCEPTNET_ASPECTS,
-                                              filter_confidence=1,
+                                              filter_gerani=True,
                                               )
 
             self.serializer.save(graph, self.paths.aspects_graph)
