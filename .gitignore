@@ -23,3 +23,7 @@ rhetorical-installation/nltk-2\.0b9\.tar\.gz
 external-libs/
 
 conceptnet_io\.pkl
+
+aspects/\.cache/
+
+\.cache/
