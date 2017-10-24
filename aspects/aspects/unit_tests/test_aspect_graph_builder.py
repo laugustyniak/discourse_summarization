@@ -163,7 +163,6 @@ class AspectGraphBuilderTest(unittest.TestCase):
                      ],
                  2: [(514, 513, 'same-unit', -0.25),
                      (514, 513, 'same-unit', 0.38),
-                     (514, 513, 'Elaboration', 1.38),
                      (517, 513, 'Elaboration', 94.38),
                      (516, 515, 'Elaboration', 0.29),
                      (516, 513, 'Elaboration', 0.2),
@@ -185,6 +184,32 @@ class AspectGraphBuilderTest(unittest.TestCase):
                  RelationAspects(aspect1=u'speaker', aspect2=u'sound',
                                  relation_type='Elaboration',
                                  gerani_weight=0.29)]}
+        self.assertEqual(rules_obtained, rules_expected)
+
+    def test_filter_gerani_sum_of_max_weights(self):
+        rules = {1: [(514, 513, 'Elaboration', 0.25),
+                     (514, 513, 'Elaboration', 1.38),
+                     (514, 513, 'Elaboration', 0.38),
+                     ],
+                 2: [(514, 513, 'Elaboration', 0.25),
+                     (514, 513, 'Elaboration', 10.8),
+                     (514, 513, 'Elaboration', 0.38),
+                     ],
+                 3: [],
+                 }
+        aspects_per_edu = [(513, [u'phone']),
+                           (514, [u'screen', u'voicemail']),
+                           (515, [u'sound']),
+                           (516, [u'speaker']),
+                           (517, [u'screen', u'speaker']),
+                           ]
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        rules_obtained = aspects_graph_builder.filter_gerani(rules)
+        rules_expected = {
+            -1: [RelationAspects(aspect1=u'screen', aspect2=u'phone',
+                                 relation_type='Elaboration',
+                                 gerani_weight=12.18),
+                 ]}
         self.assertEqual(rules_obtained, rules_expected)
 
     def test_build_without_conceptnet_multi_rules_filter_confidence_filter(
@@ -224,10 +249,12 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
         self.assertTrue(isinstance(graph, nx.DiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
+
         self.assertEqual(graph['screen']['phone']['relation_type'],
                          graph_expected['screen']['phone']['relation_type'])
         self.assertEqual(graph['screen']['phone']['gerani_weight'],
                          graph_expected['screen']['phone']['gerani_weight'])
+
         self.assertEqual(graph['speaker']['sound']['relation_type'],
                          graph_expected['speaker']['sound']['relation_type'])
         self.assertEqual(graph['speaker']['sound']['gerani_weight'],

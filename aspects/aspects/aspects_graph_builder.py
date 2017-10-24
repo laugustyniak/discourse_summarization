@@ -64,15 +64,11 @@ class AspectsGraphBuilder(object):
         """
         if documents_info is None:
             documents_info = {}
-
         if filter_gerani:
             rules = self.filter_gerani(rules)
         graph = self._build_aspects_graph(rules)
         graph = self._calculate_edges_support(graph)
-        # graph = self._delete_nodes_attribute(graph, 'support')
-
         aspect = None
-
         if conceptnet_io:
             # add relation from conceptnet
             for doc in documents_info.values():
@@ -86,7 +82,6 @@ class AspectsGraphBuilder(object):
                 except KeyError:
                     log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
         page_ranks = self._calculate_page_ranks(graph)
-
         return graph, page_ranks
 
     def _add_node_to_graph(self, graph, node):
@@ -107,7 +102,6 @@ class AspectsGraphBuilder(object):
             graph.node[node]['counter'] += 1
         else:
             graph.add_node(node, {'counter': 1})
-
         return graph
 
     def _add_edge_to_graph(self, graph, node_left, node_right,
@@ -134,7 +128,6 @@ class AspectsGraphBuilder(object):
             Graph with aspect-aspect relation.
         """
         graph = nx.DiGraph()
-
         for doc_id, rules_list in rules.iteritems():
             for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
@@ -180,7 +173,6 @@ class AspectsGraphBuilder(object):
             graph[edge[0]][edge[1]]['support'] = \
                 edge_support / float(first_node_support)
             del graph[edge[0]][edge[1]][attribute]
-
         return graph
 
     def _delete_nodes_attribute(self, graph, attibute):
@@ -202,7 +194,6 @@ class AspectsGraphBuilder(object):
         """
         for node in graph.nodes():
             del graph.node[node][attibute]
-
         return graph
 
     def _calculate_page_ranks(self, graph):
@@ -223,7 +214,6 @@ class AspectsGraphBuilder(object):
         page_ranks = nx.pagerank(graph)
         page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1),
                                         reverse=True))
-
         return page_ranks
 
     def aspects_iterator(self, edu_id_1, edu_id_2):
@@ -248,6 +238,7 @@ class AspectsGraphBuilder(object):
                     yield (aspect_left, aspect_right)
         except KeyError as err:
             log.info('Lack of aspect: {}'.format(str(err)))
+            raise KeyError(str(err))
 
     def filter_gerani(self, rules):
         """
@@ -274,7 +265,6 @@ class AspectsGraphBuilder(object):
                                         relation_type='Elaboration',
                                         gerani_weight=0.29)]}
         """
-
         rule_per_doc = defaultdict(list)
         for doc_id, rules_list in rules.iteritems():
             rules_filtered = []
@@ -300,9 +290,14 @@ class AspectsGraphBuilder(object):
                              key=lambda rel: rel[:3])])
             else:
                 log.info('Empty rule list for document {}'.format(doc_id))
-
-        rules = {-1: [max(v, key=lambda rel: rel.gerani_weight) for g, v in
-                      groupby(sorted(flatten_list(rule_per_doc.values())),
-                              key=lambda rel: rel[:3])]}
-
+        relations_list = [
+            (group + (sum([rel.gerani_weight for rel in relations]),))
+            for
+            group, relations in
+            groupby(sorted(flatten_list(rule_per_doc.values())),
+                    key=lambda rel: rel[:3])]
+        # map relations into namedtuples
+        relations_list = [RelationAspects(a1, a2, r, w) for
+                          a1, a2, r, w in relations_list]
+        rules = {-1: relations_list}
         return rules

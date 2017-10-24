@@ -10,8 +10,23 @@ class EDUAspectExtractor(object):
 
     def extract(self, edu, n_doc):
         """
-        Extract aspects and apsect_concepts
-        :param edu:
-        :return:
+        Extract aspects from edu document.
+
+        Parameters
+        ----------
+        edu : dict
+            Preprocessed string with tokens, ner and etc.
+
+        n_doc : int
+            Document of document processed.
+
+        Returns
+        -------
+        aspects : dict
+
+        concept_aspects : dict
+
+        keyword_aspects : dict
+
         """
         return self.extractor.extract(edu, n_doc)

@@ -94,12 +94,12 @@ class EDUTreeRulesExtractor(object):
                         # [N][S] or [N][N]
                         self.rules[self.doc_id].append(
                             Relation(self.right_leaf, self.left_leaf, rel_name,
-                                     self.gerani()))
+                                     self.calculate_gerani_weight()))
                     else:
                         # [S][N]
                         self.rules[self.doc_id].append(
                             Relation(self.left_leaf, self.right_leaf, rel_name,
-                                     self.gerani()))
+                                     self.calculate_gerani_weight()))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
@@ -133,7 +133,7 @@ class EDUTreeRulesExtractor(object):
 
         return self.rules
 
-    def gerani(self):
+    def calculate_gerani_weight(self):
         """
         Calculate weights for edu relations based on Gerani and
         Mehdad paper

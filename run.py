@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # author: Krzysztof xaru Rajda
+# updates: Łukasz Augustyniak <luk.augustyniak@gmail.com>
 import argparse
 import logging
 import pickle
 import shutil
 import sys
 from datetime import datetime
-from os import makedirs, listdir, getcwd
+from os import listdir, getcwd
 from os.path import basename, exists, join, split, splitext, dirname
 from time import time
 
@@ -15,19 +16,19 @@ import simplejson
 from joblib import Parallel
 from joblib import delayed
 
-from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
+from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
+from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
+from aspects.io.serializer import Serializer
+from aspects.results_analysis.gerani_graph_analysis import get_dir_moi_for_node
+from aspects.results_analysis.results_analyzer import ResultsAnalyzer
+from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
+from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import \
     LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
-from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
-from aspects.results_analysis.results_analyzer import ResultsAnalyzer
-from aspects.results_analysis.gerani_graph_analysis import get_dir_moi_for_node
-from aspects.io.serializer import Serializer
-from aspects.utilities.utils_multiprocess import batch_with_indexes
 from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
-from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
+from aspects.utilities.utils_multiprocess import batch_with_indexes
 
 sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
