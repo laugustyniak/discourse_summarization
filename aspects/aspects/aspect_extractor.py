@@ -87,7 +87,7 @@ class AspectExtractor(object):
                or token['pos'] == 'NOUN' \
                or token['pos'] == 'ADJ'
 
-    def extract(self, text_processed_spacy, n_doc):
+    def extract(self, text_processed_spacy, n_doc=1):
         """
         Extracts all possible aspects - NER, NOUN and NOUN PHRASES,
         potentially other dictionary based aspects.
