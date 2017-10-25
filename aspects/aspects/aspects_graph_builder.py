@@ -66,8 +66,8 @@ class AspectsGraphBuilder(object):
             documents_info = {}
         if filter_gerani:
             rules = self.filter_gerani(rules)
-        graph = self._build_aspects_graph(rules)
-        graph = self._calculate_edges_support(graph)
+        graph = self.build_aspects_graph(rules)
+
         aspect = None
         if conceptnet_io:
             # add relation from conceptnet
@@ -81,7 +81,8 @@ class AspectsGraphBuilder(object):
                                            relation_type=concept['relation'])
                 except KeyError:
                     log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
-        page_ranks = self._calculate_page_ranks(graph)
+
+        page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
         return graph, page_ranks
 
     def _add_node_to_graph(self, graph, node):
@@ -117,7 +118,7 @@ class AspectsGraphBuilder(object):
 
         return graph
 
-    def _build_aspects_graph(self, rules):
+    def build_aspects_graph(self, rules):
         """
         Build graph based on list of tuples with apsects ids.
 
@@ -154,7 +155,8 @@ class AspectsGraphBuilder(object):
 
     def _calculate_edges_support(self, graph):
         """
-        Calculate confidence/weight of each node/aspect
+        Calculate confidence/weight of each node/aspect.
+
         Parameters
         ----------
         graph : networkx.Graph
@@ -196,7 +198,7 @@ class AspectsGraphBuilder(object):
             del graph.node[node][attibute]
         return graph
 
-    def _calculate_page_ranks(self, graph):
+    def calculate_page_ranks(self, graph, weight='weight'):
         """
         Calculate Page Rank for ARRG.
 
@@ -205,13 +207,17 @@ class AspectsGraphBuilder(object):
         graph : networkx.Graph
             Graph of aspect-aspect relation ARRG.
 
+        weight : str, optional
+            Name of edge attribute that consists of weight for an endge. it is
+            used to calculate Weighted version of Page Rank.
+
         Returns
         -------
         page_ranks : OrderedDict
             PAge Rank values for ARRG.
 
         """
-        page_ranks = nx.pagerank(graph)
+        page_ranks = nx.pagerank(graph, weight=weight)
         page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1),
                                         reverse=True))
         return page_ranks
@@ -292,8 +298,7 @@ class AspectsGraphBuilder(object):
                 log.info('Empty rule list for document {}'.format(doc_id))
         relations_list = [
             (group + (sum([rel.gerani_weight for rel in relations]),))
-            for
-            group, relations in
+            for group, relations in
             groupby(sorted(flatten_list(rule_per_doc.values())),
                     key=lambda rel: rel[:3])]
         # map relations into namedtuples

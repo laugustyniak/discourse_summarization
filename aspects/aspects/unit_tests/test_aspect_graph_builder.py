@@ -1,14 +1,13 @@
-import unittest
 import sys
+import unittest
 from collections import OrderedDict
 
 import networkx as nx
-from traits.has_traits import weak_arg
 
-from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, \
     RelationAspects
 from aspects.io.serializer import Serializer
+from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
 
 sys.path.append("../edu_dependency_parser/src")
