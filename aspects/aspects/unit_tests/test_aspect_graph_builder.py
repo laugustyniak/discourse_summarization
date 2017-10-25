@@ -3,6 +3,7 @@ import sys
 from collections import OrderedDict
 
 import networkx as nx
+from traits.has_traits import weak_arg
 
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, \
@@ -303,7 +304,25 @@ class AspectGraphBuilderTest(unittest.TestCase):
                           'relation_type': 'Elaboration'})
 
         pagerank_expected = OrderedDict(
-            [(u'phone', 0.4139078791410039), (u'sound', 0.18874169057152615),
+            [(u'phone', 0.4035686153801606), (u'sound', 0.1990809543323695),
              (u'screen', 0.1324501434291567), (u'speaker', 0.1324501434291567),
              (u'voicemail', 0.1324501434291567)])
+        self.assertEqual(pagerank, pagerank_expected)
+
+    def test_pagerank(
+            self):
+        aspects_graph_builder = AspectsGraphBuilder()
+        graph_expected = nx.DiGraph()
+        graph_expected.add_edge('screen', 'phone')
+        graph_expected['screen']['phone']['gerani_weight'] = 10.38
+        graph_expected.add_edge('voicemail', 'phone')
+        graph_expected['voicemail']['phone']['gerani_weight'] = 100.38
+        graph_expected.add_edge('voicemail', 'cellphone')
+        graph_expected['voicemail']['cellphone']['gerani_weight'] = 1950
+        pagerank = aspects_graph_builder.calculate_page_ranks(
+            graph_expected, weight='gerani_weight')
+        pagerank_expected = OrderedDict(
+            [('phone', 0.3318621940083969), ('cellphone', 0.3172610105465724),
+             ('screen', 0.17543839772251535),
+             ('voicemail', 0.17543839772251535)])
         self.assertEqual(pagerank, pagerank_expected)
