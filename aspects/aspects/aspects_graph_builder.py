@@ -106,15 +106,19 @@ class AspectsGraphBuilder(object):
         """
         Add node with attributes to graph.
 
-        :param graph: networkx.Graph
+        Parameters
+        ----------
+        graph : nx.DiGraph
             Aspect-aspect graph.
 
-        :param node: str
-            node name
+        node : str
+            Name of the node.
 
-        :return:
-            graph: networkx.Graph
-                Aspect-aspect graph with extended nodes attributes.
+        Returns
+        -------
+        graph: networkx.Graph
+            Aspect-aspect graph with extended nodes attributes.
+
         """
         if graph.has_node(node):
             graph.node[node]['counter'] += 1
@@ -139,10 +143,15 @@ class AspectsGraphBuilder(object):
         """
         Build graph based on list of tuples with apsects ids.
 
-        :param rules: list
-            (aspect_id_1, aspect_id_2, relation, weight_dict)
+        Parameters
+        ----------
+        rules : list
+            List of tuples (aspect_id_1, aspect_id_2, relation, gerani_weight)
+            or namedtuple as RelationAspects()
 
-        :return: networkx.DiGraph()
+        Returns
+        -------
+        graph : networkx.DiGraph
             Graph with aspect-aspect relation.
         """
         graph = nx.DiGraph()
