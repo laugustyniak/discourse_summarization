@@ -1,6 +1,6 @@
 import sys
 import unittest
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import networkx as nx
 
@@ -299,7 +299,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(graph.number_of_nodes(), 5)
         self.assertEqual(graph.number_of_edges(), 4)
         self.assertEqual(graph['screen']['phone'],
-                         {'support': 1.0, 'gerani_weight': 94.38,
+                         {'counter': 7, 'gerani_weight': 94.38,
                           'relation_type': 'Elaboration'})
 
         pagerank_expected = OrderedDict(
@@ -307,6 +307,57 @@ class AspectGraphBuilderTest(unittest.TestCase):
              (u'screen', 0.1324501434291567), (u'speaker', 0.1324501434291567),
              (u'voicemail', 0.1324501434291567)])
         self.assertEqual(pagerank, pagerank_expected)
+
+    def test_build_without_conceptnet_multi_rules_gerani_moi(self):
+        rules = {1: [(514, 513, 'Elaboration', 0.25),
+                     (514, 513, 'Elaboration', 1.38),
+                     (514, 513, 'Elaboration', 0.38),
+                     ],
+                 2: [(514, 513, 'same-unit', -0.25),
+                     (514, 513, 'same-unit', 0.38),
+                     (514, 513, 'Elaboration', 1.38),
+                     (517, 513, 'Elaboration', 94.38),
+                     (516, 515, 'Elaboration', 0.29),
+                     (516, 513, 'Elaboration', 0.2),
+                     ],
+                 3: [],
+                 }
+        aspects_per_edu = [(513, [u'phone']),
+                           (514, [u'screen', u'voicemail']),
+                           (515, [u'sound']),
+                           (516, [u'speaker']),
+                           (517, [u'screen', u'speaker']),
+                           ]
+        docs_info = {1: {'sentiment': {513: 1, 514: -1, 515: 1, 517: -1}}}
+
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu,
+                                                    alpha_gerani=0.5)
+        graph, pagerank = aspects_graph_builder.build(rules,
+                                                      documents_info=docs_info,
+                                                      conceptnet_io=False,
+                                                      filter_gerani=True,
+                                                      aht_gerani=True,
+                                                      )
+        pagerank_expected = {u'sound': 0.6622808011387423,
+                             u'phone': 0.6622808011387423,
+                             u'screen': 1.0877191988612576,
+                             u'speaker': 0.5877191988612577}
+        self.assertEqual(pagerank, pagerank_expected)
+
+        graph_expected = nx.DiGraph()
+        graph_expected.add_edge('screen', 'phone')
+        graph_expected['screen']['phone']['relation_type'] = 'Elaboration'
+        graph_expected['screen']['phone']['gerani_weight'] = 1.38
+        graph_expected.add_edge('speaker', 'sound')
+        graph_expected['speaker']['sound']['relation_type'] = 'Elaboration'
+        graph_expected['speaker']['sound']['gerani_weight'] = 0.29
+
+        self.assertTrue(isinstance(graph, nx.DiGraph))
+        self.assertEqual(graph.number_of_nodes(), 4)
+        self.assertEqual(graph.number_of_edges(), 2)
+        self.assertEqual(graph['screen']['phone'],
+                         {'counter': 1, 'gerani_weight': 1.38,
+                          'relation_type': 'Elaboration'})
 
     def test_pagerank(
             self):

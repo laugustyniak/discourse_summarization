@@ -8,6 +8,8 @@ import networkx as nx
 import operator
 
 from aspects.utilities.transformations import flatten_list
+from aspects.results_analysis.gerani_graph_analysis import get_dir_moi_for_node, \
+    calculate_moi_by_gerani
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ RelationAspects = namedtuple('Relation',
 
 
 class AspectsGraphBuilder(object):
-    def __init__(self, aspects_per_edu=None):
+    def __init__(self, aspects_per_edu=None, alpha_gerani=0.5):
         """
 
         Parameters
@@ -24,13 +26,17 @@ class AspectsGraphBuilder(object):
         aspects_per_edu : list
             List of rules aspect, aspect, relation and weights.
 
+        alpha_gerani : float
+            Alpha parameter for moi function. 0.5 as default.
+
         """
+        self.alpha_gerani = alpha_gerani
         if aspects_per_edu is None:
             aspects_per_edu = []
         self.aspects_per_edu = dict(aspects_per_edu)
 
     def build(self, rules, documents_info=None,
-              conceptnet_io=False, filter_gerani=False):
+              conceptnet_io=False, filter_gerani=False, aht_gerani=False):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
         relation.
@@ -46,6 +52,10 @@ class AspectsGraphBuilder(object):
             Dictionary with document id and list of rules that will be used to
             create aspect-aspect graph, list elements: (node_1, node_2,
             relation type, weight).
+
+        aht_gerani : bool
+            Do we want to follow Gerani's approach and calculate mai function?
+            ARRG would be updated accordingly is True. False as default.
 
         documents_info: dict
             Dictionary with information about each edu.
@@ -82,7 +92,14 @@ class AspectsGraphBuilder(object):
                 except KeyError:
                     log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
 
-        page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
+        if aht_gerani:
+            graph = get_dir_moi_for_node(graph, self.aspects_per_edu,
+                                         documents_info)
+            graph, page_ranks = calculate_moi_by_gerani(graph,
+                                                        self.alpha_gerani)
+        else:
+            page_ranks = self.calculate_page_ranks(graph,
+                                                   weight='gerani_weight')
         return graph, page_ranks
 
     def _add_node_to_graph(self, graph, node):
