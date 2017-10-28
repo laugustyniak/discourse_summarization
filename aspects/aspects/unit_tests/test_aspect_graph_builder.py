@@ -1,6 +1,6 @@
 import sys
 import unittest
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 import networkx as nx
 
@@ -26,39 +26,26 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.link_tree = self.serializer.load(sample_tree_189)
 
     def _set_rst_rules_document_info(self):
-        # todo check document info structure
-        # fixme udpate rules structure
-        self.rst_rules = [(u'a movie', u'a film', u'Elaboration')]
-        self.document_info = [{'EDUs': [0, 1, 2],
-                               'accepted_edus': [2],
-                               'aspect_concepts': {
-                                   'conceptnet_io': {
-                                       {u'film': [{'end': u'a film',
-                                                   'end-lang': u'en',
-                                                   'relation': u'IsA',
-                                                   'start': u'a movie',
-                                                   'start-lang': u'en',
-                                                   'weight': 3.46},
-                                                  ]}},
-                                   'sentic': {}},
-                               'aspect_keywords': {
-                                   'rake': [(u'perfect', 1.0),
-                                            (u'pretty', 1.0)]},
-                               'aspects': {2: [u'film']},
-                               'sentiment': {0: 0, 1: 0, 2: 1}},
-                              {'EDUs': [3, 4],
-                               'accepted_edus': [3, 4],
-                               'aspect_concepts': {'conceptnet_io': {},
-                                                   'sentic': {}},
-                               'aspect_keywords': {
-                                   'rake': [(u'browsing', 1.0)]},
-                               'aspects': {},
-                               'sentiment': {3: -1, 4: 1}},
-                              ]
-        self.graph = nx.DiGraph()
-        self.graph.add_edge(u'a movie', u'a film', relation_type=u'Elaboration')
-        self.graph.add_edge(u'a movie', u'a film', relation_type=u'Background')
-        self.graph.add_edge(u'a movie', u'a film', relation_type=u'IsA')
+        self.rules = {1: [(514, 513, 'Elaboration', 0.25),
+                          (514, 513, 'Elaboration', 1.38),
+                          (514, 513, 'Elaboration', 0.38),
+                          ],
+                      2: [(514, 513, 'same-unit', -0.25),
+                          (514, 513, 'same-unit', 0.38),
+                          (514, 513, 'Elaboration', 1.38),
+                          (517, 513, 'Elaboration', 94.38),
+                          (516, 515, 'Elaboration', 0.29),
+                          (516, 513, 'Elaboration', 0.2),
+                          ],
+                      3: [],
+                      }
+        self.aspects_per_edu = [(513, [u'phone']),
+                                (514, [u'screen', u'voicemail']),
+                                (515, [u'sound']),
+                                (516, [u'speaker']),
+                                (517, [u'screen', u'speaker']),
+                                ]
+        self.docs_info = {1: {'sentiment': {513: 1, 514: -1, 515: 1, 517: -1}}}
 
     def _set_parse_tree(self):
         self.parse_tree = ParseTree('same-unit[N][N]',
@@ -239,7 +226,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                       conceptnet_io=False,
                                                       filter_gerani=True,
                                                       )
-        graph_expected = nx.DiGraph()
+        graph_expected = nx.MultiDiGraph()
         graph_expected.add_edge('screen', 'phone')
         graph_expected['screen']['phone']['relation_type'] = 'Elaboration'
         graph_expected['screen']['phone']['gerani_weight'] = 1.38
@@ -247,7 +234,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         graph_expected['speaker']['sound']['relation_type'] = 'Elaboration'
         graph_expected['speaker']['sound']['gerani_weight'] = 0.29
 
-        self.assertTrue(isinstance(graph, nx.DiGraph))
+        self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
 
         self.assertEqual(graph['screen']['phone']['relation_type'],
@@ -287,7 +274,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                       conceptnet_io=False,
                                                       filter_gerani=False,
                                                       )
-        graph_expected = nx.DiGraph()
+        graph_expected = nx.MultiDiGraph()
         graph_expected.add_edge('screen', 'phone')
         graph_expected['screen']['phone']['relation_type'] = 'Elaboration'
         graph_expected['screen']['phone']['gerani_weight'] = 1.38
@@ -295,7 +282,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         graph_expected['speaker']['sound']['relation_type'] = 'Elaboration'
         graph_expected['speaker']['sound']['gerani_weight'] = 0.29
 
-        self.assertTrue(isinstance(graph, nx.DiGraph))
+        self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 5)
         self.assertEqual(graph.number_of_edges(), 4)
         self.assertEqual(graph['screen']['phone'],
@@ -309,31 +296,11 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(pagerank, pagerank_expected)
 
     def test_build_without_conceptnet_multi_rules_gerani_moi(self):
-        rules = {1: [(514, 513, 'Elaboration', 0.25),
-                     (514, 513, 'Elaboration', 1.38),
-                     (514, 513, 'Elaboration', 0.38),
-                     ],
-                 2: [(514, 513, 'same-unit', -0.25),
-                     (514, 513, 'same-unit', 0.38),
-                     (514, 513, 'Elaboration', 1.38),
-                     (517, 513, 'Elaboration', 94.38),
-                     (516, 515, 'Elaboration', 0.29),
-                     (516, 513, 'Elaboration', 0.2),
-                     ],
-                 3: [],
-                 }
-        aspects_per_edu = [(513, [u'phone']),
-                           (514, [u'screen', u'voicemail']),
-                           (515, [u'sound']),
-                           (516, [u'speaker']),
-                           (517, [u'screen', u'speaker']),
-                           ]
-        docs_info = {1: {'sentiment': {513: 1, 514: -1, 515: 1, 517: -1}}}
-
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu,
+        self._set_rst_rules_document_info()
+        aspects_graph_builder = AspectsGraphBuilder(self.aspects_per_edu,
                                                     alpha_gerani=0.5)
-        graph, pagerank = aspects_graph_builder.build(rules,
-                                                      documents_info=docs_info,
+        graph, pagerank = aspects_graph_builder.build(self.rules,
+                                                      documents_info=self.docs_info,
                                                       conceptnet_io=False,
                                                       filter_gerani=True,
                                                       aht_gerani=True,
@@ -344,7 +311,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                              u'speaker': 0.5877191988612577}
         self.assertEqual(pagerank, pagerank_expected)
 
-        graph_expected = nx.DiGraph()
+        graph_expected = nx.MultiDiGraph()
         graph_expected.add_edge('screen', 'phone')
         graph_expected['screen']['phone']['relation_type'] = 'Elaboration'
         graph_expected['screen']['phone']['gerani_weight'] = 1.38
@@ -352,7 +319,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         graph_expected['speaker']['sound']['relation_type'] = 'Elaboration'
         graph_expected['speaker']['sound']['gerani_weight'] = 0.29
 
-        self.assertTrue(isinstance(graph, nx.DiGraph))
+        self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
         self.assertEqual(graph.number_of_edges(), 2)
         self.assertEqual(graph['screen']['phone'],
@@ -376,3 +343,15 @@ class AspectGraphBuilderTest(unittest.TestCase):
              ('screen', 0.17543839772251535),
              ('voicemail', 0.17543839772251535)])
         self.assertEqual(pagerank, pagerank_expected)
+
+    def test_merge_multiedges_in_arrg(self):
+        aspects_graph_builder = AspectsGraphBuilder()
+        graph = nx.MultiDiGraph()
+        graph.add_edge('screen', 'phone', gerani_weight=10, relation='Elaboration')
+        graph.add_edge('screen', 'phone', gerani_weight=10, relation='same-unit')
+        graph.add_edge('voicemail', 'phone', gerani_weight=10, relation='Elaboration')
+        graph.add_edge('voicemail', 'phone', gerani_weight=13, relation='same-unit')
+        graph.add_edge('voicemail', 'phone', gerani_weight=12, relation='Contrast')
+        graph = aspects_graph_builder.merge_multiedges_in_arrg(graph)
+        self.assertEqual(graph.edges(data=True), [('phone', 'screen', {'gerani_weight': 20}),
+                                                  ('phone', 'voicemail', {'gerani_weight': 35})])

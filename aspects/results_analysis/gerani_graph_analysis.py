@@ -50,7 +50,7 @@ def calculate_moi_by_gerani(graph, alpha=0.5):
 
     Parameters
     ----------
-    graph : nx.DiGraph
+    graph : nx.MultiDiGraph
         Graph of aspect-aspect relations with weights.
 
     alpha : float
@@ -58,7 +58,7 @@ def calculate_moi_by_gerani(graph, alpha=0.5):
 
     Returns
     -------
-    graph : nx.DiGraph
+    graph : nx.MultiDiGraph
         Graph of aspect-aspect relations with weights extended with moi
         attribute for each node.
 

@@ -65,7 +65,7 @@ class AspectsGraphBuilder(object):
 
         Returns
         -------
-        graph: networkx.Graph
+        graph: networkx.MultiDiGraph
             Graph with aspect-aspect relations
 
         page_rank: networkx.PageRank
@@ -108,7 +108,7 @@ class AspectsGraphBuilder(object):
 
         Parameters
         ----------
-        graph : nx.DiGraph
+        graph : nx.MultiDiGraph
             Aspect-aspect graph.
 
         node : str
@@ -116,7 +116,7 @@ class AspectsGraphBuilder(object):
 
         Returns
         -------
-        graph: networkx.Graph
+        graph: networkx.MultiDiGraph
             Aspect-aspect graph with extended nodes attributes.
 
         """
@@ -151,10 +151,10 @@ class AspectsGraphBuilder(object):
 
         Returns
         -------
-        graph : networkx.DiGraph
+        graph : networkx.MultiDiGraph
             Graph with aspect-aspect relation.
         """
-        graph = nx.DiGraph()
+        graph = nx.MultiDiGraph()
         for doc_id, rules_list in rules.iteritems():
             for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
@@ -185,12 +185,12 @@ class AspectsGraphBuilder(object):
 
         Parameters
         ----------
-        graph : networkx.Graph
+        graph : networkx.MultiDiGraph
             Graph of aspect-aspect relation ARRG.
 
         Returns
         -------
-        graph : networkx.Graph
+        graph : networkx.MultiDiGraph
             Graph of aspect-aspect relation ARRG with calculated confidence.
 
         """
@@ -209,7 +209,7 @@ class AspectsGraphBuilder(object):
 
         Parameters
         ----------
-        graph : networkx.Graph
+        graph : networkx.GMultiDiraph
             Graph of aspect-aspect relation ARRG.
 
         attibute : str
@@ -217,7 +217,7 @@ class AspectsGraphBuilder(object):
 
         Returns
         -------
-        graph : networkx.Graph
+        graph : networkx.MultiDiGraph
             Graph of aspect-aspect relation ARRG without attribute in nodes.
         """
         for node in graph.nodes():
@@ -230,7 +230,7 @@ class AspectsGraphBuilder(object):
 
         Parameters
         ----------
-        graph : networkx.Graph
+        graph : networkx.MultiDiGraph
             Graph of aspect-aspect relation ARRG.
 
         weight : str, optional
@@ -240,7 +240,7 @@ class AspectsGraphBuilder(object):
         Returns
         -------
         page_ranks : OrderedDict
-            PAge Rank values for ARRG.
+            Page Rank values for ARRG.
 
         """
         page_ranks = nx.pagerank(graph, weight=weight)
@@ -332,3 +332,32 @@ class AspectsGraphBuilder(object):
                           a1, a2, r, w in relations_list]
         rules = {-1: relations_list}
         return rules
+
+    def merge_multiedges_in_arrg(self, graph, node_attrib_name='gerani_weight'):
+        """
+        Merge multiple edges between nodes into one relation and sum attribute
+        weight.
+
+        Parameters
+        ----------
+        graph : networkx.MultiDiGraph
+            Aspect-aspect relation graph.
+
+        node_attrib_name : str
+            Name of node's attibute that will be summed up in merged relations.
+
+        Returns
+        -------
+        graph_new : networkx.Graph()
+            Aspect-aspect graph with maximum single relation between each node.
+
+        """
+        graph_new = nx.Graph()
+        for u, v, data in graph.edges_iter(data=True):
+            w = data[node_attrib_name] if node_attrib_name in data else 1.0
+            if graph_new.has_edge(u, v):
+                graph_new[u][v][node_attrib_name] += w
+
+            else:
+                graph_new.add_edge(u, v, gerani_weight=w)
+        return graph_new
