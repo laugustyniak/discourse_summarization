@@ -98,12 +98,10 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 4)
         self.assertGreaterEqual(len(graph.edges()), 3)
-        self.assertEqual(graph['apple']['phone']['relation_type'],
-                         'Elaboration')
-        self.assertEqual(graph['object']['thing']['relation_type'], 'IsA')
-        self.assertEqual(graph['thing']['stuff']['relation_type'], 'Synonym')
-
-        # self.assertEqual(aspects_obtained, aspects_expected)
+        attrib = nx.get_edge_attributes(graph, 'relation_type')
+        self.assertEqual(attrib, {(u'object', u'thing', 0): u'IsA',
+                                  (u'thing', u'stuff', 0): u'Synonym',
+                                  (u'apple', u'phone', 0): 'Elaboration'})
 
     def test_rst_relation_type(self):
         self._set_parse_tree()
@@ -123,7 +121,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 1)
         self.assertGreaterEqual(len(graph.edges()), 1)
-        self.assertEqual(graph['thing']['test']['relation_type'], 'Elaboration')
+        attrib = nx.get_edge_attributes(graph, 'relation_type')
+        self.assertEqual(attrib, {(u'thing', u'test', 0): 'Elaboration'})
 
     def test_build_exemplary_arrg_graph_sample_tree_189_multiaspects(self):
         self._setup_link_parse_tree_189()
@@ -141,7 +140,11 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(len(rules), 1)
         self.assertEqual(len(graph.nodes()), 3)
         self.assertEqual(len(graph.edges()), 4)
-        self.assertEqual(graph['thing']['test']['relation_type'], 'Elaboration')
+        attrib = nx.get_edge_attributes(graph, 'relation_type')
+        self.assertEqual(attrib, {(u'thing', u'test', 0): 'Elaboration',
+                                  (u'test2', u'test2', 0): 'Elaboration',
+                                  (u'test2', u'test', 0): 'Elaboration',
+                                  (u'thing', u'test2', 0): 'Elaboration'})
 
     def test_filter_gerani(self):
         rules = {1: [(514, 513, 'Elaboration', 0.25),
@@ -226,26 +229,16 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                       conceptnet_io=False,
                                                       filter_gerani=True,
                                                       )
-        graph_expected = nx.MultiDiGraph()
-        graph_expected.add_edge('screen', 'phone')
-        graph_expected['screen']['phone']['relation_type'] = 'Elaboration'
-        graph_expected['screen']['phone']['gerani_weight'] = 1.38
-        graph_expected.add_edge('speaker', 'sound')
-        graph_expected['speaker']['sound']['relation_type'] = 'Elaboration'
-        graph_expected['speaker']['sound']['gerani_weight'] = 0.29
-
+        gerani_weight_attrib = nx.get_edge_attributes(graph, 'gerani_weight')
+        relation_type_weight_attrib = nx.get_edge_attributes(graph, 'relation_type')
         self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
-
-        self.assertEqual(graph['screen']['phone']['relation_type'],
-                         graph_expected['screen']['phone']['relation_type'])
-        self.assertEqual(graph['screen']['phone']['gerani_weight'],
-                         graph_expected['screen']['phone']['gerani_weight'])
-
-        self.assertEqual(graph['speaker']['sound']['relation_type'],
-                         graph_expected['speaker']['sound']['relation_type'])
-        self.assertEqual(graph['speaker']['sound']['gerani_weight'],
-                         graph_expected['speaker']['sound']['gerani_weight'])
+        gerani_weight_attrib_expected = {(u'screen', u'phone', 0): 1.38,
+                                         (u'speaker', u'sound', 0): 0.29}
+        relation_type_weight_attrib_expected = {(u'screen', u'phone', 0): 'Elaboration',
+                                                (u'speaker', u'sound', 0): 'Elaboration'}
+        self.assertEqual(gerani_weight_attrib, gerani_weight_attrib_expected)
+        self.assertEqual(relation_type_weight_attrib, relation_type_weight_attrib_expected)
 
     def test_build_without_conceptnet_multi_rules_no_filter_confidence_filter(
             self):
@@ -274,25 +267,27 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                       conceptnet_io=False,
                                                       filter_gerani=False,
                                                       )
-        graph_expected = nx.MultiDiGraph()
-        graph_expected.add_edge('screen', 'phone')
-        graph_expected['screen']['phone']['relation_type'] = 'Elaboration'
-        graph_expected['screen']['phone']['gerani_weight'] = 1.38
-        graph_expected.add_edge('speaker', 'sound')
-        graph_expected['speaker']['sound']['relation_type'] = 'Elaboration'
-        graph_expected['speaker']['sound']['gerani_weight'] = 0.29
-
         self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 5)
-        self.assertEqual(graph.number_of_edges(), 4)
+        self.assertEqual(graph.number_of_edges(), 16)
         self.assertEqual(graph['screen']['phone'],
-                         {'counter': 7, 'gerani_weight': 94.38,
-                          'relation_type': 'Elaboration'})
+                         {0: {'gerani_weight': 0.25, 'relation_type': 'Elaboration'},
+                          1: {'gerani_weight': 1.38, 'relation_type': 'Elaboration'},
+                          2: {'gerani_weight': 0.38, 'relation_type': 'Elaboration'},
+                          3: {'gerani_weight': -0.25, 'relation_type': 'same-unit'},
+                          4: {'gerani_weight': 0.38, 'relation_type': 'same-unit'},
+                          5: {'gerani_weight': 1.38, 'relation_type': 'Elaboration'},
+                          6: {'gerani_weight': 94.38, 'relation_type': 'Elaboration'},
+                          }
+                         )
+        self.assertEqual(graph['speaker']['sound'],
+                         {0: {'relation_type': 'Elaboration', 'gerani_weight': 0.29}}
+                         )
 
         pagerank_expected = OrderedDict(
-            [(u'phone', 0.4035686153801606), (u'sound', 0.1990809543323695),
-             (u'screen', 0.1324501434291567), (u'speaker', 0.1324501434291567),
-             (u'voicemail', 0.1324501434291567)])
+            [(u'phone', 0.46985453080793027), (u'sound', 0.1327944758145863),
+             (u'screen', 0.1324503311258278),
+             (u'speaker', 0.1324503311258278), (u'voicemail', 0.1324503311258278)])
         self.assertEqual(pagerank, pagerank_expected)
 
     def test_build_without_conceptnet_multi_rules_gerani_moi(self):
@@ -305,53 +300,50 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                       filter_gerani=True,
                                                       aht_gerani=True,
                                                       )
-        pagerank_expected = {u'sound': 0.6622808011387423,
-                             u'phone': 0.6622808011387423,
-                             u'screen': 1.0877191988612576,
-                             u'speaker': 0.5877191988612577}
-        self.assertEqual(pagerank, pagerank_expected)
-
-        graph_expected = nx.MultiDiGraph()
-        graph_expected.add_edge('screen', 'phone')
-        graph_expected['screen']['phone']['relation_type'] = 'Elaboration'
-        graph_expected['screen']['phone']['gerani_weight'] = 1.38
-        graph_expected.add_edge('speaker', 'sound')
-        graph_expected['speaker']['sound']['relation_type'] = 'Elaboration'
-        graph_expected['speaker']['sound']['gerani_weight'] = 0.29
-
         self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
         self.assertEqual(graph.number_of_edges(), 2)
         self.assertEqual(graph['screen']['phone'],
-                         {'counter': 1, 'gerani_weight': 1.38,
-                          'relation_type': 'Elaboration'})
+                         {0: {'relation_type': 'Elaboration', 'gerani_weight': 1.38}})
+        self.assertEqual(graph['speaker']['sound'],
+                         {0: {'relation_type': 'Elaboration', 'gerani_weight': 0.29}})
 
-    def test_pagerank(
-            self):
+    def test_calculate_page_ranks(self):
         aspects_graph_builder = AspectsGraphBuilder()
-        graph_expected = nx.DiGraph()
-        graph_expected.add_edge('screen', 'phone')
-        graph_expected['screen']['phone']['gerani_weight'] = 10.38
-        graph_expected.add_edge('voicemail', 'phone')
-        graph_expected['voicemail']['phone']['gerani_weight'] = 100.38
-        graph_expected.add_edge('voicemail', 'cellphone')
-        graph_expected['voicemail']['cellphone']['gerani_weight'] = 1950
+        self._set_multigraph_arrg()
         pagerank = aspects_graph_builder.calculate_page_ranks(
-            graph_expected, weight='gerani_weight')
-        pagerank_expected = OrderedDict(
-            [('phone', 0.3318621940083969), ('cellphone', 0.3172610105465724),
-             ('screen', 0.17543839772251535),
-             ('voicemail', 0.17543839772251535)])
+            self.arrg_sample_graph, weight='gerani_weight')
+        pagerank_expected = OrderedDict([('phone', 0.4674494081710577),
+                                         ('cellphone', 0.18167339884648614),
+                                         ('screen', 0.17543859649122803),
+                                         ('voicemail', 0.17543859649122803)])
         self.assertEqual(pagerank, pagerank_expected)
 
-    def test_merge_multiedges_in_arrg(self):
+    def _set_multigraph_arrg(self):
+        self.arrg_sample_graph = nx.MultiDiGraph()
+        self.arrg_sample_graph.add_edge('screen', 'phone', gerani_weight=10.38)
+        self.arrg_sample_graph.add_edge('voicemail', 'phone', gerani_weight=100.38)
+        self.arrg_sample_graph.add_edge('voicemail', 'cellphone', gerani_weight=4.38)
+
+    def test_calculate_page_ranks_no_weight(self):
         aspects_graph_builder = AspectsGraphBuilder()
-        graph = nx.MultiDiGraph()
-        graph.add_edge('screen', 'phone', gerani_weight=10, relation='Elaboration')
-        graph.add_edge('screen', 'phone', gerani_weight=10, relation='same-unit')
-        graph.add_edge('voicemail', 'phone', gerani_weight=10, relation='Elaboration')
-        graph.add_edge('voicemail', 'phone', gerani_weight=13, relation='same-unit')
-        graph.add_edge('voicemail', 'phone', gerani_weight=12, relation='Contrast')
-        graph = aspects_graph_builder.merge_multiedges_in_arrg(graph)
-        self.assertEqual(graph.edges(data=True), [('phone', 'screen', {'gerani_weight': 20}),
-                                                  ('phone', 'voicemail', {'gerani_weight': 35})])
+        self._set_multigraph_arrg()
+        pagerank = aspects_graph_builder.calculate_page_ranks(self.arrg_sample_graph)
+        pagerank_expected = OrderedDict([('phone', 0.3991228070175438),
+                                         ('cellphone', 0.25),
+                                         ('screen', 0.1754385964912281),
+                                         ('voicemail', 0.1754385964912281)])
+        self.assertEqual(pagerank, pagerank_expected)
+
+
+def test_merge_multiedges_in_arrg(self):
+    aspects_graph_builder = AspectsGraphBuilder()
+    graph = nx.MultiDiGraph()
+    graph.add_edge('screen', 'phone', gerani_weight=10, relation='Elaboration')
+    graph.add_edge('screen', 'phone', gerani_weight=10, relation='same-unit')
+    graph.add_edge('voicemail', 'phone', gerani_weight=10, relation='Elaboration')
+    graph.add_edge('voicemail', 'phone', gerani_weight=13, relation='same-unit')
+    graph.add_edge('voicemail', 'phone', gerani_weight=12, relation='Contrast')
+    graph = aspects_graph_builder.merge_multiedges_in_arrg(graph)
+    self.assertEqual(graph.edges(data=True), [('phone', 'screen', {'gerani_weight': 20}),
+                                              ('phone', 'voicemail', {'gerani_weight': 35})])

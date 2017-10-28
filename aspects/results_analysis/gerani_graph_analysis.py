@@ -66,7 +66,7 @@ def calculate_moi_by_gerani(graph, alpha=0.5):
         Dictionary with aspects as keys and moi weight as values.
     """
     dir_moi = 0
-    wprs = nx.pagerank(graph, weight='gerani_weight')
+    wprs = nx.pagerank_scipy(graph, weight='gerani_weight')
     log.info('Weighted Page Rank, Gerani weight calculated')
     aspect_dir_moi = nx.get_node_attributes(graph, 'dir_moi')
     aspect_moi = defaultdict(float)

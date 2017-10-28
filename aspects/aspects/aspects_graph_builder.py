@@ -102,43 +102,6 @@ class AspectsGraphBuilder(object):
                                                    weight='gerani_weight')
         return graph, page_ranks
 
-    def _add_node_to_graph(self, graph, node):
-        """
-        Add node with attributes to graph.
-
-        Parameters
-        ----------
-        graph : nx.MultiDiGraph
-            Aspect-aspect graph.
-
-        node : str
-            Name of the node.
-
-        Returns
-        -------
-        graph: networkx.MultiDiGraph
-            Aspect-aspect graph with extended nodes attributes.
-
-        """
-        if graph.has_node(node):
-            graph.node[node]['counter'] += 1
-        else:
-            graph.add_node(node, {'counter': 1})
-        return graph
-
-    def _add_edge_to_graph(self, graph, node_left, node_right,
-                           relation_type='None', gerani_weight=0):
-        if graph.has_edge(node_left, node_right):
-            graph[node_left][node_right]['counter'] += 1
-        else:
-            graph.add_edge(node_left, node_right)
-            graph[node_left][node_right]['counter'] = 1
-
-        graph[node_left][node_right]['relation_type'] = relation_type
-        graph[node_left][node_right]['gerani_weight'] = gerani_weight
-
-        return graph
-
     def build_aspects_graph(self, rules):
         """
         Build graph based on list of tuples with apsects ids.
@@ -161,67 +124,18 @@ class AspectsGraphBuilder(object):
 
                 if isinstance(rule, RelationAspects):
                     aspect_left, aspect_right, relation, gerani_weigth = rule
-                    graph = self._add_node_to_graph(graph, aspect_left)
-                    graph = self._add_node_to_graph(graph, aspect_right)
-                    graph = self._add_edge_to_graph(graph, aspect_left,
-                                                    aspect_right,
-                                                    relation_type=relation,
-                                                    gerani_weight=gerani_weigth)
+                    graph.add_edge(aspect_left,
+                                   aspect_right,
+                                   relation_type=relation,
+                                   gerani_weight=gerani_weigth)
                 else:
                     left_node, right_node, relation, gerani_weigth = rule
                     for aspect_left, aspect_right in self.aspects_iterator(
                             left_node, right_node):
-                        graph = self._add_node_to_graph(graph, aspect_left)
-                        graph = self._add_node_to_graph(graph, aspect_right)
-                        graph = self._add_edge_to_graph(graph, aspect_left,
-                                                        aspect_right,
-                                                        relation_type=relation,
-                                                        gerani_weight=gerani_weigth)
-        return graph
-
-    def _calculate_edges_support(self, graph):
-        """
-        Calculate confidence/weight of each node/aspect.
-
-        Parameters
-        ----------
-        graph : networkx.MultiDiGraph
-            Graph of aspect-aspect relation ARRG.
-
-        Returns
-        -------
-        graph : networkx.MultiDiGraph
-            Graph of aspect-aspect relation ARRG with calculated confidence.
-
-        """
-        attribute = 'counter'
-        for edge in graph.edges():
-            edge_support = graph[edge[0]][edge[1]][attribute]
-            first_node_support = graph.node[edge[0]][attribute]
-            graph[edge[0]][edge[1]]['support'] = \
-                edge_support / float(first_node_support)
-            del graph[edge[0]][edge[1]][attribute]
-        return graph
-
-    def _delete_nodes_attribute(self, graph, attibute):
-        """
-        Remove atttibute from all nodes.
-
-        Parameters
-        ----------
-        graph : networkx.GMultiDiraph
-            Graph of aspect-aspect relation ARRG.
-
-        attibute : str
-            Name of attibute to be removed from all nodes.
-
-        Returns
-        -------
-        graph : networkx.MultiDiGraph
-            Graph of aspect-aspect relation ARRG without attribute in nodes.
-        """
-        for node in graph.nodes():
-            del graph.node[node][attibute]
+                        graph.add_edge(aspect_left,
+                                       aspect_right,
+                                       relation_type=relation,
+                                       gerani_weight=gerani_weigth)
         return graph
 
     def calculate_page_ranks(self, graph, weight='weight'):
@@ -243,7 +157,7 @@ class AspectsGraphBuilder(object):
             Page Rank values for ARRG.
 
         """
-        page_ranks = nx.pagerank(graph, weight=weight)
+        page_ranks = nx.pagerank_numpy(graph, weight=weight)
         page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1),
                                         reverse=True))
         return page_ranks
