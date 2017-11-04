@@ -21,7 +21,7 @@ class GeraniGraphAnalysisTest(unittest.TestCase):
                                 # the rest of document info is skipped
                                 }
                           }
-        graph = nx.DiGraph()
+        graph = nx.MultiDiGraph()
         graph.add_edge('screen', 'phone')
         graph.add_edge('speaker', 'apple')
 
@@ -32,18 +32,17 @@ class GeraniGraphAnalysisTest(unittest.TestCase):
         self.assertEqual(attribs['apple'], 3)
 
     def test_calculate_moi_by_gerani(self):
-        graph = nx.DiGraph()
-        graph.add_edge('screen', 'phone')
-        graph.node['phone']['dir_moi'] = 1
-        graph.add_edge('speaker', 'apple')
-        graph.node['apple']['dir_moi'] = 2
+        graph = nx.MultiDiGraph()
+        graph.add_edge('screen', 'phone', dir_moi=2)
+        graph.add_edge('speaker', 'apple', dir_moi=1)
 
         graph_expected, aspect_moi = calculate_moi_by_gerani(graph)
         attribs = nx.get_node_attributes(graph_expected, 'moi')
-        self.assertEqual(attribs['phone'], 0.6622808011387423)
-        self.assertEqual(attribs['apple'], 1.1622808011387424)
+        self.assertEqual(round(attribs['phone'], 4), 0.1623)
+        self.assertEqual(round(attribs['apple'], 4), 0.1623)
         print(aspect_moi)
-        self.assertEqual(aspect_moi, {'phone': 0.6622808011387423,
-                                      'screen': 0.5877191988612577,
-                                      'speaker': 0.5877191988612577,
-                                      'apple': 1.1622808011387424})
+        self.assertEqual(aspect_moi,
+                         {'phone': 0.16228080113874227,
+                          'screen': 0.08771919886125766,
+                          'speaker': 0.08771919886125766,
+                          'apple': 0.16228080113874227})
