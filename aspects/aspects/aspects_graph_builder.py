@@ -290,7 +290,7 @@ class AspectsGraphBuilder(object):
         graph : nx.Graph
             Graph with merged relations between aspects to sum of their weights - merge_multiedges_in_arrg method.
         weight : str
-            Name of weight attribute for minimum spanning tree.
+            Name of weight attribute for maximum spanning tree.
 
         Returns
         -------
