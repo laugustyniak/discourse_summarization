@@ -252,6 +252,9 @@ class AspectsGraphBuilder(object):
         Merge multiple edges between nodes into one relation and sum attribute
         weight.
 
+        Merge the edges connecting two nodes and consider the sum of their weights as the weight of the merged graph.
+        We also ignore the relation direction for the purpose of generating the tree.
+
         Parameters
         ----------
         graph : networkx.MultiDiGraph
@@ -267,11 +270,31 @@ class AspectsGraphBuilder(object):
 
         """
         graph_new = nx.Graph()
-        for u, v, data in graph.edges_iter(data=True):
+        for u, v, data in graph.edges(data=True):
             w = data[node_attrib_name] if node_attrib_name in data else 1.0
             if graph_new.has_edge(u, v):
                 graph_new[u][v][node_attrib_name] += w
-
             else:
                 graph_new.add_edge(u, v, gerani_weight=w)
         return graph_new
+
+    def arrg_to_aht(self, graph, weight):
+        """
+        To obtain a hierarchical tree structure from the extracted subgraph (filtered by moi measure). We find
+        the Maximum Spanning Tree of the undirected subgraph and set the highest weighted aspect as the root of the
+        tree. This process results in a useful knowledge structure of aspects with their associated weight and sentiment
+        polarity connected with the rhetorical relations called Aspect Hierarchical Tree (AHT).
+
+        Parameters
+        ----------
+        graph : nx.Graph
+            Graph with merged relations between aspects to sum of their weights - merge_multiedges_in_arrg method.
+        weight : str
+            Name of weight attribute for minimum spanning tree.
+
+        Returns
+        -------
+
+        """
+        mst = nx.maximum_spanning_tree(graph, weight=weight)
+        return mst

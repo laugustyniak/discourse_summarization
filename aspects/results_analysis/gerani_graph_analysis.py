@@ -47,6 +47,7 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
 
 def calculate_moi_by_gerani(graph, alpha=0.5):
     """
+    Calculate moi metric used by Gerani et. al
 
     Parameters
     ----------

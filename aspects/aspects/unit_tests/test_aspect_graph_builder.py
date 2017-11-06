@@ -335,15 +335,47 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                          ('voicemail', 0.1754385964912281)])
         self.assertEqual(pagerank, pagerank_expected)
 
+    def test_merge_multiedges_in_arrg(self):
+        aspects_graph_builder = AspectsGraphBuilder()
+        graph = nx.MultiDiGraph()
+        graph.add_edge('screen', 'phone', gerani_weight=10, relation='Elaboration')
+        graph.add_edge('screen', 'phone', gerani_weight=10, relation='same-unit')
+        graph.add_edge('voicemail', 'phone', gerani_weight=10, relation='Elaboration')
+        graph.add_edge('voicemail', 'phone', gerani_weight=13, relation='same-unit')
+        graph.add_edge('voicemail', 'phone', gerani_weight=12, relation='Contrast')
+        graph.add_edge('signal', 'phone', gerani_weight=11, relation='Contrast')
+        graph.add_edge('signal', 'phone', gerani_weight=9, relation='Elaboration')
+        graph.add_edge('phone', 'signal', gerani_weight=17, relation='Elaboration')
+        graph = aspects_graph_builder.merge_multiedges_in_arrg(graph)
+        self.assertEqual(nx.get_edge_attributes(graph, name='gerani_weight'),
+                         {('phone', 'voicemail'): 35, ('phone', 'signal'): 37, ('phone', 'screen'): 20})
 
-def test_merge_multiedges_in_arrg(self):
-    aspects_graph_builder = AspectsGraphBuilder()
-    graph = nx.MultiDiGraph()
-    graph.add_edge('screen', 'phone', gerani_weight=10, relation='Elaboration')
-    graph.add_edge('screen', 'phone', gerani_weight=10, relation='same-unit')
-    graph.add_edge('voicemail', 'phone', gerani_weight=10, relation='Elaboration')
-    graph.add_edge('voicemail', 'phone', gerani_weight=13, relation='same-unit')
-    graph.add_edge('voicemail', 'phone', gerani_weight=12, relation='Contrast')
-    graph = aspects_graph_builder.merge_multiedges_in_arrg(graph)
-    self.assertEqual(graph.edges(data=True), [('phone', 'screen', {'gerani_weight': 20}),
-                                              ('phone', 'voicemail', {'gerani_weight': 35})])
+    def test_arrg_to_aht(self):
+        aspects_graph_builder = AspectsGraphBuilder()
+        graph = nx.Graph()
+        graph.add_edge('phone', 'screen', gerani_weight=20)
+        graph.add_edge('phone', 'voicemail', gerani_weight=35)
+        graph.add_edge('apple', 'voicemail', gerani_weight=22)
+        graph.add_edge('apple', 'phone', gerani_weight=55)
+        graph.add_edge('apple', 'screen', gerani_weight=55)
+        graph.add_edge('apple', 'signal', gerani_weight=20)
+        graph.add_edge('phone', 'signal', gerani_weight=37)
+        graph.add_edge('phone', 'camera', gerani_weight=37)
+        graph.add_edge('sound', 'apple', gerani_weight=7)
+        graph.add_edge('sound', 'phone', gerani_weight=15)
+        graph.add_edge('pixel', 'camera', gerani_weight=10)
+        graph.add_edge('pixel', 'screen', gerani_weight=20)
+        graph.add_edge('phone', 'screen', gerani_weight=7)
+        mst_obtained = aspects_graph_builder.arrg_to_aht(graph, 'gerani_weight')
+        self.assertEquals(len(mst_obtained.nodes()), len(graph.nodes()))
+        self.assertLess(len(mst_obtained.edges()), len(graph.edges()))
+        self.assertEqual(nx.get_edge_attributes(mst_obtained, name='gerani_weight'),
+                         {('phone', 'voicemail'): 35,
+                          ('apple', 'screen'): 55,
+                          ('apple', 'phone'): 55,
+                          ('signal', 'phone'): 37,
+                          ('phone', 'camera'): 37,
+                          ('screen', 'pixel'): 20,
+                          ('sound', 'phone'): 15,
+                          })
+        # self.assertEqual(mst_obtained, graph)
