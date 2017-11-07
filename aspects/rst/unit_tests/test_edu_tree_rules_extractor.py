@@ -34,13 +34,9 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
-        expected_rules = {1: [
-            Relation(edu1=514, edu2=513, relation_type='Elaboration',
-                     gerani=-0.25),
-            Relation(edu1=516, edu2=515, relation_type='Elaboration',
-                     gerani=0.38),
-            Relation(edu1=517, edu2=515, relation_type='Elaboration',
-                     gerani=0.29)]}
+        expected_rules = {1: [Relation(edu1=514, edu2=513, relation_type='Elaboration', gerani=0.8),
+                              Relation(edu1=516, edu2=515, relation_type='Elaboration', gerani=0.6),
+                              Relation(edu1=517, edu2=515, relation_type='Elaboration', gerani=0.52)]}
         self.assertEqual(rules, expected_rules)
 
     def test_tree_parsing_and_get_rules_all(self):
@@ -49,26 +45,16 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
-        expected_rules = {1: [
-            Relation(edu1=514, edu2=513, relation_type='Elaboration',
-                     gerani=-0.25),
-            Relation(edu1=515, edu2=513, relation_type='same-unit',
-                     gerani=0.42),
-            Relation(edu1=516, edu2=513, relation_type='same-unit',
-                     gerani=0.33),
-            Relation(edu1=517, edu2=513, relation_type='same-unit',
-                     gerani=0.25),
-            Relation(edu1=515, edu2=514, relation_type='same-unit', gerani=0.5),
-            Relation(edu1=516, edu2=514, relation_type='same-unit',
-                     gerani=0.42),
-            Relation(edu1=517, edu2=514, relation_type='same-unit',
-                     gerani=0.33),
-            Relation(edu1=516, edu2=515, relation_type='Elaboration',
-                     gerani=0.38),
-            Relation(edu1=517, edu2=515, relation_type='Elaboration',
-                     gerani=0.29),
-            Relation(edu1=517, edu2=516, relation_type='Joint',
-                     gerani=0.17)]}
+        expected_rules = {1: [Relation(edu1=514, edu2=513, relation_type='Elaboration', gerani=0.8),
+                              Relation(edu1=515, edu2=513, relation_type='same-unit', gerani=0.42),
+                              Relation(edu1=516, edu2=513, relation_type='same-unit', gerani=0.33),
+                              Relation(edu1=517, edu2=513, relation_type='same-unit', gerani=0.25),
+                              Relation(edu1=515, edu2=514, relation_type='same-unit', gerani=0.5),
+                              Relation(edu1=516, edu2=514, relation_type='same-unit', gerani=0.42),
+                              Relation(edu1=517, edu2=514, relation_type='same-unit', gerani=0.33),
+                              Relation(edu1=516, edu2=515, relation_type='Elaboration', gerani=0.6),
+                              Relation(edu1=517, edu2=515, relation_type='Elaboration', gerani=0.52),
+                              Relation(edu1=517, edu2=516, relation_type='Joint', gerani=0.7)]}
         self.assertEqual(rules, expected_rules)
 
     def test_get_nucleus_and_satellite(self):
@@ -98,13 +84,9 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
-        expected_rules = {1: [
-            Relation(edu1=514, edu2=513, relation_type='Elaboration',
-                     gerani=-0.25),
-            Relation(edu1=516, edu2=515, relation_type='Elaboration',
-                     gerani=0.38),
-            Relation(edu1=517, edu2=515, relation_type='Elaboration',
-                     gerani=0.29)]}
+        expected_rules = {1: [Relation(edu1=514, edu2=513, relation_type='Elaboration', gerani=0.8),
+                              Relation(edu1=516, edu2=515, relation_type='Elaboration', gerani=0.6),
+                              Relation(edu1=517, edu2=515, relation_type='Elaboration', gerani=0.52)]}
         self.assertEqual(rules, expected_rules)
 
     def test_multi_aspects_per_edu(self):
@@ -114,19 +96,14 @@ class AspectExtractionTest(unittest.TestCase):
         rules = rules_extractor.extract(self.link_tree,
                                         [559, 560, 561, 562, 563],
                                         doc_id=1)
-        expected_rules = {1: [
-            Relation(edu1=560, edu2=559, relation_type='Elaboration',
-                     gerani=0.33),
-            Relation(edu1=561, edu2=559, relation_type='Elaboration',
-                     gerani=0.23),
-            Relation(edu1=562, edu2=559, relation_type='same-unit', gerani=0.3),
-            Relation(edu1=563, edu2=559, relation_type='same-unit', gerani=0.2),
-            Relation(edu1=561, edu2=560, relation_type='Elaboration',
-                     gerani=0.0),
-            Relation(edu1=562, edu2=560, relation_type='same-unit', gerani=0.4),
-            Relation(edu1=563, edu2=560, relation_type='same-unit', gerani=0.3),
-            Relation(edu1=562, edu2=561, relation_type='same-unit', gerani=0.5),
-            Relation(edu1=563, edu2=561, relation_type='same-unit', gerani=0.4),
-            Relation(edu1=563, edu2=562, relation_type='Elaboration',
-                     gerani=0.0)]}
+        expected_rules = {1: [Relation(edu1=560, edu2=559, relation_type='Elaboration', gerani=0.63),
+                              Relation(edu1=561, edu2=559, relation_type='Elaboration', gerani=0.53),
+                              Relation(edu1=562, edu2=559, relation_type='same-unit', gerani=0.3),
+                              Relation(edu1=563, edu2=559, relation_type='same-unit', gerani=0.2),
+                              Relation(edu1=561, edu2=560, relation_type='Elaboration', gerani=0.75),
+                              Relation(edu1=562, edu2=560, relation_type='same-unit', gerani=0.4),
+                              Relation(edu1=563, edu2=560, relation_type='same-unit', gerani=0.3),
+                              Relation(edu1=562, edu2=561, relation_type='same-unit', gerani=0.5),
+                              Relation(edu1=563, edu2=561, relation_type='same-unit', gerani=0.4),
+                              Relation(edu1=563, edu2=562, relation_type='Elaboration', gerani=0.75)]}
         self.assertEqual(rules, expected_rules)
