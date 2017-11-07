@@ -247,7 +247,7 @@ class AspectAnalysisSystem:
             edu_list = list(
                 self.serializer.load(self.paths.raw_edu_list).values())
             filtered_edus = {}
-            dos_info = {}
+            docs_info = {}
 
             for edu_id, edu in enumerate(edu_list):
                 edu['sentiment'] = []
@@ -255,8 +255,8 @@ class AspectAnalysisSystem:
                 sentiment = analyzer.analyze(edu['raw_text'])[0]
 
                 # todo add to readme strucutre of docuemnt info and other dicts
-                if not edu['source_document_id'] in dos_info:
-                    dos_info[edu['source_document_id']] = {
+                if not edu['source_document_id'] in docs_info:
+                    docs_info[edu['source_document_id']] = {
                         'EDUs': [],
                         'accepted_edus': [],
                         'aspects': {},
@@ -265,20 +265,20 @@ class AspectAnalysisSystem:
                         'sentiment': {},
                     }
 
-                dos_info[edu['source_document_id']]['sentiment'].update(
+                docs_info[edu['source_document_id']]['sentiment'].update(
                     {edu_id: sentiment})
-                dos_info[edu['source_document_id']]['EDUs'].append(edu_id)
+                docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
 
                 if sentiment:
                     edu['sentiment'].append(sentiment)
-                    dos_info[edu['source_document_id']][
+                    docs_info[edu['source_document_id']][
                         'accepted_edus'].append(edu_id)
 
                     filtered_edus[edu_id] = edu
 
             self.serializer.save(filtered_edus,
                                  self.paths.sentiment_filtered_edus)
-            self.serializer.save(dos_info, self.paths.docs_info)
+            self.serializer.save(docs_info, self.paths.docs_info)
 
     def _extract_aspects_from_edu(self):
         """ Extract aspects from EDU and serialize them """
@@ -293,6 +293,7 @@ class AspectAnalysisSystem:
         edus = self.serializer.load(self.paths.sentiment_filtered_edus)
         documents_info = self.serializer.load(self.paths.docs_info)
         n_edus = len(edus)
+        # fixme ValueError: max() arg is an empty sequence
         max_edu_id = max(edus.keys())
 
         logging.info('# of document with sentiment edus: {}'.format(n_edus))
