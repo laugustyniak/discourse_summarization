@@ -13,8 +13,7 @@ class IOPaths(object):
         self.paths = {}
         self.input = input_path
 
-        self.extracted_docs = join(
-            output_path + 'extracted_documents')
+        self.extracted_docs = join(output_path, 'extracted_documents')
         self.ensure_path_exist(self.extracted_docs)
 
         self.extracted_docs_ids = join(output_path,
