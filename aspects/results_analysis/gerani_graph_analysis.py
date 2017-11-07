@@ -47,7 +47,7 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
     return graph
 
 
-def calculate_moi_by_gerani(graph, alpha=0.5, max_iter=100000):
+def calculate_moi_by_gerani(graph, alpha=0.5, max_iter=1000):
     """
     Calculate moi metric used by Gerani, S., Mehdad, Y., Carenini, G., Ng, R. T., & Nejat, B. (2014).
     Abstractive Summarization of Product Reviews Using Discourse Structure. Emnlp, 1602-1613.
@@ -83,4 +83,5 @@ def calculate_moi_by_gerani(graph, alpha=0.5, max_iter=100000):
         moi = alpha * dir_moi + (1 - alpha) * wpr
         aspect_moi[aspect] = moi
         graph.node[aspect]['moi'] = moi
+        graph.node[aspect]['pagerank'] = wpr
     return graph, aspect_moi
