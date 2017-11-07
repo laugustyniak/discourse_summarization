@@ -149,8 +149,8 @@ class EDUTreeRulesExtractor(object):
             else:
                 sub_tree_height = self.right_child_parent.height()
             return round(1 - 0.5 * (
-                float(n_edus_between_analyzed_edus) / n_edus_in_tree) - 0.5 * (
-                             float(tree_height) / sub_tree_height), 2)
+                float(n_edus_between_analyzed_edus) / n_edus_in_tree)
+                         - 0.5 * (float(sub_tree_height) / tree_height), 2)
         return 0
 
     def rst_relation_type(self):
