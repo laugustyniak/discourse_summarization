@@ -74,7 +74,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
                                              # preprocesser=None
                                              )
 
-                document_path = extracted_documents_dir + str(document_id)
+                document_path = join(extracted_documents_dir, str(document_id))
 
                 if exists(document_path):
                     parser.parse(document_path)
