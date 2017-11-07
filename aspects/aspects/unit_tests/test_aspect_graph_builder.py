@@ -30,7 +30,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                           (514, 513, 'Elaboration', 1.38),
                           (514, 513, 'Elaboration', 0.38),
                           ],
-                      2: [(514, 513, 'same-unit', -0.25),
+                      2: [(514, 513, 'same-unit', 0.25),
                           (514, 513, 'same-unit', 0.38),
                           (514, 513, 'Elaboration', 1.38),
                           (517, 513, 'Elaboration', 94.38),
@@ -90,6 +90,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                     'weight': 2.8284271},
                                                    ]}
                                     },
+                                'sentiment': {559: 1, 560: -1, 5562: 1},
                                 # the rest of document info is skipped
                                 }
                           }
@@ -151,7 +152,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                      (514, 513, 'Elaboration', 1.38),
                      (514, 513, 'Elaboration', 0.38),
                      ],
-                 2: [(514, 513, 'same-unit', -0.25),
+                 2: [(514, 513, 'same-unit', 0.25),
                      (514, 513, 'same-unit', 0.38),
                      (517, 513, 'Elaboration', 94.38),
                      (516, 515, 'Elaboration', 0.29),
@@ -208,7 +209,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                      (514, 513, 'Elaboration', 1.38),
                      (514, 513, 'Elaboration', 0.38),
                      ],
-                 2: [(514, 513, 'same-unit', -0.25),
+                 2: [(514, 513, 'same-unit', 0.25),
                      (514, 513, 'same-unit', 0.38),
                      (514, 513, 'Elaboration', 1.38),
                      (517, 513, 'Elaboration', 94.38),
@@ -246,7 +247,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                      (514, 513, 'Elaboration', 1.38),
                      (514, 513, 'Elaboration', 0.38),
                      ],
-                 2: [(514, 513, 'same-unit', -0.25),
+                 2: [(514, 513, 'same-unit', 0.25),
                      (514, 513, 'same-unit', 0.38),
                      (514, 513, 'Elaboration', 1.38),
                      (517, 513, 'Elaboration', 94.38),
@@ -274,7 +275,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                          {0: {'gerani_weight': 0.25, 'relation_type': 'Elaboration'},
                           1: {'gerani_weight': 1.38, 'relation_type': 'Elaboration'},
                           2: {'gerani_weight': 0.38, 'relation_type': 'Elaboration'},
-                          3: {'gerani_weight': -0.25, 'relation_type': 'same-unit'},
+                          3: {'gerani_weight': 0.25, 'relation_type': 'same-unit'},
                           4: {'gerani_weight': 0.38, 'relation_type': 'same-unit'},
                           5: {'gerani_weight': 1.38, 'relation_type': 'Elaboration'},
                           6: {'gerani_weight': 94.38, 'relation_type': 'Elaboration'},
@@ -298,7 +299,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                                       documents_info=self.docs_info,
                                                       conceptnet_io=False,
                                                       filter_gerani=True,
-                                                      aht_gerani=True,
+                                                      aht_gerani=False,
                                                       )
         self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
