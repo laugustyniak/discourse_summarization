@@ -40,7 +40,6 @@ class GeraniGraphAnalysisTest(unittest.TestCase):
         attribs = nx.get_node_attributes(graph_expected, 'moi')
         self.assertEqual(round(attribs['phone'], 4), 0.1623)
         self.assertEqual(round(attribs['apple'], 4), 0.1623)
-        print(aspect_moi)
         self.assertEqual(aspect_moi,
                          {'phone': 0.16228080113874227,
                           'screen': 0.08771919886125766,

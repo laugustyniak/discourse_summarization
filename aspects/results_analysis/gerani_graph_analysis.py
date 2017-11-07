@@ -30,9 +30,9 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
     for aspect, sentiments in aspect_sentiments.iteritems():
         try:
             # fixme GEXF write error with list
-            graph.node[aspect]['sentiment_avg'] = np.average(sentiments)
-            graph.node[aspect]['sentiment_sum'] = np.sum(sentiments)
-            graph.node[aspect]['dir_moi'] = int(
+            graph.node[aspect]['sentiment_avg'] = float(np.average(sentiments))
+            graph.node[aspect]['sentiment_sum'] = float(np.sum(sentiments))
+            graph.node[aspect]['dir_moi'] = float(
                 np.sum([x ** 2 for x in sentiments]))
             n_aspects_updated += 1
         except KeyError as err:
@@ -47,9 +47,10 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
     return graph
 
 
-def calculate_moi_by_gerani(graph, alpha=0.5):
+def calculate_moi_by_gerani(graph, alpha=0.5, max_iter=100000):
     """
-    Calculate moi metric used by Gerani et. al
+    Calculate moi metric used by Gerani, S., Mehdad, Y., Carenini, G., Ng, R. T., & Nejat, B. (2014).
+    Abstractive Summarization of Product Reviews Using Discourse Structure. Emnlp, 1602-1613.
 
     Parameters
     ----------
@@ -58,6 +59,9 @@ def calculate_moi_by_gerani(graph, alpha=0.5):
 
     alpha : float
         Alpha parameter for moi function. 0.5 as default.
+
+    max_iter : integer, optional
+      Maximum number of iterations in power method eigenvalue solver.
 
     Returns
     -------
@@ -69,7 +73,7 @@ def calculate_moi_by_gerani(graph, alpha=0.5):
         Dictionary with aspects as keys and moi weight as values.
     """
     dir_moi = 0
-    wprs = nx.pagerank_scipy(graph, weight='gerani_weight')
+    wprs = nx.pagerank_scipy(graph, weight='gerani_weight', max_iter=max_iter)
     log.info('Weighted Page Rank, Gerani weight calculated')
     aspect_dir_moi = nx.get_node_attributes(graph, 'dir_moi')
     aspect_moi = defaultdict(float)

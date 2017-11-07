@@ -369,10 +369,11 @@ class AspectAnalysisSystem:
                 self.paths.docs_info)
 
             builder = AspectsGraphBuilder(aspects_per_edu)
-            graph, page_ranks = builder.build(dependency_rules,
-                                              documents_info,
-                                              CONCEPTNET_ASPECTS,
-                                              filter_gerani=True,
+            graph, page_ranks = builder.build(rules=dependency_rules,
+                                              documents_info=documents_info,
+                                              conceptnet_io=CONCEPTNET_ASPECTS,
+                                              filter_gerani=False,
+                                              aht_gerani=False,
                                               )
 
             self.serializer.save(graph, self.paths.aspects_graph)

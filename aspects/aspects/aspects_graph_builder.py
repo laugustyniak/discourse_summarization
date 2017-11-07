@@ -18,6 +18,7 @@ RelationAspects = namedtuple('Relation',
 
 
 class AspectsGraphBuilder(object):
+
     def __init__(self, aspects_per_edu=None, alpha_gerani=0.5):
         """
 
@@ -91,12 +92,12 @@ class AspectsGraphBuilder(object):
                                            relation_type=concept['relation'])
                 except KeyError:
                     log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
-
+        graph = get_dir_moi_for_node(graph, self.aspects_per_edu,
+                                     documents_info)
+        graph, page_ranks = calculate_moi_by_gerani(graph,
+                                                    self.alpha_gerani)
         if aht_gerani:
-            graph = get_dir_moi_for_node(graph, self.aspects_per_edu,
-                                         documents_info)
-            graph, page_ranks = calculate_moi_by_gerani(graph,
-                                                        self.alpha_gerani)
+            graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')
         else:
             page_ranks = self.calculate_page_ranks(graph,
                                                    weight='gerani_weight')
