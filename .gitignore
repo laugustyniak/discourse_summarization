@@ -21,3 +21,9 @@ rhetorical-installation/nltk-2\.0b9\.tar\.gz
 /data/sentic/affectnet/affectnet.csv
 
 external-libs/
+
+\.cache/
+
+edu_dependency_parser/tools/stanford-parser-full-2014-01-04/build\.xml
+
+logs/
