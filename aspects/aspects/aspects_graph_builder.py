@@ -250,8 +250,7 @@ class AspectsGraphBuilder(object):
 
     def merge_multiedges_in_arrg(self, graph, node_attrib_name='gerani_weight'):
         """
-        Merge multiple edges between nodes into one relation and sum attribute
-        weight.
+        Merge multiple edges between nodes into one relation and sum attribute weight.
 
         Merge the edges connecting two nodes and consider the sum of their weights as the weight of the merged graph.
         We also ignore the relation direction for the purpose of generating the tree.
