@@ -22,8 +22,8 @@ rhetorical-installation/nltk-2\.0b9\.tar\.gz
 
 external-libs/
 
-logs/
-
-aspects/\.cache/
-
 \.cache/
+
+edu_dependency_parser/tools/stanford-parser-full-2014-01-04/build\.xml
+
+logs/
