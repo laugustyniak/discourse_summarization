@@ -10,6 +10,7 @@ SENTIC_EXACT_MATCH_CONCEPTS = True
 CONCEPTNET_ASPECTS = True
 CONCEPTNET_LANG = u'en'
 CONCEPTNET_EXACT_MATCH_CONCEPTS = True
-CONCEPTNET_URL = u'http://api.conceptnet.io/c/{}/'.format(CONCEPTNET_LANG)
-CONCEPTNET_RELATIONS = ['LocatedNear', 'HasA', 'PartOf', 'MadeOf', 'IsA',
-                        'InheritsFrom', 'Synonym']
+CONCEPTNET_API_URL = u'http://api.conceptnet.io'
+CONCEPTNET_URL = u'{}/c/{}/'.format(CONCEPTNET_API_URL, CONCEPTNET_LANG)
+CONCEPTNET_RELATIONS = [u'LocatedNear', u'HasA', u'PartOf', u'MadeOf', u'IsA',
+                        u'InheritsFrom', u'Synonym']

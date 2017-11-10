@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-# update: Lukasz Augustyniak
 
 import logging
-import requests
+import sys
+from collections import defaultdict
 
 import RAKE
+import requests
+from simplejson import JSONDecodeError
 
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
     SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS, \
-    CONCEPTNET_LANG
-from aspects.enrichments.conceptnets import Sentic
+    CONCEPTNET_LANG, CONCEPTNET_API_URL
+from aspects.enrichments.conceptnets import Sentic, ConceptNetIO
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +23,7 @@ log = logging.getLogger(__name__)
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types=None, aspects_to_skip=None):
+    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True):
         """
         Initialize extractor aspect extractor.
 
@@ -33,7 +37,11 @@ class AspectExtractor(object):
 
         aspects_to_skip : list
             List of aspects that should be removed.
+
+        is_ner : bool
+            Do we want to extract Named Entity as aspects?
         """
+        self.is_ner = is_ner
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
         else:
@@ -66,6 +74,10 @@ class AspectExtractor(object):
 
         self.Rake = RAKE.Rake(RAKE.SmartStopList())
 
+        if CONCEPTNET_ASPECTS:
+            self.cn = ConceptNetIO()
+            self.cn.load_cnio()
+
     def _is_interesting_main(self, token):
         return token['pos'] == 'NOUN'
 
@@ -75,14 +87,17 @@ class AspectExtractor(object):
                or token['pos'] == 'NOUN' \
                or token['pos'] == 'ADJ'
 
-    def extract(self, input_text):
+    def extract(self, text_processed_spacy, n_doc=1):
         """
         Extracts all possible aspects - NER, NOUN and NOUN PHRASES,
         potentially other dictionary based aspects.
 
         Parameters
         ----------
-        input_text : dictionary
+        n_doc : int
+            Number of document already processed.
+
+        text_processed_spacy : dictionary
             Dictionary with raw text and spacy object with each
             token information.
 
@@ -99,18 +114,17 @@ class AspectExtractor(object):
                     {'screen': ['display', 'pixel', ...]}}
 
         """
-        tokens = input_text['tokens']
-        text = input_text['raw_text']
+        tokens = text_processed_spacy['tokens']
+        text = text_processed_spacy['raw_text']
         aspect_sequence = []
         aspect_sequence_main_encountered = False
         aspect_sequence_enabled = False
         concept_aspects = {}
+        aspects = []
 
-        # todo add config with NER flag
         # 1. look for NER examples
-        # aspects = [ent.text for ent in tokens.ents
-        # if ent.label_ in self.ner_types]
-        aspects = input_text['entities']
+        if self.is_ner:
+            aspects = text_processed_spacy['entities']
 
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
@@ -152,23 +166,61 @@ class AspectExtractor(object):
             concept_aspects['sentic'] = concept_aspects_
 
         # 4. ConceptNet.io
+        # load concepts
         if CONCEPTNET_ASPECTS:
-            concept_aspects_ = {}
+            concept_aspects_ = defaultdict(list)
             for asp in aspects:
-                concept_aspects_[asp] = []
-                cn_edges = requests.get(CONCEPTNET_URL + asp).json()['edges']
-                for edge in cn_edges:
-                    relation = edge['rel']['label']
-                    if relation in CONCEPTNET_RELATIONS \
-                            and (edge['start']['language'] == CONCEPTNET_LANG
-                                 and edge['end'][
-                                    'language'] == CONCEPTNET_LANG):
-                        concept_aspects_[asp].append(
-                            {'start': edge['start']['label'].lower(),
-                             'start-lang': edge['start']['language'],
-                             'end': edge['end']['label'].lower(),
-                             'end-lang': edge['end']['language'],
-                             'relation': relation})
+                if asp not in self.cn.concepts_io:
+                    concept_aspects_[asp] = []
+                    next_page = CONCEPTNET_URL + asp + u'?offset=0&limit=20'
+                    n_pages = 1
+                    while next_page:
+                        next_page = next_page.replace(' ', '_')
+                        log.info('#{} pages for {}'.format(n_pages, asp))
+                        n_pages += 1
+                        try:
+                            response = requests.get(next_page).json()
+                        except JSONDecodeError as err:
+                            log.error(
+                                'Response parsing error: {}'.format(str(err)))
+                            raise JSONDecodeError(str(err))
+                        try:
+                            cn_edges = response['edges']
+                            cn_view = response['view']
+                            next_page = CONCEPTNET_API_URL + cn_view['nextPage']
+                            log.info(
+                                'Next page from ConceptNet.io: {}'.format(
+                                    next_page))
+                            for edge in cn_edges:
+                                relation = edge['rel']['label']
+                                if relation in CONCEPTNET_RELATIONS \
+                                        and (edge['start'][
+                                                 'language'] == CONCEPTNET_LANG
+                                             and edge['end'][
+                                                'language'] == CONCEPTNET_LANG):
+                                    concept_aspects_[asp].append(
+                                        {'start': edge['start'][
+                                            'label'].lower(),
+                                         'start-lang': edge['start'][
+                                             'language'],
+                                         'end': edge['end']['label'].lower(),
+                                         'end-lang': edge['end']['language'],
+                                         'relation': relation,
+                                         'weight': edge['weight']})
+                        except KeyError:
+                            log.error(
+                                'Next page url: {} will be set to None'.format(
+                                    next_page))
+                            if 'error' in response.keys():
+                                log.error(response['error']['details'])
+                            next_page = None
+                    self.cn.concepts_io.update(concept_aspects_)
+                    if not n_doc % 100:
+                        self.cn.save_cnio()
+                else:
+                    log.debug(
+                        'We have already stored this concept: {}'.format(asp))
+                    concept_aspects_[asp] = self.cn.concepts_io[asp]
             concept_aspects['conceptnet_io'] = concept_aspects_
 
         # 5. keyword extraction

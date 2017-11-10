@@ -27,17 +27,17 @@ class ResultsAnalyzer(object):
                 d += 1
 
         tot = a + b + c + d
-        Pa = float(a + d) / tot
-        PA1 = float(a + b) / tot
-        PA2 = 1.0 - PA1
-        PB1 = float(a + c) / tot
-        PB2 = 1.0 - PB1
-        Pe = PA1 * PB1 + PA2 * PB2
+        pa = float(a + d) / tot
+        p_a1 = float(a + b) / tot
+        p_a2 = 1.0 - p_a1
+        p_b1 = float(a + c) / tot
+        p_b2 = 1.0 - p_b1
+        pe = p_a1 * p_b1 + p_a2 * p_b2
 
-        if Pe == 1:
+        if pe == 1:
             return 1
         else:
-            return (Pa - Pe) / (1.0 - Pe)
+            return (pa - pe) / (1.0 - pe)
 
     def __f1(self, y_pred, y_gold):
 
@@ -80,6 +80,7 @@ class ResultsAnalyzer(object):
                     y_gold += [0]
                     y_pred += [1]
 
+            # fixme why aspect not defined?
             for aspect in gold_standard:
                 y_gold += [1]
                 y_pred += [0]
