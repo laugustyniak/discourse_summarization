@@ -25,17 +25,21 @@ make
 make install
 cd ..
 
-
 cd crfsuite-0.12
 chmod +x configure
 ./configure --prefix=$HOME/local --with-liblbfgs=$HOME/local
 make
-make install
+sudo make install
+# possible solution for links problem
+#sudo ln -s /usr/local/lib/libcrfsuite-0.12.so /usr/lib/libcrfsuite-0.12.so
+#sudo ln -s /usr/local/lib/libcqdb-0.12.so /usr/lib/libcqdb-0.12.so
+#sudo ln -s /usr/local/bin/crfsuite /usr/bin/crfsuite-stdin
 cd ..
 
 cp $HOME/local/bin/crfsuite crfsuite-stdin
 chmod +x crfsuite-stdin
 cd ../../..
 
+# test
 cd gCRF_dist/tools/crfsuite
 ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt

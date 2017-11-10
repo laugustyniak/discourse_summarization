@@ -22,8 +22,7 @@ class DiscourseParser(object):
                  skip_parsing=False, global_features=False,
                  save_preprocessed_doc=False, preprocesser=None):
 
-        self.output_dir = os.path.join(paths.OUTPUT_PATH,
-                                       output_dir if output_dir is not None else '')
+        self.output_dir = os.path.join(output_dir if output_dir is not None else '')
         self.feature_sets = 'gCRF'
 
         self.verbose = verbose
