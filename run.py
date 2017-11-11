@@ -5,7 +5,6 @@ import argparse
 import logging
 import pickle
 import shutil
-import sys
 from datetime import datetime
 from os import listdir, getcwd
 from os.path import basename, exists, join, split, splitext, dirname
@@ -29,8 +28,6 @@ from aspects.sentiment.sentiment_analyzer import \
 from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
 from aspects.utilities.utils_multiprocess import batch_with_indexes
-
-sys.path.append('edu_dependency_parser/src/')
 from parse import DiscourseParser
 
 logging.basicConfig(level=logging.DEBUG,
@@ -42,76 +39,49 @@ logging.basicConfig(level=logging.DEBUG,
                     )
 
 
-def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir,
-                             extracted_documents_dir):
+def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_documents_dir):
     processed = 0
     skipped = 0
     errors = 0
 
     n_docs = docs_id_range[1] - docs_id_range[0]
 
-    for n_doc, document_id in enumerate(
-            xrange(docs_id_range[0], docs_id_range[1]), start=1):
+    for n_doc, document_id in enumerate(xrange(docs_id_range[0], docs_id_range[1]), start=1):
         start_time = datetime.now()
-
-        logging.info(
-            'EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc,
-                                                          n_docs))
+        logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
         try:
             edu_tree_path = edu_trees_dir + str(document_id) + '.tree'
-
             if exists(edu_tree_path):
-                logging.info(
-                    'EDU Tree Already exists: {}'.format(edu_tree_path))
+                logging.info('EDU Tree Already exists: {}'.format(edu_tree_path))
                 skipped += 1
             else:
                 if parser is None:
-                    parser = DiscourseParser(output_dir=edu_trees_dir,
-                                             verbose=True,
-                                             # skip_parsing=True,
-                                             # global_features=True,
-                                             # save_preprocessed_doc=True,
-                                             # preprocesser=None
-                                             )
-
+                    parser = DiscourseParser(output_dir=edu_trees_dir)
                 document_path = join(extracted_documents_dir, str(document_id))
-
                 if exists(document_path):
                     parser.parse(document_path)
                 else:
-                    logging.warning(
-                        'Document #{} does not exist! Skipping '
-                        'to next one.'.format(document_id))
+                    logging.warning('Document #{} does not exist! Skipping to next one.'.format(document_id))
                     errors += 1
-
                 processed += 1
         # skip documents that parsing returns errors
         except (ValueError, IndexError, ZeroDivisionError, OSError) as err:
-            logging.error(
-                'Error for doc #{}: {}. It has been skipped'.format(
-                    document_id, str(err)))
+            logging.error('Error for doc #{}: {}. It has been skipped'.format(document_id, str(err)))
             if exists(edu_tree_path):
                 shutil.rmtree(edu_tree_path)
             errors += 1
-
         logging.info(
-            'EDU document id: {} -> parsed in {} seconds'.format(document_id, (
-                datetime.now() - start_time).seconds))
-
+            'EDU document id: {} -> parsed in {} seconds'.format(document_id, (datetime.now() - start_time).seconds))
     if parser is not None:
         parser.unload()
-
-    logging.info(
-        'Docs processed: {}, docs skipped: {}'.format(processed, skipped))
+    logging.info('Docs processed: {}, docs skipped: {}'.format(processed, skipped))
 
 
 class AspectAnalysisSystem:
-    def __init__(self, input_path, output_path, gold_standard_path,
-                 analysis_results_path, jobs=1, sent_model_path=None,
+    def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
                  n_logger=1000, batch_size=None):
 
         self.batch_size = batch_size
-
         self.gold_standard_path = gold_standard_path
         self.analysis_results_path = analysis_results_path
         self.input_file_path = input_path
@@ -148,86 +118,55 @@ class AspectAnalysisSystem:
             if f_extension in ['json']:
                 with open(self.input_file_path, 'r') as f:
                     raw_documents = simplejson.load(f)
-                    for ref_id, (doc_id, document) in enumerate(
-                            raw_documents.iteritems()):
-                        self.serializer.save(document, join(
-                            self.paths.extracted_docs, str(
-                                ref_id)))
-                        self.serializer.save(str(doc_id), join(
-                            self.paths.extracted_docs_ids, str(
-                                ref_id)))
+                    for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
+                        self.serializer.save(document, join(self.paths.extracted_docs, str(ref_id)))
+                        self.serializer.save(str(doc_id), join(self.paths.extracted_docs_ids, str(ref_id)))
                         documents_count += 1
             # this is {'doc_id': {'text', text, 'metadata1': xxx}}
             # text with additional metadata
             elif f_extension in ['pkl', 'p', 'pickle']:
                 with open(self.input_file_path, 'r') as f:
                     raw_documents = pickle.load(f)
-                for ref_id, (doc_id, document) in enumerate(
-                        raw_documents.iteritems()):
-                    self.serializer.save(document['text'],
-                                         join(self.paths.extracted_docs,
-                                              str(ref_id)))
-                    self.serializer.save({doc_id: document},
-                                         join(
-                                             self.paths.extracted_docs_metadata,
-                                             str(ref_id)))
+                for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
+                    self.serializer.save(document['text'], join(self.paths.extracted_docs, str(ref_id)))
+                    self.serializer.save({doc_id: document}, join(self.paths.extracted_docs_metadata, str(ref_id)))
                     documents_count += 1
             elif f_extension in ['csv', 'txt']:
                 raw_documents = {}
                 with open(self.input_file_path, 'r') as f:
                     for idx, line in enumerate(f):
                         raw_documents[str(idx)] = line
-                        self.serializer.save(line,
-                                             self.paths.extracted_docs + str(
-                                                 idx))
-                        self.serializer.save({idx: line},
-                                             self.paths.extracted_docs_metadata + str(
-                                                 idx))
+                        self.serializer.save(line, self.paths.extracted_docs + str(idx))
+                        self.serializer.save({idx: line}, self.paths.extracted_docs_metadata + str(idx))
                         documents_count += 1
             else:
                 raise WrongTypeException()
-            logging.info('Number of all documents to analyse: {}'.format(
-                len(raw_documents)))
+            logging.info('Number of all documents to analyse: {}'.format(len(raw_documents)))
         return documents_count
 
     def _perform_edu_parsing(self, documents_count, batch_size=None):
         logging.info('Documents: #{} will be processed'.format(documents_count))
-
         if batch_size is None:
             batch_size = documents_count / self.jobs
             if batch_size < 1:
                 batch_size = 1
-            logging.debug('Batch size for multiprocessing execution: {}'.format(
-                batch_size))
-
+            logging.debug('Batch size for multiprocessing execution: {}'.format(batch_size))
         Parallel(n_jobs=self.jobs, verbose=5)(
-            delayed(edu_parsing_multiprocess)(None, docs_id_range,
-                                              self.paths.edu_trees,
-                                              self.paths.extracted_docs)
-            for docs_id_range, l in
-            batch_with_indexes(range(documents_count), batch_size))
+            delayed(edu_parsing_multiprocess)(None, docs_id_range, self.paths.edu_trees, self.paths.extracted_docs)
+            for docs_id_range, l in batch_with_indexes(range(documents_count), batch_size))
 
     def _perform_edu_preprocessing(self, documents_count):
-
         if not exists(self.paths.raw_edu_list):
             preprocesser = EDUTreePreprocesser()
-
             for document_id in range(0, documents_count):
                 try:
                     if not document_id % self.n_loger:
-                        logging.debug(
-                            'EDU Preprocessor documentId: {}/{}'.format(
-                                document_id, documents_count))
-                    tree = self.serializer.load(
-                        join(self.paths.edu_trees,
-                             str(document_id) + '.tree.ser'))
+                        logging.debug('EDU Preprocessor documentId: {}/{}'.format(document_id, documents_count))
+                    tree = self.serializer.load(join(self.paths.edu_trees, str(document_id) + '.tree.ser'))
                     preprocesser.processTree(tree, document_id)
-                    self.serializer.save(tree, join(self.paths.link_trees,
-                                                    str(document_id)))
+                    self.serializer.save(tree, join(self.paths.link_trees, str(document_id)))
                 except TypeError as err:
-                    logging.error(
-                        'Document id: {} and error: {}'.format(document_id,
-                                                               str(err)))
+                    logging.error('Document id: {} and error: {}'.format(document_id, str(err)))
                     self.parsing_errors += 1
             edu_list = preprocesser.getPreprocessedEdusList()
             self.serializer.save(edu_list, self.paths.raw_edu_list)
@@ -242,9 +181,7 @@ class AspectAnalysisSystem:
                 analyzer = SentimentAnalyzer()
             else:
                 analyzer = SentimentAnalyzer(model_path=self.sent_model_path)
-
-            edu_list = list(
-                self.serializer.load(self.paths.raw_edu_list).values())
+            edu_list = list(self.serializer.load(self.paths.raw_edu_list).values())
             filtered_edus = {}
             docs_info = {}
 
@@ -263,20 +200,13 @@ class AspectAnalysisSystem:
                         'aspect_keywords': {},
                         'sentiment': {},
                     }
-
-                docs_info[edu['source_document_id']]['sentiment'].update(
-                    {edu_id: sentiment})
+                docs_info[edu['source_document_id']]['sentiment'].update({edu_id: sentiment})
                 docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
-
                 if sentiment:
                     edu['sentiment'].append(sentiment)
-                    docs_info[edu['source_document_id']][
-                        'accepted_edus'].append(edu_id)
-
+                    docs_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
                     filtered_edus[edu_id] = edu
-
-            self.serializer.save(filtered_edus,
-                                 self.paths.sentiment_filtered_edus)
+            self.serializer.save(filtered_edus, self.paths.sentiment_filtered_edus)
             self.serializer.save(docs_info, self.paths.docs_info)
 
     def _extract_aspects_from_edu(self):
@@ -300,17 +230,13 @@ class AspectAnalysisSystem:
         for n_doc, (edu_id, edu) in enumerate(edus.iteritems()):
             if edu_id not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
-                aspects, aspect_concepts, aspect_keywords = extractor.extract(
-                    edu, n_doc)
+                aspects, aspect_concepts, aspect_keywords = extractor.extract(edu, n_doc)
                 aspects_per_edu[edu_id] = aspects
                 logging.info(
                     'EDU ID/MAX EDU ID: {}/{}'.format(edu_id, max_edu_id))
-                logging.debug(
-                    'aspects: {}'.format(aspects))
-
+                logging.debug('aspects: {}'.format(aspects))
                 if 'aspects' not in doc_info:
                     doc_info['aspects'] = []
-
                 doc_info['aspects'].update({edu_id: aspects})
                 doc_info['aspect_concepts'].update({edu_id: aspect_concepts})
                 doc_info['aspect_keywords'].update({edu_id: aspect_keywords})

@@ -1,10 +1,7 @@
 import unittest
 
-import sys
-from os import getcwd
-sys.path.append(getcwd() + "/edu_dependency_parser/src")
-from trees.parse_tree import ParseTree
 from parse import DiscourseParser
+from trees.parse_tree import ParseTree
 
 
 class RSTParseTest(unittest.TestCase):
@@ -19,11 +16,7 @@ class RSTParseTest(unittest.TestCase):
         
         """
 
-    def test_parse_docuemnt(self):
-        parser = DiscourseParser(output_dir=edu_trees_dir,
-                                 # verbose=True,
-                                 # skip_parsing=True,
-                                 # global_features=True,
-                                 # save_preprocessed_doc=True,
-                                 # preprocesser=None
-                                 )
+    def test_parse_document(self):
+        parser = DiscourseParser(output_dir='', global_features=True)
+        parsed_tree = parser.parse('0')
+        self.assertTrue(isinstance(parsed_tree, ParseTree))

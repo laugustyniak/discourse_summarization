@@ -136,8 +136,7 @@ class AspectExtractionTest(unittest.TestCase):
         text = preprocesser.preprocess(raw_text)
         if CONCEPTNET_ASPECTS:
             aspects_extractor = AspectExtractor()
-            _, concepts_obtained, _ = aspects_extractor.extract(
-                text)
+            _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
             self.assertGreater(len(concepts), 20)
@@ -149,8 +148,7 @@ class AspectExtractionTest(unittest.TestCase):
         text = preprocesser.preprocess(raw_text)
         if CONCEPTNET_ASPECTS:
             aspects_extractor = AspectExtractor()
-            _, concepts_obtained, _ = aspects_extractor.extract(
-                text)
+            _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
             self.assertGreater(len(concepts), 20)
