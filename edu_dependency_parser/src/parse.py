@@ -161,6 +161,7 @@ class DiscourseParser(object):
                     f_o.close()
                     utils.serialize.saveData(core_filename, pt, self.output_dir,
                                              '.tree.ser')
+                    return pt
 
         except Exception, e:
             print traceback.print_exc()
