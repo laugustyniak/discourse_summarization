@@ -70,7 +70,10 @@ class DiscourseParser(object):
         if not self.treebuilder is None:
             self.treebuilder.unload()
 
-    def parse(self, filename):
+    def parse(self, filename, parse_text=''):
+        if parse_text:
+            utils.serialize.saveData(filename, parse_text, self.output_dir, '')
+
         if not os.path.exists(filename):
             return
 
