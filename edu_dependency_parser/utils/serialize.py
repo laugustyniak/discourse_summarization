@@ -1,18 +1,19 @@
-
 import sys
-import cPickle 
+import cPickle
 import paths
 import os.path
 
 save_suffix = ".dat"
 
-def saveData(filename, myobject, where = paths.save_folder, suffix = save_suffix):
+
+def saveData(filename, myobject, where=paths.save_folder, suffix=save_suffix):
     fo = open(os.path.join(where, filename + suffix), "wb")
-    #print 'Saved serialized file to %s' % os.path.join(where, filename + suffix)
-    cPickle.dump(myobject, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+    # print 'Saved serialized file to %s' % os.path.join(where, filename + suffix)
+    cPickle.dump(myobject, fo, protocol=cPickle.HIGHEST_PROTOCOL)
     fo.close()
 
-def loadData(filename, where = paths.save_folder, suffix = save_suffix):
+
+def loadData(filename, where=paths.save_folder, suffix=save_suffix):
     data_file = os.path.join(where, filename + suffix)
     try:
         fo = open(data_file, "rb")

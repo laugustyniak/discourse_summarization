@@ -3,7 +3,7 @@ import paths
 
 from parsers.intra_sentential_parser import IntraSententialParser
 from parsers.multi_sentential_parser import MultiSententialParser
-from features.tree_feature_writer import CRFTreeFeatureWriter
+from features_parser.tree_feature_writer import CRFTreeFeatureWriter
 
 from classifiers.crf_classifier import CRFClassifier
 

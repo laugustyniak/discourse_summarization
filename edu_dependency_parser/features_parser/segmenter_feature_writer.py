@@ -29,16 +29,16 @@ class SegmenterFeatureWriter:
             self.features.add('Is_Sentence_End_Unit%d@%d' % (unit, position))
 
             #        for n in range(2, 4):
-            ##            self.features.add('Beginning_lexical_%d_Grams=%s_Unit%d@%d' % (n, token.sentence.get_ngram(token.id - 1, n), unit, position))
-            ##            self.features.add('End_lexical_%d_Grams=%s_Unit%d@%d' % (n, token.sentence.get_ngram(token.id - 1, -n), unit, position))
+            ##            self.features_parser.add('Beginning_lexical_%d_Grams=%s_Unit%d@%d' % (n, token.sentence.get_ngram(token.id - 1, n), unit, position))
+            ##            self.features_parser.add('End_lexical_%d_Grams=%s_Unit%d@%d' % (n, token.sentence.get_ngram(token.id - 1, -n), unit, position))
             #
-            #            self.features.add('Beginning_PoS_%d_Grams=%s_Unit%d@%d' % (n, '#'.join(token.sentence.get_POS_ngram(token.id - 1, n)), unit, position))
-            #            self.features.add('End_PoS_%d_Grams=%s_Unit%d@%d' % (n, '#'.join(token.sentence.get_POS_ngram(token.id - 1, -n)), unit, position))
+            #            self.features_parser.add('Beginning_PoS_%d_Grams=%s_Unit%d@%d' % (n, '#'.join(token.sentence.get_POS_ngram(token.id - 1, n)), unit, position))
+            #            self.features_parser.add('End_PoS_%d_Grams=%s_Unit%d@%d' % (n, '#'.join(token.sentence.get_POS_ngram(token.id - 1, -n)), unit, position))
             #
-            ##        self.features.add('Relative_Position=%.3f@%d' % (token.get_relative_position(), position))
+            ##        self.features_parser.add('Relative_Position=%.3f@%d' % (token.get_relative_position(), position))
             ##
-            ##        self.features.add('Distance_to_Start=%d@%d' % (token.id - 1, position))
-            ##        self.features.add('Distance_to_End=%d@%d' % (len(token.tree.leaves()) - token.id - 1, position))
+            ##        self.features_parser.add('Distance_to_Start=%d@%d' % (token.id - 1, position))
+            ##        self.features_parser.add('Distance_to_End=%d@%d' % (len(token.tree.leaves()) - token.id - 1, position))
             ##
 
     def write_unit_token_identity_features(self, token, unit, position):
@@ -62,11 +62,11 @@ class SegmenterFeatureWriter:
             len(treepos), unit, position))
 
         if len(treepos) < len(token.get_treepos()):
-            #            self.features.add('Largest_Subtree_Height=%s_Unit=%d@%d' % (ancestor_subtree.height(), unit, position))
-            #            self.features.add('Largest_Subtree_Num_Leaves=%s_Unit=%d@%d' % (len(ancestor_subtree.leaves()), unit, position))
+            #            self.features_parser.add('Largest_Subtree_Height=%s_Unit=%d@%d' % (ancestor_subtree.height(), unit, position))
+            #            self.features_parser.add('Largest_Subtree_Num_Leaves=%s_Unit=%d@%d' % (len(ancestor_subtree.leaves()), unit, position))
 
             #            if ancestor_subtree.head == token.id - 1:
-            #                self.features.add('Is_Head_in_Largest_Subtree_Unit=%d@%d' % (unit, position))
+            #                self.features_parser.add('Is_Head_in_Largest_Subtree_Unit=%d@%d' % (unit, position))
 
             production = '%s->%s' % (ancestor_subtree.node, '#'.join(
                 str(x) for x in nltk.tree._child_names(ancestor_subtree)))
@@ -159,17 +159,17 @@ class SegmenterFeatureWriter:
     #        if l_boundary is not None:
     #            self.write_global_features_for_span((l_boundary, token.id), token, unit, position)
     #        else:
-    #            self.features.add('First_Boundary@%d' % (position))
+    #            self.features_parser.add('First_Boundary@%d' % (position))
     #
     #        if r_boundary is not None:
     #            self.write_global_features_for_span((token.id - 1, r_boundary), token, unit, position)
     #        else:
-    #            self.features.add('Last_Boundary@%d' % (position))
+    #            self.features_parser.add('Last_Boundary@%d' % (position))
 
 
     def write_global_features_for_span(self, span, token, unit, position):
         (start, end) = span
-        #        self.features.add('Distance_to_Neighbouring_Boundary=%d_Unit%d@%d' % (end - start, unit, position))
+        #        self.features_parser.add('Distance_to_Neighbouring_Boundary=%d_Unit%d@%d' % (end - start, unit, position))
 
         tree = token.sentence.parse_tree
 
@@ -196,7 +196,7 @@ class SegmenterFeatureWriter:
         subtree_top_tags = []
         for subtree in subtrees:
             subtree_top_tags.append(subtree.node)
-        # self.features.add('Subtree_Tags_to_Neighbouring_Boundary=%s_Unit%d@%d' % ('#'.join(subtree_top_tags), unit, position))
+        # self.features_parser.add('Subtree_Tags_to_Neighbouring_Boundary=%s_Unit%d@%d' % ('#'.join(subtree_top_tags), unit, position))
 
         #        print start, end
 

@@ -8,7 +8,7 @@ import networkx as nx
 import operator
 
 from aspects.utilities.transformations import flatten_list
-from aspects.results_analysis.gerani_graph_analysis import get_dir_moi_for_node, \
+from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, \
     calculate_moi_by_gerani
 
 log = logging.getLogger(__name__)

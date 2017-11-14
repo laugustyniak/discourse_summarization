@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 
-from aspects.results_analysis.analyze import get_count_from_series
+from aspects.analysis.analyze import get_count_from_series
 
 
 class AnalyzeTest(unittest.TestCase):

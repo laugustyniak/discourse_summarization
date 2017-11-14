@@ -3,7 +3,7 @@ Created on 2014-01-11
 
 @author: Wei
 """
-from features.segmenter_feature_writer import SegmenterFeatureWriter
+from features_parser.segmenter_feature_writer import SegmenterFeatureWriter
 from classifiers.crf_classifier import CRFClassifier
 import paths
 import utils.utils
@@ -41,24 +41,24 @@ class CRFSegmenter:
             self.add_classifier(classifier2, 'classifier2')
 
 
-        #        classifier1 = MalletCRFClassifier(name= self.name,
-        #                                          model_type = 'segmenter',
-        #                                          model_path = paths.CRF_SEGMENTER_MODEL_PATH,
-        #                                          model_file = 'seg.mallet',
-        #                                          verbose = self.verbose)
-        #        self.add_classifier(classifier1, 'classifier1')
-        #
-        #        if self.global_features:
-        #            classifier2 = MalletCRFClassifier(name= self.name + "_global_features",
-        #                                              model_type = 'segmenter',
-        #                                              model_path = paths.CRF_SEGMENTER_MODEL_PATH,
-        #                                              model_file = 'seg_global_features.mallet',
-        #                                              verbose = self.verbose)
-        #
-        #
-        #
-        #            self.add_classifier(classifier2, 'classifier2')
-        #
+            #        classifier1 = MalletCRFClassifier(name= self.name,
+            #                                          model_type = 'segmenter',
+            #                                          model_path = paths.CRF_SEGMENTER_MODEL_PATH,
+            #                                          model_file = 'seg.mallet',
+            #                                          verbose = self.verbose)
+            #        self.add_classifier(classifier1, 'classifier1')
+            #
+            #        if self.global_features:
+            #            classifier2 = MalletCRFClassifier(name= self.name + "_global_features",
+            #                                              model_type = 'segmenter',
+            #                                              model_path = paths.CRF_SEGMENTER_MODEL_PATH,
+            #                                              model_file = 'seg_global_features.mallet',
+            #                                              verbose = self.verbose)
+            #
+            #
+            #
+            #            self.add_classifier(classifier2, 'classifier2')
+            #
 
     def add_classifier(self, classifier, name):
         if name == 'classifier1':
@@ -94,9 +94,9 @@ class CRFSegmenter:
             #            print feature_str
             features.append('0\t%s' % feature_str)
 
-        #            feature_str = ' '.join(list(inst_features))
+        # feature_str = ' '.join(list(inst_features))
         ##            print feature_str
-        #            features.append('%s 0' % feature_str)
+        #            features_parser.append('%s 0' % feature_str)
 
         return features
 
@@ -124,7 +124,7 @@ class CRFSegmenter:
             sentence.doc.edus.extend(edus)
             return
 
-        #        print sentence.raw_text
+        # print sentence.raw_text
 
         self.feature_writer.cached_subtrees = {}
 
@@ -144,23 +144,23 @@ class CRFSegmenter:
                     else:
                         r_boundary = end_word
 
-                    #                    l_boundary1 = self.find_neighbouring_boundary(offset + 1, input_edu_segmentation, 'L')
+                    # l_boundary1 = self.find_neighbouring_boundary(offset + 1, input_edu_segmentation, 'L')
                     #                    r_boundary1 = self.find_neighbouring_boundary(offset + 1, input_edu_segmentation, 'R')
                     ##
                     ##                    print offset, l_boundary, r_boundary, l_boundary1, r_boundary1
                     #                    assert l_boundary1 == l_boundary and r_boundary1 == r_boundary
                     offset2neighbouring_boundaries[offset] = (l_boundary, r_boundary)
-                #
-                #            for offset in offset2neighbouring_boundaries:
-                #                print 'sentence', j, offset, offset2neighbouring_boundaries[offset]
+                    #
+                    #            for offset in offset2neighbouring_boundaries:
+                    #                print 'sentence', j, offset, offset2neighbouring_boundaries[offset]
         else:
             offset2neighbouring_boundaries = None
 
         features = self.write_features(sentence, offset2neighbouring_boundaries)
 
         #        print sentence.raw_text
-        #        print len(features)
-        #        for feat in features:
+        #        print len(features_parser)
+        #        for feat in features_parser:
         #            print feat
         #        print
 
@@ -221,7 +221,7 @@ class CRFSegmenter:
 
                 index += 1
 
-            #            if index == len(canonical_doc.sentences):
+            # if index == len(canonical_doc.sentences):
             #                print sent.sent_id, sent.raw_text
             #                print canonical_doc.sentences[index - 1].raw_text
             #                print
@@ -230,7 +230,7 @@ class CRFSegmenter:
             #            print sent.sent_id, index
             sentence_order.append(index)
 
-        #        print sentence_order
+        # print sentence_order
         #        print sorted(sentence_order)
         assert sorted(sentence_order) == range(len(doc.sentences))
 
@@ -246,7 +246,7 @@ class CRFSegmenter:
                 token.lemma = te.lemma
                 sentence.add_token(token)
 
-            #            print i
+            # print i
             #            print sentence.raw_text
             #            print canonical_doc.sentences[index].raw_text
             #            print
@@ -282,11 +282,11 @@ class CRFSegmenter:
             for sentence in doc.sentences:
                 self.segment_sentence(sentence, input_edu_segmentation=init_edu_word_segmentation[sentence.sent_id])
 
-            #                if init_edu_word_segmentation[sentence.sent_id] != doc.edu_word_segmentation[sentence.sent_id]:
-            #                    print sentence.sent_id
-            #                    print 'initial segmentation', init_edu_word_segmentation[sentence.sent_id]
-            #                    print 'new segmentation', doc.edu_word_segmentation[sentence.sent_id]
-            #                    print
+                #                if init_edu_word_segmentation[sentence.sent_id] != doc.edu_word_segmentation[sentence.sent_id]:
+                #                    print sentence.sent_id
+                #                    print 'initial segmentation', init_edu_word_segmentation[sentence.sent_id]
+                #                    print 'new segmentation', doc.edu_word_segmentation[sentence.sent_id]
+                #                    print
 
         doc.start_edu = 0
         doc.end_edu = len(doc.edus)
