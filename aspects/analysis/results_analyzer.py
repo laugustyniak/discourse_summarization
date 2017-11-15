@@ -89,8 +89,7 @@ class ResultsAnalyzer(object):
 
     def analyze(self, documents_aspects, gold_standard):
 
-        y_pred, y_gold = self._convert_to_binary_vector(documents_aspects,
-                                                        gold_standard)
+        y_pred, y_gold = self._convert_to_binary_vector(documents_aspects, gold_standard)
 
         self.y_gold += y_gold
         self.y_pred += y_pred

@@ -24,23 +24,19 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
                     aspect_sentiments[aspect].append(sentiment)
             except KeyError as err:
                 n_skipped_edus += 1
-                log.info(
-                    'Aspect: {} not extracted from edu: {}'.format(str(err),
-                                                                   edu_id))
+                log.info('Aspect: {} not extracted from edu: {}'.format(str(err), edu_id))
     for aspect, sentiments in aspect_sentiments.iteritems():
         try:
             # fixme GEXF write error with list
             graph.node[aspect]['sentiment_avg'] = float(np.average(sentiments))
             graph.node[aspect]['sentiment_sum'] = float(np.sum(sentiments))
-            graph.node[aspect]['dir_moi'] = float(
-                np.sum([x ** 2 for x in sentiments]))
+            graph.node[aspect]['dir_moi'] = float(np.sum([x ** 2 for x in sentiments]))
             n_aspects_updated += 1
         except KeyError as err:
             n_aspects_not_in_graph += 1
             log.info('There is not aspect: {} in graph'.format(str(err)))
 
-    log.info('#{} skipped aspects out of #{} documents'.format(n_skipped_edus,
-                                                               n_all_documents))
+    log.info('#{} skipped aspects out of #{} documents'.format(n_skipped_edus, n_all_documents))
     log.info('#{} aspects not in graph'.format(n_aspects_not_in_graph))
     log.info('#{} aspects updated in graph'.format(n_aspects_updated))
 
