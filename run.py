@@ -50,7 +50,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
         start_time = datetime.now()
         logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
         try:
-            edu_tree_path = edu_trees_dir + str(document_id) + '.tree'
+            edu_tree_path = join(edu_trees_dir, str(document_id) + '.tree')
             if exists(edu_tree_path):
                 logging.info('EDU Tree Already exists: {}'.format(edu_tree_path))
                 skipped += 1
@@ -232,8 +232,7 @@ class AspectAnalysisSystem:
                 doc_info = documents_info[edu['source_document_id']]
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(edu, n_doc)
                 aspects_per_edu[edu_id] = aspects
-                logging.info(
-                    'EDU ID/MAX EDU ID: {}/{}'.format(edu_id, max_edu_id))
+                logging.info('EDU ID/MAX EDU ID: {}/{}'.format(edu_id, max_edu_id))
                 logging.debug('aspects: {}'.format(aspects))
                 if 'aspects' not in doc_info:
                     doc_info['aspects'] = []
@@ -242,12 +241,9 @@ class AspectAnalysisSystem:
                 doc_info['aspect_keywords'].update({edu_id: aspect_keywords})
 
                 if not edu_id % 100:
-                    logging.info(
-                        'Save partial aspects, edu_id {}'.format(edu_id))
-                    self.serializer.save(aspects_per_edu,
-                                         self.paths.aspects_per_edu)
-                    self.serializer.save(documents_info,
-                                         self.paths.docs_info)
+                    logging.info('Save partial aspects, edu_id {}'.format(edu_id))
+                    self.serializer.save(aspects_per_edu, self.paths.aspects_per_edu)
+                    self.serializer.save(documents_info, self.paths.docs_info)
 
         logging.info('Serializing aspect per edu and document info objects.')
         self.serializer.save(aspects_per_edu, self.paths.aspects_per_edu)
@@ -255,43 +251,26 @@ class AspectAnalysisSystem:
 
     def _extract_edu_dependency_rules(self):
         """Extract association rules to RST trees"""
-
         if not exists(self.paths.edu_dependency_rules):
-
             link_tree = None
             rules_extractor = EDUTreeRulesExtractor()
             rules = {}
-
             docs_info = self.serializer.load(self.paths.docs_info)
-
             for doc_id, doc_info in docs_info.iteritems():
-
                 if len(doc_info['accepted_edus']) > 0:
-                    link_tree = self.serializer.load(
-                        join(self.paths.link_trees, str(doc_id)))
-
-                extracted_rules = rules_extractor.extract(link_tree,
-                                                          doc_info[
-                                                              'accepted_edus'],
-                                                          doc_id)
-
-                # if len(extracted_rules) > 0:
+                    link_tree = self.serializer.load(join(self.paths.link_trees, str(doc_id)))
+                extracted_rules = rules_extractor.extract(link_tree, doc_info['accepted_edus'], doc_id)
                 rules.update(extracted_rules)
-
             logging.info('Rules extracted.')
             self.serializer.save(rules, self.paths.edu_dependency_rules)
 
     def _build_aspect_dependency_graph(self):
         """Build dependency graph"""
 
-        if not (exists(self.paths.aspects_graph) and exists(
-                self.paths.aspects_importance)):
-            dependency_rules = self.serializer.load(
-                self.paths.edu_dependency_rules)
-            aspects_per_edu = self.serializer.load(
-                self.paths.aspects_per_edu)
-            documents_info = self.serializer.load(
-                self.paths.docs_info)
+        if not (exists(self.paths.aspects_graph) and exists(self.paths.aspects_importance)):
+            dependency_rules = self.serializer.load(self.paths.edu_dependency_rules)
+            aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
+            documents_info = self.serializer.load(self.paths.docs_info)
 
             builder = AspectsGraphBuilder(aspects_per_edu)
             graph, page_ranks = builder.build(rules=dependency_rules,
@@ -299,6 +278,7 @@ class AspectAnalysisSystem:
                                               conceptnet_io=CONCEPTNET_ASPECTS,
                                               filter_gerani=False,
                                               aht_gerani=False,
+                                              aspect_graph_path=self.paths.aspects_graph,
                                               )
 
             self.serializer.save(graph, self.paths.aspects_graph)
@@ -317,8 +297,7 @@ class AspectAnalysisSystem:
             if 'aspects' in document_info:
                 for aspect in document_info['aspects']:
                     if aspect in aspects_importance:
-                        aspect_position = float(
-                            aspects_list.index(aspect) + 1) / aspects_count
+                        aspect_position = float(aspects_list.index(aspect) + 1) / aspects_count
                         if aspect_position < threshold:
                             aspects.append(aspect)
             documents_info[documentId]['aspects'] = aspects
@@ -326,33 +305,23 @@ class AspectAnalysisSystem:
 
     def _analyze_results(self, threshold):
         """ remove noninformative aspects  """
-
-        documents_info = self.serializer.load(
-            self.paths.final_docs_info)
+        documents_info = self.serializer.load(self.paths.final_docs_info)
         gold_standard = self.serializer.load(self.gold_standard_path)
-
         if gold_standard is None:
             raise ValueError('GoldStandard data is None')
-
         analyzer = ResultsAnalyzer()
-
         for document_id, document_info in documents_info.iteritems():
-            # todo: why document is never used?
-            document = self.serializer.load(
-                join(self.paths.extracted_docs + str(document_id)))
-            analyzer.analyze(document_info['aspects'],
-                             gold_standard[document_id])
+            analyzer.analyze(document_info['aspects'], gold_standard[document_id])
         measures = analyzer.get_analysis_results()
         self.serializer.append_serialized(
             ';'.join(str(x) for x in [threshold] + measures) + '\n',
             self.analysis_results_path)
 
-    def _add_sentiment_to_graph_adn_dir_moi(self):
+    def _add_sentiment_and_dir_moi_to_graph(self):
         aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
         documents_info = self.serializer.load(self.paths.docs_info)
         aspect_graph = self.serializer.load(self.paths.aspects_graph)
-        aspect_graph = get_dir_moi_for_node(aspect_graph, aspects_per_edu,
-                                            documents_info)
+        aspect_graph = get_dir_moi_for_node(aspect_graph, aspects_per_edu, documents_info)
         self.serializer.save(aspect_graph, self.paths.aspects_graph)
 
     def run(self):
@@ -368,8 +337,7 @@ class AspectAnalysisSystem:
         timer_end = time()
 
         logging.info("Extracted", documents_count,
-                     "documents from input file in {:.2f} seconds.".format(
-                         timer_end - timer_start))
+                     "documents from input file in {:.2f} seconds.".format(timer_end - timer_start))
 
         # preprocessing and rhetorical parsing
         logging.info('--------------------------------------')
@@ -394,8 +362,7 @@ class AspectAnalysisSystem:
         timer_end = time()
 
         logging.info(
-            "EDU trees preprocessing succeeded in {:.2f} seconds".format(
-                timer_end - timer_start))
+            "EDU trees preprocessing succeeded in {:.2f} seconds".format(timer_end - timer_start))
 
         # filter EDU with sentiment orientation only
         logging.info('--------------------------------------')
@@ -405,8 +372,7 @@ class AspectAnalysisSystem:
         self._filter_edu_by_sentiment()
         timer_end = time()
 
-        logging.info("EDU filtering succeeded in {:.2f} seconds".format(
-            timer_end - timer_start))
+        logging.info("EDU filtering succeeded in {:.2f} seconds".format(timer_end - timer_start))
 
         # extract aspects
         logging.info('--------------------------------------')
@@ -416,8 +382,7 @@ class AspectAnalysisSystem:
         self._extract_aspects_from_edu()
         timer_end = time()
 
-        logging.info("EDU aspects extraction in {:.2f} seconds".format(
-            timer_end - timer_start))
+        logging.info("EDU aspects extraction in {:.2f} seconds".format(timer_end - timer_start))
 
         # rule extraction
         logging.info('--------------------------------------')
@@ -439,15 +404,14 @@ class AspectAnalysisSystem:
         timer_end = time()
 
         logging.info(
-            "Aspects graph building succeeded in {:.2f} seconds".format(
-                timer_end - timer_start))
+            "Aspects graph building succeeded in {:.2f} seconds".format(timer_end - timer_start))
 
         # add sentiments to nodes/aspects and count Gerani dir-moi weight
         logging.info('--------------------------------------')
         logging.info("Sentiments to nodes/aspects and Gerani dir-moi weight...")
 
         timer_start = time()
-        self._add_sentiment_to_graph_adn_dir_moi()
+        self._add_sentiment_and_dir_moi_to_graph()
         timer_end = time()
 
         logging.info(
@@ -457,8 +421,7 @@ class AspectAnalysisSystem:
         logging.info('--------------------------------------')
         total_timer_end = time()
 
-        logging.info("Whole system run in {:.2f} seconds".format(
-            total_timer_end - total_timer_start))
+        logging.info("Whole system run in {:.2f} seconds".format(total_timer_end - total_timer_start))
 
         logging.info('--------------------------------------')
         logging.info('Save graph with Gephi suitable extension')

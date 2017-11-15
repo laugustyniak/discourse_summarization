@@ -10,6 +10,7 @@ import operator
 from aspects.utilities.transformations import flatten_list
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, \
     calculate_moi_by_gerani
+from aspects.io.serializer import Serializer
 
 log = logging.getLogger(__name__)
 
@@ -35,9 +36,10 @@ class AspectsGraphBuilder(object):
         if aspects_per_edu is None:
             aspects_per_edu = []
         self.aspects_per_edu = dict(aspects_per_edu)
+        self.serializer = Serializer()
 
-    def build(self, rules, documents_info=None,
-              conceptnet_io=False, filter_gerani=False, aht_gerani=False):
+    def build(self, rules, documents_info=None, conceptnet_io=False, filter_gerani=False, aht_gerani=False,
+              aspect_graph_path=None):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
         relation.
@@ -88,19 +90,20 @@ class AspectsGraphBuilder(object):
                     for aspect, concepts in cnio.iteritems():
                         log.info(aspect)
                         for concept in concepts:
-                            graph.add_edge(concept['start'], concept['end'],
-                                           relation_type=concept['relation'])
+                            graph.add_edge(concept['start'], concept['end'], relation_type=concept['relation'])
                 except KeyError:
                     log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
-        graph = get_dir_moi_for_node(graph, self.aspects_per_edu,
-                                     documents_info)
-        graph, page_ranks = calculate_moi_by_gerani(graph,
-                                                    self.alpha_gerani)
+
+        if aspect_graph_path is not None:
+            log.info('Save ARRG graph based on rules only (with conceptnets relations!)')
+            nx.write_gexf(graph, aspect_graph_path + '_based_on_rules_only.gexf')
+
+        graph = get_dir_moi_for_node(graph, self.aspects_per_edu, documents_info)
+        graph, page_ranks = calculate_moi_by_gerani(graph, self.alpha_gerani)
         if aht_gerani:
             graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')
         else:
-            page_ranks = self.calculate_page_ranks(graph,
-                                                   weight='gerani_weight')
+            page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
         return graph, page_ranks
 
     def build_aspects_graph(self, rules):
