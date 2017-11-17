@@ -8,14 +8,12 @@ import networkx as nx
 import operator
 
 from aspects.utilities.transformations import flatten_list
-from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, \
-    calculate_moi_by_gerani
+from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
 from aspects.io.serializer import Serializer
 
 log = logging.getLogger(__name__)
 
-RelationAspects = namedtuple('Relation',
-                             'aspect1 aspect2 relation_type gerani_weight')
+RelationAspects = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani_weight')
 
 
 class AspectsGraphBuilder(object):
@@ -38,7 +36,7 @@ class AspectsGraphBuilder(object):
         self.aspects_per_edu = dict(aspects_per_edu)
         self.serializer = Serializer()
 
-    def build(self, rules, documents_info=None, conceptnet_io=False, filter_gerani=False, aht_gerani=False,
+    def build(self, rules, docs_info=None, conceptnet_io=False, filter_gerani=False, aht_gerani=False,
               aspect_graph_path=None):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
@@ -60,7 +58,7 @@ class AspectsGraphBuilder(object):
             Do we want to follow Gerani's approach and calculate mai function?
             ARRG would be updated accordingly is True. False as default.
 
-        documents_info: dict
+        docs_info: dict
             Dictionary with information about each edu.
 
         conceptnet_io: bool
@@ -75,22 +73,23 @@ class AspectsGraphBuilder(object):
             PageRank counted for aspect-aspect graph.
 
         """
-        if documents_info is None:
-            documents_info = {}
+        if docs_info is None:
+            docs_info = {}
         if filter_gerani:
             rules = self.filter_gerani(rules)
         graph = self.build_aspects_graph(rules)
 
         aspect = None
+        # fixme please fix fucking iteration via aspects_concept dicts
         if conceptnet_io:
             # add relation from conceptnet
-            for doc in documents_info.values():
+            for doc_id, doc_info in docs_info.iteritems():
                 try:
-                    cnio = doc['aspect_concepts']['conceptnet_io']
-                    for aspect, concepts in cnio.iteritems():
-                        log.info(aspect)
-                        for concept in concepts:
-                            graph.add_edge(concept['start'], concept['end'], relation_type=concept['relation'])
+                    for _, concepts_all in doc_info['aspect_concepts'].iteritems():
+                        for aspect, concepts in concepts_all['conceptnet_io'].iteritems():
+                            log.info(aspect)
+                            for concept in concepts:
+                                graph.add_edge(concept['start'], concept['end'], relation_type=concept['relation'])
                 except KeyError:
                     log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
 
@@ -98,7 +97,7 @@ class AspectsGraphBuilder(object):
             log.info('Save ARRG graph based on rules only (with conceptnets relations!)')
             nx.write_gexf(graph, aspect_graph_path + '_based_on_rules_only.gexf')
 
-        graph = get_dir_moi_for_node(graph, self.aspects_per_edu, documents_info)
+        graph = get_dir_moi_for_node(graph, self.aspects_per_edu, docs_info)
         graph, page_ranks = calculate_moi_by_gerani(graph, self.alpha_gerani)
         if aht_gerani:
             graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')

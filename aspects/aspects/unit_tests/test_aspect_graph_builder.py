@@ -75,20 +75,22 @@ class AspectGraphBuilderTest(unittest.TestCase):
         documents_info = {189: {'EDUs': [559, 560, 561, 562, 563],
                                 'accepted_edus': [559, 560, 561, 562, 563],
                                 'aspect_concepts':
-                                    {'conceptnet_io': {
-                                        u'thing': [{'end': u'thing',
-                                                    'end-lang': u'en',
-                                                    'relation': u'IsA',
-                                                    'start': u'object',
-                                                    'start-lang': u'en',
-                                                    'weight': 2.8284271},
-                                                   {'end': u'stuff',
-                                                    'end-lang': u'en',
-                                                    'relation': u'Synonym',
-                                                    'start': u'thing',
-                                                    'start-lang': u'en',
-                                                    'weight': 2.8284271},
-                                                   ]}
+                                    {189:
+                                        {'conceptnet_io': {
+                                            u'apple': [{'end': u'apple',
+                                                        'end-lang': u'en',
+                                                        'relation': u'IsA',
+                                                        'start': u'object',
+                                                        'start-lang': u'en',
+                                                        'weight': 2.8284271},
+                                                       {'end': u'stuff',
+                                                        'end-lang': u'en',
+                                                        'relation': u'Synonym',
+                                                        'start': u'apple',
+                                                        'start-lang': u'en',
+                                                        'weight': 2.8284271},
+                                                       ]}
+                                        }
                                     },
                                 'sentiment': {559: 1, 560: -1, 5562: 1},
                                 # the rest of document info is skipped
@@ -100,8 +102,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertGreaterEqual(len(graph.nodes()), 4)
         self.assertGreaterEqual(len(graph.edges()), 3)
         attrib = nx.get_edge_attributes(graph, 'relation_type')
-        self.assertEqual(attrib, {(u'object', u'thing', 0): u'IsA',
-                                  (u'thing', u'stuff', 0): u'Synonym',
+        self.assertEqual(attrib, {(u'object', u'apple', 0): u'IsA',
+                                  (u'apple', u'stuff', 0): u'Synonym',
                                   (u'apple', u'phone', 0): 'Elaboration'})
 
     def test_rst_relation_type(self):
@@ -226,7 +228,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            ]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         graph, pagerank = aspects_graph_builder.build(rules,
-                                                      documents_info={},
+                                                      docs_info={},
                                                       conceptnet_io=False,
                                                       filter_gerani=True,
                                                       )
@@ -264,7 +266,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            ]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         graph, pagerank = aspects_graph_builder.build(rules,
-                                                      documents_info={},
+                                                      docs_info={},
                                                       conceptnet_io=False,
                                                       filter_gerani=False,
                                                       )
@@ -296,7 +298,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(self.aspects_per_edu,
                                                     alpha_gerani=0.5)
         graph, pagerank = aspects_graph_builder.build(self.rules,
-                                                      documents_info=self.docs_info,
+                                                      docs_info=self.docs_info,
                                                       conceptnet_io=False,
                                                       filter_gerani=True,
                                                       aht_gerani=False,

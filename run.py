@@ -274,7 +274,7 @@ class AspectAnalysisSystem:
 
             builder = AspectsGraphBuilder(aspects_per_edu)
             graph, page_ranks = builder.build(rules=dependency_rules,
-                                              documents_info=documents_info,
+                                              docs_info=documents_info,
                                               conceptnet_io=CONCEPTNET_ASPECTS,
                                               filter_gerani=False,
                                               aht_gerani=False,
