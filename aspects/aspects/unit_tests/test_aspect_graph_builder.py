@@ -96,8 +96,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                                 # the rest of document info is skipped
                                 }
                           }
-        graph, page_rank = aspects_graph_builder.build(rules, documents_info,
-                                                       True)
+        graph, page_rank = aspects_graph_builder.build(rules, documents_info, True)
         self.assertEqual(len(rules), 1)
         self.assertGreaterEqual(len(graph.nodes()), 4)
         self.assertGreaterEqual(len(graph.edges()), 3)
@@ -135,11 +134,10 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, [])]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu, with_cycles_between_aspects=True)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
-        graph, page_rank = aspects_graph_builder.build(rules,
-                                                       conceptnet_io=False)
+        graph, page_rank = aspects_graph_builder.build(rules, conceptnet_io=False)
         self.assertEqual(len(rules), 1)
         self.assertEqual(len(graph.nodes()), 3)
         self.assertEqual(len(graph.edges()), 4)
@@ -171,11 +169,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         rules_obtained = aspects_graph_builder.filter_gerani(rules)
         rules_expected = {
-            -1: [RelationAspects(aspect1=u'screen', aspect2=u'phone',
-                                 relation_type='Elaboration',
-                                 gerani_weight=1.38),
-                 RelationAspects(aspect1=u'speaker', aspect2=u'sound',
-                                 relation_type='Elaboration',
+            -1: [RelationAspects(aspect1=u'screen', aspect2=u'phone', relation_type='Elaboration', gerani_weight=1.38),
+                 RelationAspects(aspect1=u'speaker', aspect2=u'sound', relation_type='Elaboration',
                                  gerani_weight=0.29)]}
         self.assertEqual(rules_obtained, rules_expected)
 
@@ -227,11 +222,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (517, [u'screen', u'speaker']),
                            ]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
-        graph, pagerank = aspects_graph_builder.build(rules,
-                                                      docs_info={},
-                                                      conceptnet_io=False,
-                                                      filter_gerani=True,
-                                                      )
+        graph, pagerank = aspects_graph_builder.build(rules, docs_info={}, conceptnet_io=False, filter_gerani=True)
         gerani_weight_attrib = nx.get_edge_attributes(graph, 'gerani_weight')
         relation_type_weight_attrib = nx.get_edge_attributes(graph, 'relation_type')
         self.assertTrue(isinstance(graph, nx.MultiDiGraph))
@@ -264,12 +255,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (516, [u'speaker']),
                            (517, [u'screen', u'speaker']),
                            ]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
-        graph, pagerank = aspects_graph_builder.build(rules,
-                                                      docs_info={},
-                                                      conceptnet_io=False,
-                                                      filter_gerani=False,
-                                                      )
+        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu, with_cycles_between_aspects=True)
+        graph, pagerank = aspects_graph_builder.build(rules, docs_info={}, conceptnet_io=False, filter_gerani=False)
         self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 5)
         self.assertEqual(graph.number_of_edges(), 16)
@@ -294,14 +281,9 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def test_build_without_conceptnet_multi_rules_gerani_moi(self):
         self._set_rst_rules_document_info()
-        aspects_graph_builder = AspectsGraphBuilder(self.aspects_per_edu,
-                                                    alpha_gerani=0.5)
-        graph, pagerank = aspects_graph_builder.build(self.rules,
-                                                      docs_info=self.docs_info,
-                                                      conceptnet_io=False,
-                                                      filter_gerani=True,
-                                                      aht_gerani=False,
-                                                      )
+        aspects_graph_builder = AspectsGraphBuilder(self.aspects_per_edu, alpha_gerani=0.5)
+        graph, pagerank = aspects_graph_builder.build(self.rules, docs_info=self.docs_info, conceptnet_io=False,
+                                                      filter_gerani=True, aht_gerani=False)
         self.assertTrue(isinstance(graph, nx.MultiDiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
         self.assertEqual(graph.number_of_edges(), 2)

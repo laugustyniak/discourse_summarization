@@ -17,7 +17,7 @@ RelationAspects = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani_w
 
 
 class AspectsGraphBuilder(object):
-    def __init__(self, aspects_per_edu=None, alpha_gerani=0.5, with_cycles_between_aspects=True):
+    def __init__(self, aspects_per_edu=None, alpha_gerani=0.5, with_cycles_between_aspects=False):
         """
 
         Parameters
@@ -29,7 +29,7 @@ class AspectsGraphBuilder(object):
             Alpha parameter for moi function. 0.5 as default.
 
         with_cycles_between_aspects : bool
-            Do we want to have cycles for aspect, in arrg there could be aspect1-aspect1 relation or not. True by
+            Do we want to have cycles for aspect, in arrg there could be aspect1-aspect1 relation or not. False by
             default.
 
         """
@@ -67,6 +67,9 @@ class AspectsGraphBuilder(object):
 
         conceptnet_io: bool
             Do we use ConcetNet.io relation in graph?
+
+        aspect_graph_path : str
+            Path to save temporar arrg.
 
         Returns
         -------
