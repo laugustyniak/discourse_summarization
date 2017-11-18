@@ -17,8 +17,7 @@ RelationAspects = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani_w
 
 
 class AspectsGraphBuilder(object):
-
-    def __init__(self, aspects_per_edu=None, alpha_gerani=0.5):
+    def __init__(self, aspects_per_edu=None, alpha_gerani=0.5, with_cycles_between_aspects=True):
         """
 
         Parameters
@@ -29,7 +28,12 @@ class AspectsGraphBuilder(object):
         alpha_gerani : float
             Alpha parameter for moi function. 0.5 as default.
 
+        with_cycles_between_aspects : bool
+            Do we want to have cycles for aspect, in arrg there could be aspect1-aspect1 relation or not. True by
+            default.
+
         """
+        self.with_cycles_between_aspects = with_cycles_between_aspects
         self.alpha_gerani = alpha_gerani
         if aspects_per_edu is None:
             aspects_per_edu = []
@@ -126,19 +130,20 @@ class AspectsGraphBuilder(object):
                 log.debug('Rule: {}'.format(rule))
 
                 if isinstance(rule, RelationAspects):
-                    aspect_left, aspect_right, relation, gerani_weigth = rule
-                    graph.add_edge(aspect_left,
-                                   aspect_right,
-                                   relation_type=relation,
-                                   gerani_weight=gerani_weigth)
+                    aspect_left, aspect_right, relation, gerani_weight = rule
+                    graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
                 else:
-                    left_node, right_node, relation, gerani_weigth = rule
+                    left_node, right_node, relation, gerani_weight = rule
                     for aspect_left, aspect_right in self.aspects_iterator(
                             left_node, right_node):
-                        graph.add_edge(aspect_left,
-                                       aspect_right,
-                                       relation_type=relation,
-                                       gerani_weight=gerani_weigth)
+                        graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
+
+        return graph
+
+    def add_aspects_to_graph(self, graph, aspect_left, aspect_right, relation, gerani_weight):
+        if self.with_cycles_between_aspects or aspect_left != aspect_right:
+            log.info('Skip rule: {}-{}'.format(aspect_left, aspect_right))
+            graph.add_edge(aspect_left, aspect_right, relation_type=relation, gerani_weight=gerani_weight)
         return graph
 
     def calculate_page_ranks(self, graph, weight='weight'):

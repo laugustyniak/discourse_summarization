@@ -288,9 +288,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
                          )
 
         pagerank_expected = OrderedDict(
-            [(u'phone', 0.46985453080793027), (u'sound', 0.1327944758145863),
-             (u'screen', 0.1324503311258278),
-             (u'speaker', 0.1324503311258278), (u'voicemail', 0.1324503311258278)])
+            [(u'phone', 0.4698552806383583), (u'sound', 0.1327942890741717), (u'screen', 0.1324501434291567),
+             (u'speaker', 0.1324501434291567), (u'voicemail', 0.1324501434291567)])
         self.assertEqual(pagerank, pagerank_expected)
 
     def test_build_without_conceptnet_multi_rules_gerani_moi(self):
@@ -316,10 +315,9 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self._set_multigraph_arrg()
         pagerank = aspects_graph_builder.calculate_page_ranks(
             self.arrg_sample_graph, weight='gerani_weight')
-        pagerank_expected = OrderedDict([('phone', 0.4674494081710577),
-                                         ('cellphone', 0.18167339884648614),
-                                         ('screen', 0.17543859649122803),
-                                         ('voicemail', 0.17543859649122803)])
+        pagerank_expected = OrderedDict(
+            [('phone', 0.46744998785621517), ('cellphone', 0.18167321669875405), ('screen', 0.17543839772251535),
+             ('voicemail', 0.17543839772251535)])
         self.assertEqual(pagerank, pagerank_expected)
 
     def _set_multigraph_arrg(self):
@@ -332,10 +330,9 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder()
         self._set_multigraph_arrg()
         pagerank = aspects_graph_builder.calculate_page_ranks(self.arrg_sample_graph)
-        pagerank_expected = OrderedDict([('phone', 0.3991228070175438),
-                                         ('cellphone', 0.25),
-                                         ('screen', 0.1754385964912281),
-                                         ('voicemail', 0.1754385964912281)])
+        pagerank_expected = OrderedDict(
+            [('phone', 0.3991232045549693), ('cellphone', 0.25), ('screen', 0.17543839772251535),
+             ('voicemail', 0.17543839772251535)])
         self.assertEqual(pagerank, pagerank_expected)
 
     def test_merge_multiedges_in_arrg(self):
@@ -381,4 +378,17 @@ class AspectGraphBuilderTest(unittest.TestCase):
                           ('screen', 'pixel'): 20,
                           ('sound', 'phone'): 15,
                           })
-        # self.assertEqual(mst_obtained, graph)
+
+    def test_add_aspects_to_graph_not_equal_aspects(self):
+        aspects_graph_builder = AspectsGraphBuilder(with_cycles_between_aspects=True)
+        graph = nx.Graph()
+        aspects_graph_builder.add_aspects_to_graph(graph, 'phone', 'battery', 'rel', 55)
+        self.assertEquals(len(graph.nodes()), 2)
+        self.assertEquals(len(graph.edges()), 1)
+
+    def test_add_aspects_to_graph_equal_aspects(self):
+        aspects_graph_builder = AspectsGraphBuilder(with_cycles_between_aspects=False)
+        graph = nx.Graph()
+        aspects_graph_builder.add_aspects_to_graph(graph, 'phone', 'phone', 'rel', 55)
+        self.assertEquals(len(graph.nodes()), 0)
+        self.assertEquals(len(graph.edges()), 0)
