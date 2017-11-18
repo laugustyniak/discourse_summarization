@@ -5,6 +5,8 @@ from collections import defaultdict
 import networkx as nx
 import numpy as np
 
+from tqdm import tqdm
+
 log = logging.getLogger(__name__)
 
 
@@ -71,9 +73,11 @@ def calculate_moi_by_gerani(graph, alpha=0.5, max_iter=1000):
     dir_moi = 0
     wprs = nx.pagerank_scipy(graph, weight='gerani_weight', max_iter=max_iter)
     log.info('Weighted Page Rank, Gerani weight calculated')
+    log.info('Graph with #{} nodes and #{} edges'.format(len(graph.nodes()), len(graph.edges())))
     aspect_dir_moi = nx.get_node_attributes(graph, 'dir_moi')
     aspect_moi = defaultdict(float)
-    for aspect, wpr in wprs.iteritems():
+    n_wprs = len(wprs)
+    for aspect, wpr in tqdm(wprs.iteritems(), total=n_wprs):
         if aspect in aspect_dir_moi:
             dir_moi = aspect_dir_moi[aspect]
         moi = alpha * dir_moi + (1 - alpha) * wpr

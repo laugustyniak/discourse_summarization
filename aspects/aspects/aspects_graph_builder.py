@@ -160,9 +160,10 @@ class AspectsGraphBuilder(object):
             Page Rank values for ARRG.
 
         """
-        page_ranks = nx.pagerank_numpy(graph, weight=weight)
-        page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1),
-                                        reverse=True))
+        log.info('Weighted Page Rank calculation starts here.')
+        page_ranks = nx.pagerank_scipy(graph, weight=weight)
+        log.info('Weighted Page Rank calculation ended.')
+        page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
         return page_ranks
 
     def aspects_iterator(self, edu_id_1, edu_id_2):

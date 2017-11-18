@@ -2,8 +2,7 @@ import unittest
 
 import networkx as nx
 
-from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, \
-    calculate_moi_by_gerani
+from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
 
 
 class GeraniGraphAnalysisTest(unittest.TestCase):
