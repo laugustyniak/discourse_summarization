@@ -4,7 +4,7 @@ __pycache__/
 
 # ignore this folders
 texts/*
-results/*
+logs/*
 .idea/
 results/
 .ipynb_checkpoints/
@@ -24,14 +24,14 @@ external-libs/
 
 \.cache/
 
-logs/
-
 edu_dependency_parser/tools/stanford-parser-full-2014-01-04/build\.xml
+
+logs/
 
 edu_dependency_parser/rhetorical-installation/PyYAML-3\.09/
 
-edu_dependency_parser/rhetorical-installation/gCRF_dist/
-
 edu_dependency_parser/rhetorical-installation/nltk-2\.0b9/
+
+edu_dependency_parser/rhetorical-installation/gCRF_dist/
 
 edu_dependency_parser/rhetorical-installation/\._nltk-2\.0b9

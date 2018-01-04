@@ -36,6 +36,16 @@ class AspectExtractionTest(unittest.TestCase):
         aspects_obtained, _, _ = aspects_extractor.extract(text)
         self.assertEqual(aspects_obtained, aspects_expected)
 
+    def test_get_aspects_ner_false(self):
+        aspects_expected = []
+        preprocesser = Preprocesser()
+        # sample text, don't correct :)
+        raw_text = u'this is the biggest in Europe!'
+        text = preprocesser.preprocess(raw_text)
+        aspects_extractor = AspectExtractor(is_ner=False)
+        aspects_obtained, _, _ = aspects_extractor.extract(text)
+        self.assertEqual(aspects_obtained, aspects_expected)
+
     def test_1_char_aspects_and_donts(self):
         aspects_expected = []
         preprocesser = Preprocesser()
@@ -126,8 +136,19 @@ class AspectExtractionTest(unittest.TestCase):
         text = preprocesser.preprocess(raw_text)
         if CONCEPTNET_ASPECTS:
             aspects_extractor = AspectExtractor()
-            _, concepts_obtained, _ = aspects_extractor.extract(
-                text)
+            _, concepts_obtained, _ = aspects_extractor.extract(text)
+            concepts = concepts_obtained['conceptnet_io'][concept]
+
+            self.assertGreater(len(concepts), 20)
+
+    def test_conceptnet_io_concept_extraction_paggination_same_concepts(self):
+        concept = 'device'
+        preprocesser = Preprocesser()
+        raw_text = u'this device is really good device, but this phone'
+        text = preprocesser.preprocess(raw_text)
+        if CONCEPTNET_ASPECTS:
+            aspects_extractor = AspectExtractor()
+            _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
             self.assertGreater(len(concepts), 20)

@@ -1,21 +1,24 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
+import logging
 
 from sklearn.externals import joblib
 
+log = logging.getLogger(__name__)
+from aspects.configs.sentiment_config import SENTIMENT_MODEL_PATH
 
-class LogisticRegressionSentimentAnalyzer:
+
+class LogisticRegressionSentimentAnalyzer(object):
+
     def __init__(self, model_path=None):
-        print 'SentimentAnalyzer: initializing'
+        log.info('Sentiment Analyzer - status: initializing')
 
         if model_path is None:
-            # self.model = joblib.load('data/models/Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-10-domains.pkl')
-            # smaller model as default - useful for testing
-            self.model = joblib.load('data/models/Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-reviews_Apps_for_Android-500000-balanced.pkl')
+            log.info('Defaul sentiment model will be loaded: {}'.format(
+                SENTIMENT_MODEL_PATH))
+            self.model = joblib.load(SENTIMENT_MODEL_PATH)
         else:
             self.model = joblib.load(model_path)
 
-        print 'SentimentAnalyzer: initialized'
+        log.info('Sentiment Analyzer - status: initialized')
 
     def analyze(self, text):
         return self.model.predict([text])

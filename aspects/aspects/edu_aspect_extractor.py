@@ -8,22 +8,25 @@ class EDUAspectExtractor(object):
     def __init__(self):
         self.extractor = AspectExtractor()
 
-    def extract(self, edu):
+    def extract(self, edu, n_doc):
         """
-        Extract aspects and apsect_concepts
-        :param edu:
-        :return:
+        Extract aspects from edu document.
+
+        Parameters
+        ----------
+        edu : dict
+            Preprocessed string with tokens, ner and etc.
+
+        n_doc : int
+            Document of document processed.
+
+        Returns
+        -------
+        aspects : dict
+
+        concept_aspects : dict
+
+        keyword_aspects : dict
+
         """
-        return self.extractor.extract(edu)
-
-    def get_aspects_in_document(self, documents_aspects, aspects):
-
-        if documents_aspects is None:
-            return aspects
-        else:
-            doc_asp = documents_aspects + aspects
-
-            # wymuszamy unikalnosc
-            doc_asp = list(set(doc_asp))
-
-            return doc_asp
+        return self.extractor.extract(edu, n_doc)
