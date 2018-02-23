@@ -1,6 +1,9 @@
 import subprocess
 
 import paths
+from aspects.utilities.nlp import load_spacy
+
+nlp = load_spacy()
 
 
 class SyntaxParser:
