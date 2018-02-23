@@ -10,10 +10,10 @@ class RSTParseTest(unittest.TestCase):
         self.document = u"""
         If you can get past this little flaw, give the ipod 5 stars, because everything else about it is pretty  
         much perfect.
-        """.strip()
+        """
 
     def _with_simple_sentences_document(self):
-        self.document = u"""crappy battery. crappy screen. i love apple.""".strip()
+        self.document = u"""crappy battery. crappy screen. i love apple."""
 
     def _with_brexit_document(self):
         self.document = u"""He made his argument during a debate on the proposed transition period after Britain 
@@ -22,11 +22,6 @@ class RSTParseTest(unittest.TestCase):
         However, countering the narrative, one member of the audience said: There's this preoccupation that time is 
         running out for us. But time's running out for French farmers, Germany car manufactures, for Spanish tourist 
         resorts, and last of all, time's running out for Italian politicians."""
-
-    def test_parse_document_on_disc(self):
-        parser = DiscourseParser(output_dir='', global_features=True)
-        parsed_tree = parser.parse('0')
-        self.assertTrue(isinstance(parsed_tree, ParseTree))
 
     def test_parse_document_str_one_sentence(self):
         parser = DiscourseParser(output_dir='', global_features=True)
