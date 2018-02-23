@@ -64,42 +64,28 @@ class CRFTreeBuilder:
             self.multi_parser.mc_classifier = classifier
         else:
             raise Exception('Unknown classifier name', name)
-
-        # print 'Added classifier', name, 'to treebuilder', self.name
-
         self.classifiers.append(classifier)
 
     def add_feature_writer(self):
         feature_writer = CRFTreeFeatureWriter(self.verbose)
-
         self.intra_parser.feature_writer = feature_writer
         self.multi_parser.feature_writer = feature_writer
 
-        # print 'Added feature writer to treebuilder'
-
     def build_tree(self, doc):
-        #        print self.use_contextual_features
-        # Check if only one EDU
         if len(doc.edus) == 1:
             return [ParseTree("n/a", [doc.edus[0]])]
-
-        for i in range(len(doc.sentences)):
-            sentence = doc.sentences[i]
-            (start_edu, end_edu) = doc.cuts[i]
+        for i, sentence in enumerate(doc.sentences):
+            start_edu, end_edu = doc.cuts[i]
 
             if self.verbose:
                 print 'sentence %d' % i
                 print 'start_edu', start_edu, 'end_edu', end_edu
-
             self.intra_parser.parse_each_sentence(sentence)
-
         self.multi_parser.parse_document(doc)
-
         return doc.discourse_tree
 
     def unload(self):
         self.intra_parser.unload()
         self.multi_parser.unload()
-
         for classifier in self.classifiers:
             classifier.unload()

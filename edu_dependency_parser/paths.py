@@ -4,13 +4,10 @@ ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 RHETORICAL_INSTLALATION_PATH = os.path.join(ROOT_PATH, 'rhetorical-installation', 'gCRF_dist')
 
 PARSED_TEXTS_PATH = os.path.join(ROOT_PATH, 'texts/parsed_texts/')
-STANFORD_PATH = os.path.join(ROOT_PATH, 'tools/stanford_parser/')
 PENN2MALT_PATH = os.path.join(ROOT_PATH, 'tools/Penn2Malt/')
 SVM_TOOLS = os.path.join(ROOT_PATH, 'tools/svm_tools/')
 CRFSUITE_PATH = os.path.join(RHETORICAL_INSTLALATION_PATH, 'tools/crfsuite/')
 MALLET_PATH = os.path.join(ROOT_PATH, 'tools/mallet-2.07/')
-STANFORD_CORENLP_PATH = os.path.join(ROOT_PATH, 'tools/stanford-corenlp-full-2013-11-12/')
-SSPLITTER_PATH = os.path.join(ROOT_PATH, 'tools/CCGSsplitter/')
 STANFORD_PARSER_PATH = os.path.join(ROOT_PATH, 'tools/stanford-parser-full-2014-01-04/')
 
 MODEL_PATH = os.path.join(ROOT_PATH, 'model/')

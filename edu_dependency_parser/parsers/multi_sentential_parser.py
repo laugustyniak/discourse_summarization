@@ -30,13 +30,9 @@ class MultiSententialParser(BaseParser):
             return
 
         for i in range(len(doc.constituents) - 1):
-            #            print 'constituent', i, doc.constituents[i]
-            #            print doc.constituents[i].parse_subtree
-            #            print
             bin_score = self.classify_pair(doc, i)
             doc.constituent_scores.append(bin_score)
 
-        seq_prob = None
         while len(doc.constituents) > 1:
             best_one = None
             max_bin_score = -20.0
@@ -45,7 +41,7 @@ class MultiSententialParser(BaseParser):
                     best_one = index
                     max_bin_score = bin_score
 
-            seq_prob = self.connect_stumps(best_one, doc)
+            self.connect_stumps(best_one, doc)
 
         if doc.constituents:
             doc.discourse_tree = doc.constituents[0].parse_subtree

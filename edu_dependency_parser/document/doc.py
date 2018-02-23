@@ -31,8 +31,8 @@ class Document(BaseRepresentation):
     def add_sentence(self, sentence):
         self.sentences.append(sentence)
 
-    def preprocess(self, raw_filename, preprocesser):
-        preprocesser.preprocess(raw_filename, self)
+    def preprocess(self, text, preprocesser):
+        preprocesser.preprocess(text, self)
         self.preprocessed = True
 
     def get_bottom_level_constituents(self):

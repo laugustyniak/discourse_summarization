@@ -1,3 +1,4 @@
+nltk
 jellyfish=>0.5.6
 joblib>=0.9.4
 networkx>=2.1rc1.dev_20171103120827
@@ -8,6 +9,7 @@ pathlib>=1.0.1
 Pillow>=4.2.1
 plotly==1.12.2
 python-rake>=1.1.2
+repoze.lru>=0.7
 scikit-learn>=0.18.2
 scipy>=0.13.3
 seaborn==0.7.1

@@ -6,7 +6,7 @@ import os.path
 save_suffix = ".dat"
 
 
-def saveData(filename, myobject, where=paths.save_folder, suffix=save_suffix):
+def save_data(filename, myobject, where=paths.save_folder, suffix=save_suffix):
     fo = open(os.path.join(where, filename + suffix), "wb")
     # print 'Saved serialized file to %s' % os.path.join(where, filename + suffix)
     cPickle.dump(myobject, fo, protocol=cPickle.HIGHEST_PROTOCOL)

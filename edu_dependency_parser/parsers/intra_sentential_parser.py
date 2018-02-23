@@ -9,11 +9,9 @@ import paths
 class IntraSententialParser(BaseParser):
     def __init__(self, name='IntraParser', verbose=False, window_size=3):
         BaseParser.__init__(self, name, verbose, window_size)
-
+        self.bin_classifier = None
+        self.mc_classifier = None
         self.scope = True
-
-    #        signature = random.getrandbits(24)
-    #        self.tmp_test_fname = os.path.join(paths.TMP_PATH, 'tmp_intra_struct_crf_test_%s.txt' % signature)
 
     def add_classifier(self, classifier, name):
         if name == 'bin':
@@ -22,23 +20,18 @@ class IntraSententialParser(BaseParser):
             self.mc_classifier = classifier
         else:
             raise Exception('Unknown classifier name', name)
-
         print 'Added classifier', name, 'to treebuilder', self.name
 
     def parse_sequence(self, sentence):
         if len(sentence.constituents) == 1:
             sentence.discourse_tree = sentence.constituents[0]
             return
-
-        sentence.constituents_scores = self.parse_single_sequence(sentence.constituents,
-                                                                  labeling=False)[1]
+        sentence.constituents_scores = self.parse_single_sequence(sentence.constituents, labeling=False)[1]
 
         while len(sentence.constituents) > 1:
             best_one = None
             max_bin_score = -20.0
-
             for (index, bin_score) in enumerate(sentence.constituents_scores):
-
                 if bin_score > max_bin_score:
                     best_one = index
                     max_bin_score = bin_score
@@ -49,12 +42,10 @@ class IntraSententialParser(BaseParser):
             sentence.constituents[best_one: best_one + 2] = [new_constituent]
 
             if len(sentence.constituents) > 1:
-                sentence.constituents_scores = self.parse_single_sequence(sentence.constituents,
-                                                                          labeling=False)[1]
+                sentence.constituents_scores = self.parse_single_sequence(sentence.constituents, labeling=False)[1]
 
             ''' Assign relations '''
-            seq_prob, mc_predictions = self.parse_single_sequence(sentence.constituents,
-                                                                  labeling=True)
+            seq_prob, mc_predictions = self.parse_single_sequence(sentence.constituents, labeling=True)
 
             for k in range(len(sentence.constituents)):
                 c = sentence.constituents[k]
