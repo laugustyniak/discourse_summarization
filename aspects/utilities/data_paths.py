@@ -16,12 +16,12 @@ class IOPaths(object):
         self.extracted_docs = join(output_path, 'extracted_documents')
         self.ensure_path_exist(self.extracted_docs)
 
-        self.extracted_docs_ids = join(output_path,
-                                       'extracted_documents_ids')
+        self.extracted_docs_all = join(self.extracted_docs, 'all.csv')
+
+        self.extracted_docs_ids = join(output_path, 'extracted_documents_ids')
         self.ensure_path_exist(self.extracted_docs_ids)
 
-        self.extracted_docs_metadata = join(output_path,
-                                            'extracted_documents_metadata')
+        self.extracted_docs_metadata = join(output_path, 'extracted_documents_metadata')
         self.ensure_path_exist(self.extracted_docs_metadata)
 
         self.docs_info = join(output_path, 'documents_info')
@@ -33,19 +33,16 @@ class IOPaths(object):
         self.ensure_path_exist(self.link_trees)
 
         self.raw_edu_list = join(output_path, 'raw_edu_list')
-        self.sentiment_filtered_edus = join(output_path,
-                                            'sentiment_filtered_edus')
+        self.sentiment_filtered_edus = join(output_path, 'sentiment_filtered_edus')
         self.aspects_per_edu = join(output_path, 'aspects_per_edu')
-        self.edu_dependency_rules = join(output_path,
-                                         'edu_dependency_rules')
+        self.edu_dependency_rules = join(output_path, 'edu_dependency_rules')
 
         self.aspects_graph = join(output_path, 'aspects_graph')
         self.aspects_graph_gpkl = join(output_path, 'aspects_graph.gpkl')
         self.aspects_graph_gexf = join(output_path, 'aspects_graph.gexf')
         self.aspects_importance = join(output_path, 'aspects_importance')
 
-        self.final_docs_info = join(output_path,
-                                    'final_documents_info')
+        self.final_docs_info = join(output_path, 'final_documents_info')
 
     def ensure_path_exist(self, path):
         if not exists(path):
