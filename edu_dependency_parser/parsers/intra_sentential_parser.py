@@ -44,7 +44,7 @@ class IntraSententialParser(BaseParser):
             if len(sentence.constituents) > 1:
                 sentence.constituents_scores = self.parse_single_sequence(sentence.constituents, labeling=False)[1]
 
-            ''' Assign relations '''
+            # Assign relations
             seq_prob, mc_predictions = self.parse_single_sequence(sentence.constituents, labeling=True)
 
             for k in range(len(sentence.constituents)):
@@ -60,9 +60,6 @@ class IntraSententialParser(BaseParser):
                         print 'R', c.right_child
                         print 'with predicted label', predicted_label
                         print
-
-                        #        print stumps[0]
-
         sentence.discourse_tree = sentence.constituents[0].parse_subtree
         if self.verbose:
             print sentence.discourse_tree

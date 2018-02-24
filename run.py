@@ -111,7 +111,7 @@ class AspectAnalysisSystem:
         documents_count = len(existing_documents_list)
 
         # FIXME: disambiguate file loading and metadata information storing
-        # todo why metadata is not stored?
+        # TODO: why metadata is not stored?
         if documents_count == 0:
             f_extension = basename(self.input_file_path).split('.')[-1]
             logging.debug('Input file extension: {}'.format(f_extension))

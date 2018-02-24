@@ -1,7 +1,3 @@
-from trees.parse_tree import ParseTree
-import os.path
-
-
 class BaseParser:
     def __init__(self, name, verbose=False, window_size=3):
         self.name = name
@@ -73,10 +69,6 @@ class BaseParser:
             for k in range(len(s)):
                 c = s[k]
 
-                #                print 'k', k, c
-                #                print c
-                #                print
-
                 if k == 0:
                     c0 = None
                 else:
@@ -108,14 +100,6 @@ class BaseParser:
 
                     positions = [-1, 0, 1]
                     hash_key = (c1_tot, c0_num_edus, c1_num_edus, c2_num_edus, c3_num_edus)
-
-                    #                    if post_editing:
-                    #                        if c0:
-                    #                            print 'c0:', c0, c0.parse_subtree
-                    #                        print 'c1:', c1, c1.parse_subtree
-                    #                        print 'c2:', c2, c2.parse_subtree
-                    #                        if c3:
-                    #                            print 'c3:', c3, c3.parse_subtree
 
                     if self.verbose:
                         print 'c0:', c0

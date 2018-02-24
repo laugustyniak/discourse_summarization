@@ -43,8 +43,7 @@ class DiscourseParser(object):
 
         try:
             if not self.skip_parsing:
-                self.treebuilder = CRFTreeBuilder(_name=self.feature_sets,
-                                                  verbose=self.verbose)
+                self.treebuilder = CRFTreeBuilder(_name=self.feature_sets, verbose=self.verbose)
             else:
                 self.treebuilder = None
         except Exception, e:
