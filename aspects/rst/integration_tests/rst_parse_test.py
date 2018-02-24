@@ -1,5 +1,8 @@
 import unittest
 
+from time import time
+from tqdm import tqdm
+
 from parse import DiscourseParser
 from trees.parse_tree import ParseTree
 
@@ -34,3 +37,15 @@ class RSTParseTest(unittest.TestCase):
         self._with_brexit_document()
         parsed_tree = parser.parse(text=self.document)
         self.assertTrue(isinstance(parsed_tree, ParseTree))
+
+    def test_parsing_time(self):
+        n_documents_to_test = 20
+        parser = DiscourseParser(output_dir='', global_features=True)
+        self._with_brexit_document()
+        timer_start = time()
+        for _ in tqdm(range(n_documents_to_test), desc='Parsing'):
+            parsed_tree = parser.parse(text=self.document)
+            self.assertTrue(isinstance(parsed_tree, ParseTree))
+        timer_stop = time()
+        timer_delta = timer_stop - timer_start
+        print('All took {}s, this is {}s for each document.'.format(timer_delta, timer_delta / n_documents_to_test))
