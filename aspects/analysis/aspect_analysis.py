@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-# updates: Łukasz Augustyniak <luk.augustyniak@gmail.com>
 import argparse
 import logging
-import uuid
 from os import getcwd
 from os.path import basename, exists, join, split, splitext, dirname
 
-import itertools
 import networkx as nx
 import pandas as pd
 import simplejson
@@ -16,12 +11,12 @@ from tqdm import tqdm
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
-from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
+from aspects.aspects.aspect_extractor import extract_noun_and_noun_phrases
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EduExtractor
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
+from aspects.sentiment.sentiment_analyzer import load_sentiment_analyzer
 from aspects.utilities.data_paths import IOPaths
 from parse import DiscourseParser
 
@@ -93,78 +88,10 @@ class AspectAnalysis:
         documents_df['edus'] = edus
         return documents_df
 
-    def filter_edu_by_sentiment(self, documents_df):
-        """Filter out EDUs without sentiment, with neutral sentiment too"""
-
-        # 1. create dataframe with aspects and sentiment
-        # 2. filter as you like
-
-        if self.sent_model_path is None:
-            analyzer = SentimentAnalyzer()
-        else:
-            analyzer = SentimentAnalyzer(model_path=self.sent_model_path)
-
-        for edus in tqdm(documents_df['edus']):
-            for edu in edus:
-                sentiment = analyzer.analyze(edu)[0]
-
-                # todo add to readme strucutre of docuemnt info and other dicts
-                if not edu['source_document_id'] in docs_info:
-                    docs_info[edu['source_document_id']] = {
-                        'EDUs': [],
-                        'accepted_edus': [],
-                        'aspects': {},
-                        'aspect_concepts': {},
-                        'aspect_keywords': {},
-                        'sentiment': {},
-                    }
-                # docs_info[edu['source_document_id']]['sentiment'].update({edu_id: sentiment})
-                # docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
-                if sentiment:
-                    edu['sentiment'].append(sentiment)
-                    # docs_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
-                    # filtered_edus[edu_id] = edu
-        return documents_df
-
-    def _extract_aspects_from_edu(self):
-        """ Extract aspects from EDU and serialize them """
-        if exists(self.paths.aspects_per_edu):
-            aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
-            logging.info('Aspect per EDU loaded.')
-        else:
-            logging.info('No aspects extracted, starting from beginning!')
-            aspects_per_edu = {}
-
-        extractor = EDUAspectExtractor()
-        edus = self.serializer.load(self.paths.sentiment_filtered_edus)
-        documents_info = self.serializer.load(self.paths.docs_info)
-        n_edus = len(edus)
-        # fixme ValueError: max() arg is an empty sequence
-        max_edu_id = max(edus.keys())
-
-        logging.info('# of document with sentiment edus: {}'.format(n_edus))
-
-        for n_doc, (edu_id, edu) in enumerate(edus.iteritems()):
-            if edu_id not in aspects_per_edu:
-                doc_info = documents_info[edu['source_document_id']]
-                aspects, aspect_concepts, aspect_keywords = extractor.extract(edu, n_doc)
-                aspects_per_edu[edu_id] = aspects
-                logging.info('EDU ID/MAX EDU ID: {}/{}'.format(edu_id, max_edu_id))
-                logging.debug('aspects: {}'.format(aspects))
-                if 'aspects' not in doc_info:
-                    doc_info['aspects'] = []
-                doc_info['aspects'].update({edu_id: aspects})
-                doc_info['aspect_concepts'].update({edu_id: aspect_concepts})
-                doc_info['aspect_keywords'].update({edu_id: aspect_keywords})
-
-                if not edu_id % 100:
-                    logging.info('Save partial aspects, edu_id {}'.format(edu_id))
-                    self.serializer.save(aspects_per_edu, self.paths.aspects_per_edu)
-                    self.serializer.save(documents_info, self.paths.docs_info)
-
-        logging.info('Serializing aspect per edu and document info objects.')
-        self.serializer.save(aspects_per_edu, self.paths.aspects_per_edu)
-        self.serializer.save(documents_info, self.paths.docs_info)
+    def get_sentiment(self, edu_df):
+        sentiment_model = load_sentiment_analyzer()
+        edu_df['sentiment'] = [sentiment_model.predict([edu.text])[0] for edu in tqdm(edu_df['edu'])]
+        return edu_df
 
     def _extract_edu_dependency_rules(self):
         """Extract association rules to RST trees"""
@@ -242,19 +169,23 @@ class AspectAnalysis:
         self.serializer.save(aspect_graph, self.paths.aspects_graph)
 
     def run(self):
-        # TODO: make pipeline with DFs
-        documents_df = self.parse_input_documents()
-        documents_df = self.parse_edus(documents_df)
-        documents_df = self.extract_edus(documents_df)
+        documents_df = (self.parse_input_documents()
+                        .pipe(self.parse_edus)
+                        .pipe(self.extract_edus)
+                        )
 
         # get edu-based dataframe for sentiment and aspect extraction
         edu_df = pd.DataFrame([(edu_id, edu) for edus in documents_df.edus for edu_id, edu in edus.items()],
                               columns=['edu_id', 'edu'])
+        edu_df = (edu_df
+                  .pipe(self.get_sentiment)
+                  .pipe(extract_noun_and_noun_phrases)
+                  )
 
         # create separate data frame for aspects - each row for edu
 
         documents_df = self.filter_edu_by_sentiment(documents_df)
-        self._extract_aspects_from_edu(documents_df)
+        self.extract_aspects_from_edu(documents_df)
         self._extract_edu_dependency_rules()
         self._build_aspect_dependency_graph()
         self._add_sentiment_and_dir_moi_to_graph()

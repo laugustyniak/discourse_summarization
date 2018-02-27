@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
 import logging
-import sys
 from collections import defaultdict
 
 import RAKE
@@ -14,13 +11,10 @@ from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
     CONCEPTNET_LANG, CONCEPTNET_API_URL
 from aspects.enrichments.conceptnets import Sentic, ConceptNetIO
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 log = logging.getLogger(__name__)
 
 
-class AspectExtractor(object):
+class AspectExtractor:
     """ Extract aspects from EDU. """
 
     def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True):
@@ -128,14 +122,12 @@ class AspectExtractor(object):
 
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
-            # jesli jest główny (rzeczownik) - akceptujemy od razu
             if self._is_interesting_main(token) and len(token) > 1:
                 if not token['is_stop']:
                     aspect_sequence.append(token['lemma'])
                 aspect_sequence_enabled = True
                 aspect_sequence_main_encountered = True
             else:
-                # akceptujemy sekwencje, jesli byl w niej element główny
                 if aspect_sequence_enabled and aspect_sequence_main_encountered:
                     aspect = ' '.join(aspect_sequence)
                     if aspect not in aspects:
@@ -144,7 +136,6 @@ class AspectExtractor(object):
                 aspect_sequence_enabled = False
                 aspect_sequence = []
 
-        # dodajemy ostatnią sekwencje
         if aspect_sequence_enabled and aspect_sequence_main_encountered:
             aspects.append(' '.join(aspect_sequence))
 
@@ -230,3 +221,34 @@ class AspectExtractor(object):
             keyword_aspects = {'rake': [(None, None)]}
 
         return aspects, concept_aspects, keyword_aspects
+
+
+def extract_noun_and_noun_phrases(df, column_with_text='edu'):
+    # FIXME: reimplement it
+    all_edus_aspects = []
+    for words in df[column_with_text]:
+        aspects = []
+        aspect_sequence = []
+        aspect_sequence_main_encountered = False
+        aspect_sequence_enabled = False
+        for token in words:
+            if token.pos_ == 'NOUN' and len(token) > 1:
+                if not token.is_stop:
+                    aspect_sequence.append(token.lemma_)
+                aspect_sequence_enabled = True
+                aspect_sequence_main_encountered = True
+            else:
+                if aspect_sequence_enabled and aspect_sequence_main_encountered:
+                    aspect = ' '.join(aspect_sequence)
+                    if aspect not in aspects:
+                        aspects.append(aspect)
+                aspect_sequence_main_encountered = False
+                aspect_sequence_enabled = False
+                aspect_sequence = []
+        if aspect_sequence_enabled and aspect_sequence_main_encountered:
+            aspects.append(' '.join(aspect_sequence))
+        # filter empty strings
+        aspects = [aspect for aspect in aspects if aspect]
+        all_edus_aspects.append(aspects)
+    df['aspects'] = all_edus_aspects
+    return df
