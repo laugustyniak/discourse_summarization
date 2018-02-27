@@ -16,6 +16,9 @@ class IOPaths(object):
         self.extracted_docs = join(output_path, 'extracted_documents')
         self.ensure_path_exist(self.extracted_docs)
 
+        self.tmp = join(output_path, 'tmp')
+        self.ensure_path_exist(self.tmp)
+
         self.extracted_docs_all = join(self.extracted_docs, 'all.csv')
 
         self.extracted_docs_ids = join(output_path, 'extracted_documents_ids')
@@ -26,10 +29,12 @@ class IOPaths(object):
 
         self.docs_info = join(output_path, 'documents_info')
 
-        self.edu_trees = join(output_path, 'edu_trees_dir')
+        self.edu_trees = join(output_path, 'edu_trees')
         self.ensure_path_exist(self.edu_trees)
 
-        self.link_trees = join(output_path, 'link_trees_dir')
+        self.edu_trees_df = join(self.edu_trees, 'edu_parsed.pkl')
+
+        self.link_trees = join(output_path, 'link_trees')
         self.ensure_path_exist(self.link_trees)
 
         self.raw_edu_list = join(output_path, 'raw_edu_list')

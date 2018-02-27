@@ -1,7 +1,7 @@
 import logging
 from glob import glob
 
-from run import AspectAnalysisSystem
+from aspects.analysis.run import AspectAnalysisSystem
 
 reviews = glob('data/reviews/*.json')
 
