@@ -17,7 +17,7 @@ from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.io.serializer import Serializer
-from aspects.rst.edu_tree_preprocesser import process_tree
+from aspects.rst.edu_tree_preprocesser import EduTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
 from aspects.utilities.data_paths import IOPaths
@@ -54,6 +54,7 @@ class AspectAnalysis:
         self.parsing_errors = 0
 
         self.n_sample = n_sample
+        self.edu_preprocesser = EduTreePreprocesser()
 
     def parse_input_documents(self):
         """
@@ -85,8 +86,8 @@ class AspectAnalysis:
         return documents_df
 
     def preproces_edus(self, documents_df):
-        documents_df['edus'] = [list(process_tree(tree)) for tree in tqdm(documents_df['rst_tree'],
-                                                                          desc='Edu extraction')]
+        documents_df['edus'] = [list(self.edu_preprocesser.get_edus_from_tree(tree)) for tree in
+                                tqdm(documents_df['rst_tree'], desc='Edu extraction')]
         return documents_df
 
     def filter_edu_by_sentiment(self, documents_df):
@@ -239,6 +240,7 @@ class AspectAnalysis:
         self.serializer.save(aspect_graph, self.paths.aspects_graph)
 
     def run(self):
+        # TODO: make pipeline with DFs
         documents_df = self.parse_input_documents()
         documents_df = self.parse_edus(documents_df)
         documents_df = self.preproces_edus(documents_df)
