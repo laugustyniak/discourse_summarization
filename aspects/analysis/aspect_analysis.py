@@ -3,6 +3,7 @@
 # updates: Łukasz Augustyniak <luk.augustyniak@gmail.com>
 import argparse
 import logging
+import uuid
 from os import getcwd
 from os.path import basename, exists, join, split, splitext, dirname
 
@@ -17,7 +18,7 @@ from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.io.serializer import Serializer
-from aspects.rst.edu_tree_preprocesser import EduTreePreprocesser
+from aspects.rst.edu_tree_preprocesser import EduExtractor
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
 from aspects.utilities.data_paths import IOPaths
@@ -54,7 +55,7 @@ class AspectAnalysis:
         self.parsing_errors = 0
 
         self.n_sample = n_sample
-        self.edu_preprocesser = EduTreePreprocesser()
+        self.edu_preprocesser = EduExtractor()
 
     def parse_input_documents(self):
         """
@@ -85,43 +86,43 @@ class AspectAnalysis:
         documents_df.to_pickle(self.paths.edu_trees_df)
         return documents_df
 
-    def preproces_edus(self, documents_df):
-        documents_df['edus'] = [list(self.edu_preprocesser.get_edus_from_tree(tree)) for tree in
-                                tqdm(documents_df['rst_tree'], desc='Edu extraction')]
+    def extract_edus(self, documents_df):
+        edus = [self.edu_preprocesser.get_edus_with_idsfrom_tree(tree) for tree in
+                tqdm(documents_df['rst_tree'], desc='Edu extraction')]
+        documents_df['edus'] = edus
         return documents_df
 
     def filter_edu_by_sentiment(self, documents_df):
         """Filter out EDUs without sentiment, with neutral sentiment too"""
 
+        # 1. create dataframe with aspects and sentiment
+        # 2. filter as you like
+
         if self.sent_model_path is None:
             analyzer = SentimentAnalyzer()
         else:
             analyzer = SentimentAnalyzer(model_path=self.sent_model_path)
-        edu_list = list(self.serializer.load(self.paths.raw_edu_list).values())
-        filtered_edus = {}
-        docs_info = {}
 
-        for edu in tqdm(documents_df['edus']):
-            sentiment = analyzer.analyze(edu['raw_text'])[0]
+        for edus in tqdm(documents_df['edus']):
+            for edu in edus:
+                sentiment = analyzer.analyze(edu)[0]
 
-            # todo add to readme strucutre of docuemnt info and other dicts
-            if not edu['source_document_id'] in docs_info:
-                docs_info[edu['source_document_id']] = {
-                    'EDUs': [],
-                    'accepted_edus': [],
-                    'aspects': {},
-                    'aspect_concepts': {},
-                    'aspect_keywords': {},
-                    'sentiment': {},
-                }
-            # docs_info[edu['source_document_id']]['sentiment'].update({edu_id: sentiment})
-            # docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
-            if sentiment:
-                edu['sentiment'].append(sentiment)
-                # docs_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
-                # filtered_edus[edu_id] = edu
-        self.serializer.save(filtered_edus, self.paths.sentiment_filtered_edus)
-        self.serializer.save(docs_info, self.paths.docs_info)
+                # todo add to readme strucutre of docuemnt info and other dicts
+                if not edu['source_document_id'] in docs_info:
+                    docs_info[edu['source_document_id']] = {
+                        'EDUs': [],
+                        'accepted_edus': [],
+                        'aspects': {},
+                        'aspect_concepts': {},
+                        'aspect_keywords': {},
+                        'sentiment': {},
+                    }
+                # docs_info[edu['source_document_id']]['sentiment'].update({edu_id: sentiment})
+                # docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
+                if sentiment:
+                    edu['sentiment'].append(sentiment)
+                    # docs_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
+                    # filtered_edus[edu_id] = edu
         return documents_df
 
     def _extract_aspects_from_edu(self):
@@ -243,7 +244,7 @@ class AspectAnalysis:
         # TODO: make pipeline with DFs
         documents_df = self.parse_input_documents()
         documents_df = self.parse_edus(documents_df)
-        documents_df = self.preproces_edus(documents_df)
+        documents_df = self.extract_edus(documents_df)
         documents_df = self.filter_edu_by_sentiment(documents_df)
         self._extract_aspects_from_edu(documents_df)
         self._extract_edu_dependency_rules()
