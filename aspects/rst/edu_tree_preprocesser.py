@@ -24,4 +24,4 @@ class EduExtractor:
     def get_edus_with_idsfrom_tree(self, tree):
         self.edus = []
         self.process_tree(tree)
-        return {uuid.uuid4(): edu for edu in self.edus}
+        return {str(uuid.uuid4()): edu for edu in self.edus}
