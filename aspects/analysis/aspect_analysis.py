@@ -7,6 +7,7 @@ import uuid
 from os import getcwd
 from os.path import basename, exists, join, split, splitext, dirname
 
+import itertools
 import networkx as nx
 import pandas as pd
 import simplejson
@@ -245,6 +246,13 @@ class AspectAnalysis:
         documents_df = self.parse_input_documents()
         documents_df = self.parse_edus(documents_df)
         documents_df = self.extract_edus(documents_df)
+
+        # get edu-based dataframe for sentiment and aspect extraction
+        edu_df = pd.DataFrame([(edu_id, edu) for edus in documents_df.edus for edu_id, edu in edus.items()],
+                              columns=['edu_id', 'edu'])
+
+        # create separate data frame for aspects - each row for edu
+
         documents_df = self.filter_edu_by_sentiment(documents_df)
         self._extract_aspects_from_edu(documents_df)
         self._extract_edu_dependency_rules()
