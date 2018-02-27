@@ -11,7 +11,7 @@ from tqdm import tqdm
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
-from aspects.aspects.aspect_extractor import extract_noun_and_noun_phrases
+from aspects.aspects import aspect_extractor
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EduExtractor
@@ -179,13 +179,13 @@ class AspectAnalysis:
                               columns=['edu_id', 'edu'])
         edu_df = (edu_df
                   .pipe(self.get_sentiment)
-                  .pipe(extract_noun_and_noun_phrases)
+                  .query('sentiment != 0')
+                  .pipe(aspect_extractor.extract_noun_and_noun_phrases)
+                  .pipe(aspect_extractor.extract_named_entities)
+                  .pipe(aspect_extractor.extract_sentic_concepts)
+                  .pipe(aspect_extractor.extract_keywords_rake)
                   )
 
-        # create separate data frame for aspects - each row for edu
-
-        documents_df = self.filter_edu_by_sentiment(documents_df)
-        self.extract_aspects_from_edu(documents_df)
         self._extract_edu_dependency_rules()
         self._build_aspect_dependency_graph()
         self._add_sentiment_and_dir_moi_to_graph()
