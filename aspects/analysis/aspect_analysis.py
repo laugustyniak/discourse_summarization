@@ -183,9 +183,11 @@ class AspectAnalysis:
                   .pipe(aspect_extractor.extract_noun_and_noun_phrases)
                   .pipe(aspect_extractor.extract_named_entities)
                   .pipe(aspect_extractor.extract_sentic_concepts)
+                  .pipe(aspect_extractor.extract_conceptnet_concepts)
                   .pipe(aspect_extractor.extract_keywords_rake)
                   )
 
+        #  TODO: we are here
         self._extract_edu_dependency_rules()
         self._build_aspect_dependency_graph()
         self._add_sentiment_and_dir_moi_to_graph()

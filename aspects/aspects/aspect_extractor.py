@@ -5,10 +5,7 @@ import RAKE
 import requests
 from simplejson import JSONDecodeError
 
-from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
-from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
-    SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS, \
-    CONCEPTNET_LANG, CONCEPTNET_API_URL
+import aspects.configs.conceptnets_config as config
 from aspects.enrichments.conceptnets import Sentic, ConceptNetIO
 
 log = logging.getLogger(__name__)
@@ -84,7 +81,7 @@ def extract_sentic_concepts(df):
         concept_aspects = {}
         for aspect in aspects:
             aspect = aspect.replace(' ', '_')
-            concept_aspects.update(sentic.get_semantic_concept_by_concept(aspect, SENTIC_EXACT_MATCH_CONCEPTS))
+            concept_aspects.update(sentic.get_semantic_concept_by_concept(aspect, config.SENTIC_EXACT_MATCH_CONCEPTS))
         sentic_concepts.append(concept_aspects)
     df['sentic_aspects'] = sentic_concepts
     return df
@@ -103,7 +100,7 @@ def extract_conceptnet_concepts(df):
             if aspect not in cn.concepts_io:
                 concept_aspects[aspect] = []
                 # TODO: move to settings
-                next_page = CONCEPTNET_URL + aspect + u'?offset=0&limit=20'
+                next_page = config.CONCEPTNET_URL + aspect + config.CONCEPTNET_API_URL_OFFSET_AND_LIMIT
                 n_pages = 1
                 while next_page:
                     next_page = next_page.replace(' ', '_')
@@ -118,12 +115,13 @@ def extract_conceptnet_concepts(df):
                     try:
                         cn_edges = response['edges']
                         cn_view = response['view']
-                        next_page = CONCEPTNET_API_URL + cn_view['nextPage']
+                        next_page = config.CONCEPTNET_API_URL + cn_view['nextPage']
                         log.info('Next page from ConceptNet.io: {}'.format(next_page))
                         for edge in cn_edges:
                             relation = edge['rel']['label']
-                            if relation in CONCEPTNET_RELATIONS and (edge['start']['language'] == CONCEPTNET_LANG
-                                                                     and edge['end']['language'] == CONCEPTNET_LANG):
+                            if relation in config.CONCEPTNET_RELATIONS \
+                                    and (edge['start']['language'] == config.CONCEPTNET_LANG
+                                         and edge['end']['language'] == config.CONCEPTNET_LANG):
                                 concept_aspects[aspect].append({'start': edge['start']['label'].lower(),
                                                                 'start-lang': edge['start']['language'],
                                                                 'end': edge['end']['label'].lower(),
@@ -143,3 +141,5 @@ def extract_conceptnet_concepts(df):
                 log.debug('We have already stored this concept: {}'.format(aspect))
                 concept_aspects[aspect] = cn.concepts_io[aspect]
         conceptnet_concepts.append(concept_aspects)
+    df['conceptnet_concepts'] = [concepts if concepts else None for concepts in conceptnet_concepts]
+    return df

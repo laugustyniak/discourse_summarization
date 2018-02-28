@@ -11,6 +11,7 @@ CONCEPTNET_ASPECTS = True
 CONCEPTNET_LANG = u'en'
 CONCEPTNET_EXACT_MATCH_CONCEPTS = True
 CONCEPTNET_API_URL = u'http://api.conceptnet.io'
+CONCEPTNET_API_URL_OFFSET_AND_LIMIT = u'?offset=0&limit=20'
 CONCEPTNET_URL = u'{}/c/{}/'.format(CONCEPTNET_API_URL, CONCEPTNET_LANG)
 CONCEPTNET_RELATIONS = [u'LocatedNear', u'HasA', u'PartOf', u'MadeOf', u'IsA',
                         u'InheritsFrom', u'Synonym']
