@@ -93,20 +93,12 @@ class AspectAnalysis:
         edu_df['sentiment'] = [sentiment_model.predict([edu.text])[0] for edu in tqdm(edu_df['edu'])]
         return edu_df
 
-    def _extract_edu_dependency_rules(self):
-        """Extract association rules to RST trees"""
-        if not exists(self.paths.edu_dependency_rules):
-            link_tree = None
-            rules_extractor = EDUTreeRulesExtractor()
-            rules = {}
-            docs_info = self.serializer.load(self.paths.docs_info)
-            for doc_id, doc_info in docs_info.iteritems():
-                if len(doc_info['accepted_edus']) > 0:
-                    link_tree = self.serializer.load(join(self.paths.link_trees, str(doc_id)))
-                extracted_rules = rules_extractor.extract(link_tree, doc_info['accepted_edus'], doc_id)
-                rules.update(extracted_rules)
-            logging.info('Rules extracted.')
-            self.serializer.save(rules, self.paths.edu_dependency_rules)
+    def _extract_edu_dependency_rules(self, document_df):
+        rules_extractor = EDUTreeRulesExtractor()
+        extracted_rules = [rules_extractor.extract(tree) for tree in document_df.rst_tree]
+        document_df['edu_rules'] = extracted_rules
+        logging.info('Rules extracted')
+        return document_df
 
     def _build_aspect_dependency_graph(self):
         """Build dependency graph"""
@@ -172,6 +164,7 @@ class AspectAnalysis:
         documents_df = (self.parse_input_documents()
                         .pipe(self.parse_edus)
                         .pipe(self.extract_edus)
+                        .pipe(self._extract_edu_dependency_rules)
                         )
 
         # get edu-based dataframe for sentiment and aspect extraction
@@ -188,7 +181,7 @@ class AspectAnalysis:
                   )
 
         #  TODO: we are here
-        self._extract_edu_dependency_rules()
+        documents_df = self._extract_edu_dependency_rules()
         self._build_aspect_dependency_graph()
         self._add_sentiment_and_dir_moi_to_graph()
         aspects_graph = self.serializer.load(self.paths.aspects_graph)
