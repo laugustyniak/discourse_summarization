@@ -99,7 +99,6 @@ def extract_conceptnet_concepts(df):
         for aspect in aspects:
             if aspect not in cn.concepts_io:
                 concept_aspects[aspect] = []
-                # TODO: move to settings
                 next_page = config.CONCEPTNET_URL + aspect + config.CONCEPTNET_API_URL_OFFSET_AND_LIMIT
                 n_pages = 1
                 while next_page:
@@ -109,8 +108,7 @@ def extract_conceptnet_concepts(df):
                     try:
                         response = requests.get(next_page).json()
                     except JSONDecodeError as err:
-                        log.error(
-                            'Response parsing error: {}'.format(str(err)))
+                        log.error('Response parsing error: {}'.format(str(err)))
                         raise JSONDecodeError(str(err))
                     try:
                         cn_edges = response['edges']
@@ -129,8 +127,7 @@ def extract_conceptnet_concepts(df):
                                                                 'relation': relation,
                                                                 'weight': edge['weight']})
                     except KeyError:
-                        log.error(
-                            'Next page url: {} will be set to None'.format(next_page))
+                        log.error('Next page url: {} will be set to None'.format(next_page))
                         if 'error' in response.keys():
                             log.error(response['error']['details'])
                         next_page = None

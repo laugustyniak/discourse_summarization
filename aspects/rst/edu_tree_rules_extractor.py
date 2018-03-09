@@ -1,7 +1,6 @@
-import sys
 import os
-
-from collections import defaultdict, namedtuple
+import sys
+from collections import namedtuple
 
 sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
 from trees.parse_tree import ParseTree
@@ -10,15 +9,13 @@ Relation = namedtuple('Relation', 'edu1 edu2 relation_type gerani')
 
 
 class EDUTreeRulesExtractor(object):
-    def __init__(self, weight_type=None,
-                 only_hierarchical_relations=True):
+    def __init__(self, weight_type=None, only_hierarchical_relations=True):
         """
         Extracting rules from RST tress.
 
         rules - dictionaty of rules extracted from Discourse Trees, key is
             document id, value lsit of rules for tree
         tree - Discource Tree
-        accepted_edus - list of edu ids that consist of aspect
         left_child_parent - parent of actually analyzed left leaf
         right_child_parent - parent of actually analyzed right leaf
 
@@ -34,9 +31,8 @@ class EDUTreeRulesExtractor(object):
         """
         if weight_type is None:
             weight_type = ['gerani']
-        self.rules = {}
+        self.rules = []
         self.tree = None
-        self.accepted_edus = None
         self.left_child_parent = None
         self.left_leaf = None
         self.right_child_parent = None
@@ -78,66 +74,45 @@ class EDUTreeRulesExtractor(object):
     def _make_rules(self, leaf_left, tree):
         # if int we got leaf level
         if isinstance(tree, int):
-            if tree in self.accepted_edus and leaf_left in self.accepted_edus:
-                self.left_leaf = leaf_left
-                self.right_leaf = tree
-                relation = self.rst_relation_type()
-                # relation name, nucleus/satellite, nucleus/satellite
-                rel_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(
-                    relation)
-                if self.only_hierarchical_relations \
-                        and not self.check_hierarchical_rst_relation(nuc_sat_1,
-                                                                     nuc_sat_2):
-                    return
+            self.left_leaf = leaf_left
+            self.right_leaf = tree
+            relation = self.rst_relation_type()
+            # relation name, nucleus/satellite, nucleus/satellite
+            relation_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(relation)
+            if self.only_hierarchical_relations and not self.check_hierarchical_rst_relation(nuc_sat_1, nuc_sat_2):
+                return
+            else:
+                if nuc_sat_1 == 'N':
+                    # [N][S] or [N][N]
+                    self.rules.append(Relation(
+                        self.right_leaf, self.left_leaf, relation_name, self.calculate_gerani_weight()))
                 else:
-                    if nuc_sat_1 == 'N':
-                        # [N][S] or [N][N]
-                        self.rules[self.doc_id].append(
-                            Relation(self.right_leaf, self.left_leaf, rel_name,
-                                     self.calculate_gerani_weight()))
-                    else:
-                        # [S][N]
-                        self.rules[self.doc_id].append(
-                            Relation(self.left_leaf, self.right_leaf, rel_name,
-                                     self.calculate_gerani_weight()))
+                    # [S][N]
+                    self.rules.append(
+                        Relation(self.left_leaf, self.right_leaf, relation_name, self.calculate_gerani_weight()))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
                 self._make_rules(leaf_left, child)
 
-    def extract(self, tree, accepted_edus, doc_id):
+    def extract(self, tree):
         """
         Extract RST relation with BFS approach.
 
         :param tree: ParseTree object
             RST Tree that will be parsed and relation will be extracted from it
-        :param accepted_edus: list
-            A list of aspect's ids.
-        :param doc_id : int
-            Document/tree id.
 
-        :return: dict
-            Dictionary with document id and list of tuples with nodes and
-            metadata (relations and weights)
+        :return: rules list
+            List of namedtuples with nodes/edu and metadata (relations and weights)
         """
-        if len(accepted_edus) > 1:
-            self.accepted_edus = accepted_edus
-        else:
-            # if there are not any aspects it's not needed to extract relations
-            return []
-
-        self.doc_id = doc_id
-        self.rules = defaultdict(list)
+        self.rules = []
         self.tree = tree
         self._process_tree(tree)
 
         return self.rules
 
     def calculate_gerani_weight(self):
-        """
-        Calculate weights for edu relations based on Gerani and
-        Mehdad paper
-        """
+        """ Calculate weights for edu relations based on Gerani and Mehdad paper """
         if self.right_leaf is not None or self.left_leaf is not None:
             # calculate how many edus are between analyzed leaf,
             # leaf are integers hence we may substract them
@@ -148,8 +123,7 @@ class EDUTreeRulesExtractor(object):
                 sub_tree_height = self.left_child_parent.height()
             else:
                 sub_tree_height = self.right_child_parent.height()
-            return round(1 - 0.5 * (
-                float(n_edus_between_analyzed_edus) / n_edus_in_tree)
+            return round(1 - 0.5 * (float(n_edus_between_analyzed_edus) / n_edus_in_tree)
                          - 0.5 * (float(sub_tree_height) / tree_height), 2)
         return 0
 
