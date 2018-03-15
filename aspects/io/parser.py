@@ -28,7 +28,7 @@ def get_amazon_dataset(f_name, column='reviewText', n_reviews=10000):
         i += 1
         if i > n_reviews:
             break
-    with open(dataset_path.replace('.gz', '')) as j:
+    with open(dataset_path.replace('.gz', ''), 'wb') as j:
         json.dump(reviews, j)
 
 
