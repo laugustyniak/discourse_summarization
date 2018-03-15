@@ -131,7 +131,6 @@ class AspectsGraphBuilder(object):
         for doc_id, rules_list in rules.iteritems():
             for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
-
                 if isinstance(rule, RelationAspects):
                     aspect_left, aspect_right, relation, gerani_weight = rule
                     graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
