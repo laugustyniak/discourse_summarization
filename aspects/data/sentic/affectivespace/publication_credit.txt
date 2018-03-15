@@ -1,0 +1,9 @@
+Thank you for using AffectiveSpace!
+
+Please acknowledge the authors by citing the following publication
+in any research work or presentation containing results obtained
+in whole or in part through the use of AffectiveSpace:
+
+E. Cambria, J. Fu, F. Bisio, and S. Poria. 
+AffectiveSpace 2: Enabling affective intuition for concept-level sentiment analysis. 
+In: AAAI, pp. 508-514, Austin (2015)

@@ -1,0 +1,9 @@
+Thank you for using AffectNet!
+
+Please acknowledge the authors by citing the following publication
+in any research work or presentation containing results obtained
+in whole or in part through the use of AffectNet:
+
+E. Cambria and A. Hussain. 
+Sentic Computing: A Common-Sense-Based Framework for Concept-Level Sentiment Analysis.
+Cham, Switzerland: Springer, ISBN: 978-3-319-23654-4 (2015)
