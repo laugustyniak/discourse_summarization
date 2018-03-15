@@ -13,12 +13,12 @@ from joblib import Parallel
 from joblib import delayed
 from tqdm import tqdm
 
+from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
+from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.io.serializer import Serializer
-from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
-from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import \
@@ -44,7 +44,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
     n_docs = docs_id_range[1] - docs_id_range[0]
 
-    for n_doc, document_id in tqdm(enumerate(xrange(docs_id_range[0], docs_id_range[1]), start=1), desc='Parsing'):
+    for n_doc, document_id in tqdm(enumerate(range(docs_id_range[0], docs_id_range[1]), start=1), desc='Parsing'):
         start_time = datetime.now()
         logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
         try:
@@ -116,7 +116,7 @@ class AspectAnalysisSystem:
             if f_extension in ['json']:
                 with open(self.input_file_path, 'r') as f:
                     raw_documents = simplejson.load(f)
-                    for ref_id, (doc_id, document) in tqdm(enumerate(raw_documents.iteritems())):
+                    for ref_id, (doc_id, document) in tqdm(enumerate(raw_documents.iteritems()), desc='Extract docs'):
                         self.serializer.save(document, join(self.paths.extracted_docs, str(ref_id)))
                         self.serializer.save(str(doc_id), join(self.paths.extracted_docs_ids, str(ref_id)))
                         documents_count += 1
