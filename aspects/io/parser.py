@@ -1,6 +1,7 @@
 import gzip
+import json
+from tqdm import tqdm
 
-import pandas as pd
 import pathlib
 
 # TODO: move it to settings
@@ -17,15 +18,19 @@ def parse_reviews(path):
             yield eval(l)
 
 
-def get_amazon_dataset(f_name):
+def get_amazon_dataset(f_name, column='reviewText', n_reviews=10000):
     # TODO: move it to settings
-    dataset_path = ROOT_PATH / 'data' / 'reviews' / 'amazon' / f_name
+    dataset_path = str(ROOT_PATH / 'data' / 'reviews' / 'amazon' / f_name)
     i = 0
     reviews = {}
-    for d in parse_reviews(str(dataset_path)):
-        reviews[i] = d
+    for d in tqdm(parse_reviews(dataset_path)):
+        reviews[i] = d[column]
         i += 1
-    return pd.DataFrame.from_dict(reviews, orient='index')
+        if i > n_reviews:
+            break
+    with open(dataset_path.replace('.gz', '')) as j:
+        json.dump(reviews, j)
 
 
-df = get_amazon_dataset(AMAZON_REVIEWS_DATASET)
+if __name__ == '__main__':
+    get_amazon_dataset(AMAZON_REVIEWS_DATASET)
