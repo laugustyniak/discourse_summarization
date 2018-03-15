@@ -13,7 +13,6 @@ def parse_reviews(path):
 
 
 def get_amazon_dataset(dataset_path, column='reviewText', n_reviews=10000):
-    # TODO: move it to settings
     i = 0
     reviews = {}
     for d in tqdm(parse_reviews(dataset_path)):
