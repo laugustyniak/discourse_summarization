@@ -222,8 +222,6 @@ class AspectAnalysisSystem:
         edus = self.serializer.load(self.paths.sentiment_filtered_edus)
         documents_info = self.serializer.load(self.paths.docs_info)
         n_edus = len(edus)
-        # fixme ValueError: max() arg is an empty sequence
-        max_edu_id = max(edus.keys())
 
         logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
@@ -232,7 +230,7 @@ class AspectAnalysisSystem:
                 doc_info = documents_info[edu['source_document_id']]
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(edu, n_doc)
                 aspects_per_edu[edu_id] = aspects
-                logging.info('EDU ID/MAX EDU ID: {}/{}'.format(edu_id, max_edu_id))
+                logging.info('EDU ID/MAX EDU ID: {}'.format(edu_id))
                 logging.debug('aspects: {}'.format(aspects))
                 if 'aspects' not in doc_info:
                     doc_info['aspects'] = []
