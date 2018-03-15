@@ -25,4 +25,4 @@ def get_amazon_dataset(dataset_path, column='reviewText', n_reviews=10000):
 
 
 if __name__ == '__main__':
-    get_amazon_dataset(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ)
+    get_amazon_dataset(str(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ))
