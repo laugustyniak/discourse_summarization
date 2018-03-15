@@ -1,10 +1,11 @@
 import logging
 import pickle
+
 import pandas as pd
-from os.path import join
+from repoze.lru import lru_cache
 
 from aspects.data.sentic.senticnet4 import senticnet4
-from aspects.project_path import CNIO_PATH
+from aspects.utilities import settings
 
 log = logging.getLogger(__name__)
 
@@ -60,24 +61,8 @@ class Sentic(object):
         return concepts
 
 
-class ConceptNetIO(object):
-    def __init__(self, f_name_concepts_io='conceptnet_io.pkl'):
-        self.concepts_io = {}
-        self.concepts_io_path = join(CNIO_PATH, f_name_concepts_io)
-
-    def save_cnio(self):
-        log.info('ConceptNet.io temp files will be stored in: {}'.format(
-            self.concepts_io_path))
-        with open(self.concepts_io_path, 'wb') as f:
-            pickle.dump(self.concepts_io, f)
-            log.info('ConceptNet.io temp file loaded correctly')
-
-    def load_cnio(self):
-        try:
-            log.info('ConceptNet.io temp files will be load from: {}'.format(
-                self.concepts_io_path))
-            with open(self.concepts_io_path, 'rb') as f:
-                self.concepts_io = pickle.load(f)
-        except IOError as err:
-            log.error(str(err))
-            self.concepts_io = {}
+@lru_cache(maxsize=None)
+def load_conceptnet_io(self):
+    log.info('ConceptNet.io temp files will be load from: {}'.format(settings.CONCEPTNET_IO_PKL))
+    with open(settings.CONCEPTNET_IO_PKL, 'rb') as f:
+        self.concepts_io = pickle.load(f)

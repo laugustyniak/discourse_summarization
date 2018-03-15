@@ -1,18 +1,11 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import sys
 from collections import defaultdict
 
 import RAKE
-import requests
-from simplejson import JSONDecodeError
 
-from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
-from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
-    SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS, \
-    CONCEPTNET_LANG, CONCEPTNET_API_URL
-from aspects.enrichments.conceptnets import Sentic, ConceptNetIO
+from aspects.configs import conceptnets_config as config
+from aspects.enrichments.conceptnets import Sentic, load_conceptnet_io
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -74,9 +67,8 @@ class AspectExtractor(object):
 
         self.Rake = RAKE.Rake(RAKE.SmartStopList())
 
-        if CONCEPTNET_ASPECTS:
-            self.cn = ConceptNetIO()
-            self.cn.load_cnio()
+        if config.CONCEPTNET_ASPECTS:
+            self.conceptnet_io = load_conceptnet_io()
 
     def _is_interesting_main(self, token):
         return token['pos'] == 'NOUN'
@@ -128,14 +120,12 @@ class AspectExtractor(object):
 
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
-            # jesli jest główny (rzeczownik) - akceptujemy od razu
             if self._is_interesting_main(token) and len(token) > 1:
                 if not token['is_stop']:
                     aspect_sequence.append(token['lemma'])
                 aspect_sequence_enabled = True
                 aspect_sequence_main_encountered = True
             else:
-                # akceptujemy sekwencje, jesli byl w niej element główny
                 if aspect_sequence_enabled and aspect_sequence_main_encountered:
                     aspect = ' '.join(aspect_sequence)
                     if aspect not in aspects:
@@ -144,7 +134,6 @@ class AspectExtractor(object):
                 aspect_sequence_enabled = False
                 aspect_sequence = []
 
-        # dodajemy ostatnią sekwencje
         if aspect_sequence_enabled and aspect_sequence_main_encountered:
             aspects.append(' '.join(aspect_sequence))
 
@@ -153,75 +142,25 @@ class AspectExtractor(object):
                    if x not in self.aspects_to_skip and x != '']
 
         # 3. senticnet
-        if SENTIC_ASPECTS:
+        if config.SENTIC_ASPECTS:
             sentic = Sentic()
-            # dict with concepts and related concepts
-            concept_aspects_ = {}
-            for asp in aspects:
-                asp = asp.replace(' ', '_')
-                concept_aspects_[asp] = \
-                    sentic.get_semantic_concept_by_concept(asp,
-                                                           SENTIC_EXACT_MATCH_CONCEPTS)
-            # save conceptnet name
-            concept_aspects['sentic'] = concept_aspects_
+            sentic_aspects = {}
+            for aspect in aspects:
+                aspect = aspect.replace(' ', '_')
+                sentic_aspects[aspect] = sentic.get_semantic_concept_by_concept(aspect,
+                                                                                config.SENTIC_EXACT_MATCH_CONCEPTS)
+            concept_aspects['sentic'] = sentic_aspects
 
         # 4. ConceptNet.io
-        # load concepts
-        if CONCEPTNET_ASPECTS:
-            concept_aspects_ = defaultdict(list)
-            for asp in aspects:
-                if asp not in self.cn.concepts_io:
-                    concept_aspects_[asp] = []
-                    next_page = CONCEPTNET_URL + asp + u'?offset=0&limit=20'
-                    n_pages = 1
-                    while next_page:
-                        next_page = next_page.replace(' ', '_')
-                        log.info('#{} pages for {}'.format(n_pages, asp))
-                        n_pages += 1
-                        try:
-                            response = requests.get(next_page).json()
-                        except JSONDecodeError as err:
-                            log.error(
-                                'Response parsing error: {}'.format(str(err)))
-                            raise JSONDecodeError(str(err))
-                        try:
-                            cn_edges = response['edges']
-                            cn_view = response['view']
-                            next_page = CONCEPTNET_API_URL + cn_view['nextPage']
-                            log.info(
-                                'Next page from ConceptNet.io: {}'.format(
-                                    next_page))
-                            for edge in cn_edges:
-                                relation = edge['rel']['label']
-                                if relation in CONCEPTNET_RELATIONS \
-                                        and (edge['start'][
-                                                 'language'] == CONCEPTNET_LANG
-                                             and edge['end'][
-                                                'language'] == CONCEPTNET_LANG):
-                                    concept_aspects_[asp].append(
-                                        {'start': edge['start'][
-                                            'label'].lower(),
-                                         'start-lang': edge['start'][
-                                             'language'],
-                                         'end': edge['end']['label'].lower(),
-                                         'end-lang': edge['end']['language'],
-                                         'relation': relation,
-                                         'weight': edge['weight']})
-                        except KeyError:
-                            log.error(
-                                'Next page url: {} will be set to None'.format(
-                                    next_page))
-                            if 'error' in response.keys():
-                                log.error(response['error']['details'])
-                            next_page = None
-                    self.cn.concepts_io.update(concept_aspects_)
-                    if not n_doc % 100:
-                        self.cn.save_cnio()
+        if config.CONCEPTNET_ASPECTS:
+            conceptnet_aspects = defaultdict(list)
+            for aspect in aspects:
+                if aspect not in self.conceptnet_io:
+                    conceptnet_aspects[aspect] = self.conceptnet_io[aspects]
                 else:
-                    log.debug(
-                        'We have already stored this concept: {}'.format(asp))
-                    concept_aspects_[asp] = self.cn.concepts_io[asp]
-            concept_aspects['conceptnet_io'] = concept_aspects_
+                    log.debug('We have already stored this concept: {}'.format(aspect))
+                    conceptnet_aspects[aspect] = self.conceptnet_io.concepts_io[aspect]
+            concept_aspects['conceptnet_io'] = conceptnet_aspects
 
         # 5. keyword extraction
         if text:
