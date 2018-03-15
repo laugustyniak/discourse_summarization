@@ -1,6 +1,7 @@
 import pathlib
 
 ROOT_PATH = pathlib.Path(__file__).absolute().parent.parent
+EDU_DEPENDENCY_PARSER_PATH = ROOT_PATH.parent / 'edu_dependency_parser'
 
 # AMAZON DATASETS PATHS
 AMAZON_REVIEWS_DATASETS_PATH = ROOT_PATH / 'data' / 'reviews' / 'amazon'

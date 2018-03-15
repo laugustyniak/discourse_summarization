@@ -161,12 +161,12 @@ class AspectAnalysisSystem:
                     if not document_id % self.n_loger:
                         logging.debug('EDU Preprocessor documentId: {}/{}'.format(document_id, documents_count))
                     tree = self.serializer.load(join(self.paths.edu_trees, str(document_id) + '.tree.ser'))
-                    preprocesser.processTree(tree, document_id)
+                    preprocesser.process_tree(tree, document_id)
                     self.serializer.save(tree, join(self.paths.link_trees, str(document_id)))
                 except TypeError as err:
                     logging.error('Document id: {} and error: {}'.format(document_id, str(err)))
                     self.parsing_errors += 1
-            edu_list = preprocesser.getPreprocessedEdusList()
+            edu_list = preprocesser.get_preprocessed_edus_list()
             self.serializer.save(edu_list, self.paths.raw_edu_list)
 
     def _filter_edu_by_sentiment(self):
