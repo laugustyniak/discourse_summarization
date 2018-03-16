@@ -147,8 +147,8 @@ class AspectExtractor(object):
             sentic_aspects = {}
             for aspect in aspects:
                 aspect = aspect.replace(' ', '_')
-                sentic_aspects[aspect] = sentic.get_semantic_concept_by_concept(aspect,
-                                                                                config.SENTIC_EXACT_MATCH_CONCEPTS)
+                sentic_aspects[aspect] = sentic.get_semantic_concept_by_concept(
+                    aspect, config.SENTIC_EXACT_MATCH_CONCEPTS)
             concept_aspects['sentic'] = sentic_aspects
 
         # 4. ConceptNet.io
