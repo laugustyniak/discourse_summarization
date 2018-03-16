@@ -1,9 +1,9 @@
 import gzip
 import json
-
 import pickle
-import simplejson
 from collections import defaultdict
+
+import simplejson
 from tqdm import tqdm
 
 from aspects.utilities import settings
@@ -53,5 +53,7 @@ def conceptnet_io_parse(langs={u'en'}):
 
 
 if __name__ == '__main__':
-    amazon_dataset_parse(str(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ))
+    amazon_dataset_parse(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ.as_posix())
+    amazon_dataset_parse(settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_GZ.as_posix())
+    amazon_dataset_parse(settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_GZ.as_posix())
     conceptnet_io_parse()
