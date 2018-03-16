@@ -2,6 +2,7 @@ from os import makedirs
 from os.path import exists, join
 
 
+# TODO: remove class + variables by upper case
 class IOPaths(object):
     def __init__(self, input_path, output_path):
         self.ensure_path_exist(output_path)
