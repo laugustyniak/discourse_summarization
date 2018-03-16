@@ -236,7 +236,7 @@ class AspectAnalysisSystem:
                 doc_info['aspect_concepts'].update({edu_id: aspect_concepts})
                 doc_info['aspect_keywords'].update({edu_id: aspect_keywords})
 
-                if not edu_id % 100:
+                if not edu_id % settings.ASPECT_EXTRACTION_SERIALIZATION_STEP:
                     logging.info('Save partial aspects, edu_id {}'.format(edu_id))
                     self.serializer.save(aspects_per_edu, self.paths.aspects_per_edu)
                     self.serializer.save(documents_info, self.paths.docs_info)

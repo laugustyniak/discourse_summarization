@@ -152,10 +152,7 @@ class AspectExtractor(object):
             conceptnet_aspects = defaultdict(list)
             for aspect in aspects:
                 if aspect not in self.conceptnet_io:
-                    conceptnet_aspects[aspect] = self.conceptnet_io[aspects]
-                else:
-                    log.debug('We have already stored this concept: {}'.format(aspect))
-                    conceptnet_aspects[aspect] = self.conceptnet_io[aspect]
+                    conceptnet_aspects[aspect] += self.conceptnet_io[aspect]
             concept_aspects['conceptnet_io'] = conceptnet_aspects
 
         # 5. keyword extraction

@@ -38,3 +38,6 @@ SENTIC_EXACT_MATCH_CONCEPTS = True
 # We use conceptnet.io as data source here.
 CONCEPTNET_IO_ASPECTS = True
 CONCEPTNET_IO_RELATIONS = [u'LocatedNear', u'HasA', u'PartOf', u'MadeOf', u'IsA', u'InheritsFrom', u'Synonym']
+
+# serialization steps
+ASPECT_EXTRACTION_SERIALIZATION_STEP = 10000
