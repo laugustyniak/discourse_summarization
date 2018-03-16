@@ -17,12 +17,12 @@ from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
-from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import \
     LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
+from aspects.utilities import settings
 from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
 from aspects.utilities.utils_multiprocess import batch_with_indexes
@@ -271,7 +271,7 @@ class AspectAnalysisSystem:
             builder = AspectsGraphBuilder(aspects_per_edu)
             graph, page_ranks = builder.build(rules=dependency_rules,
                                               docs_info=documents_info,
-                                              conceptnet_io=CONCEPTNET_ASPECTS,
+                                              conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
                                               filter_gerani=False,
                                               aht_gerani=False,
                                               aspect_graph_path=self.paths.aspects_graph,

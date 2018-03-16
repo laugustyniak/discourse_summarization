@@ -26,3 +26,15 @@ SENTIMENT_MODEL_TESTS = SENTIMENT_MODELS_PATH / 'Pipeline-LogisticRegression-Cou
 # conceptnets
 CONCEPTNET_IO_PATH_GZ = DATA_PATH / 'conceptnet' / 'conceptnet-assertions-5.5.5.csv.gz'
 CONCEPTNET_IO_PKL = DATA_PATH / 'conceptnet' / 'conceptnet_io.pkl'
+
+# sentic net conceptnet
+# Do we use sentic conceptnet based entities in aspect extraction procedure.
+# We use sentic.net as data source here.
+SENTIC_ASPECTS = True
+SENTIC_EXACT_MATCH_CONCEPTS = True
+
+# conceptnet io
+# Do we use ConceptNet based entities in aspect extraction procedure.
+# We use conceptnet.io as data source here.
+CONCEPTNET_IO_ASPECTS = True
+CONCEPTNET_IO_RELATIONS = [u'LocatedNear', u'HasA', u'PartOf', u'MadeOf', u'IsA', u'InheritsFrom', u'Synonym']

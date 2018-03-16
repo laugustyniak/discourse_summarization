@@ -4,8 +4,8 @@ from collections import defaultdict
 
 import RAKE
 
-from aspects.configs import conceptnets_config as config
 from aspects.enrichments.conceptnets import Sentic, load_conceptnet_io
+from aspects.utilities import settings
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -67,7 +67,7 @@ class AspectExtractor(object):
 
         self.Rake = RAKE.Rake(RAKE.SmartStopList())
 
-        if config.CONCEPTNET_ASPECTS:
+        if settings.CONCEPTNET_IO_ASPECTS:
             self.conceptnet_io = load_conceptnet_io()
 
     def _is_interesting_main(self, token):
@@ -138,24 +138,24 @@ class AspectExtractor(object):
         aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
 
         # 3. senticnet
-        if config.SENTIC_ASPECTS:
+        if settings.SENTIC_ASPECTS:
             sentic = Sentic()
             sentic_aspects = {}
             for aspect in aspects:
                 aspect = aspect.replace(' ', '_')
                 sentic_aspects[aspect] = sentic.get_semantic_concept_by_concept(
-                    aspect, config.SENTIC_EXACT_MATCH_CONCEPTS)
+                    aspect, settings.SENTIC_EXACT_MATCH_CONCEPTS)
             concept_aspects['sentic'] = sentic_aspects
 
         # 4. ConceptNet.io
-        if config.CONCEPTNET_ASPECTS:
+        if settings.CONCEPTNET_IO_ASPECTS:
             conceptnet_aspects = defaultdict(list)
             for aspect in aspects:
                 if aspect not in self.conceptnet_io:
                     conceptnet_aspects[aspect] = self.conceptnet_io[aspects]
                 else:
                     log.debug('We have already stored this concept: {}'.format(aspect))
-                    conceptnet_aspects[aspect] = self.conceptnet_io.concepts_io[aspect]
+                    conceptnet_aspects[aspect] = self.conceptnet_io[aspect]
             concept_aspects['conceptnet_io'] = conceptnet_aspects
 
         # 5. keyword extraction
