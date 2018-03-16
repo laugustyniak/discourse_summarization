@@ -3,7 +3,7 @@ import logging
 import pickle
 import shutil
 from datetime import datetime
-from os import listdir, getcwd
+from os import listdir
 from os.path import basename, exists, join, split, splitext, dirname
 from time import time
 
@@ -20,8 +20,7 @@ from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.sentiment.sentiment_analyzer import \
-    LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
+from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
 from aspects.utilities import settings
 from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
@@ -427,17 +426,13 @@ class AspectAnalysisSystem:
 
 
 if __name__ == "__main__":
-    ROOT_PATH = getcwd()
-    DEFAULT_OUTPUT_PATH = join(ROOT_PATH, 'results')
-    DEFAULT_INPUT_FILE_PATH = join(ROOT_PATH, 'texts', 'test.txt')
-
     arg_parser = argparse.ArgumentParser(description='Process documents.')
     arg_parser.add_argument('-input', type=str, dest='input_file_path',
-                            default=DEFAULT_INPUT_FILE_PATH,
+                            default=settings.DEFAULT_INPUT_FILE_PATH,
                             help='Path to the file with documents '
                                  '(json, csv, pickle)')
     arg_parser.add_argument('-output', type=str, dest='output_file_path',
-                            default=DEFAULT_OUTPUT_PATH,
+                            default=settings.DEFAULT_OUTPUT_PATH,
                             help='Number of processes')
     arg_parser.add_argument('-sent_model', type=str, dest='sent_model_path',
                             default=None,

@@ -15,7 +15,7 @@ def parse_reviews(path):
             yield eval(l)
 
 
-def amazon_dataset_parse(dataset_path, column='reviewText', n_reviews=10000):
+def amazon_dataset_parse(dataset_path, column='reviewText', n_reviews=100000):
     i = 0
     reviews = {}
     for d in tqdm(parse_reviews(dataset_path)):

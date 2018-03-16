@@ -3,6 +3,8 @@ import pathlib
 ROOT_PATH = pathlib.Path(__file__).absolute().parent.parent
 DATA_PATH = ROOT_PATH / 'data'
 EDU_DEPENDENCY_PARSER_PATH = ROOT_PATH.parent / 'edu_dependency_parser'
+DEFAULT_OUTPUT_PATH = ROOT_PATH / 'results'
+DEFAULT_INPUT_FILE_PATH = ROOT_PATH / 'texts' / 'test.txt'
 
 # AMAZON DATASETS PATHS
 AMAZON_REVIEWS_DATASETS_PATH = DATA_PATH / 'reviews' / 'amazon'
@@ -37,6 +39,7 @@ SENTIC_EXACT_MATCH_CONCEPTS = True
 # Do we use ConceptNet based entities in aspect extraction procedure.
 # We use conceptnet.io as data source here.
 CONCEPTNET_IO_ASPECTS = True
+CONCEPTNET_IO_LANG = u'en'
 CONCEPTNET_IO_RELATIONS = [u'LocatedNear', u'HasA', u'PartOf', u'MadeOf', u'IsA', u'InheritsFrom', u'Synonym']
 
 # serialization steps
