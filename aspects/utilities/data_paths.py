@@ -1,9 +1,5 @@
-from os.path import exists, join
-
 from os import makedirs
-
-sample_tree_177 = '../../../data/sample_trees/177'
-sample_tree_189 = '../../../data/sample_trees/189'
+from os.path import exists, join
 
 
 class IOPaths(object):

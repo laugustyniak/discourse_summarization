@@ -41,3 +41,7 @@ CONCEPTNET_IO_RELATIONS = [u'LocatedNear', u'HasA', u'PartOf', u'MadeOf', u'IsA'
 
 # serialization steps
 ASPECT_EXTRACTION_SERIALIZATION_STEP = 10000
+
+# sample trees
+SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177'
+SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189'
