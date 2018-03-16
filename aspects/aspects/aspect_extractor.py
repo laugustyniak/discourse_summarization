@@ -79,16 +79,13 @@ class AspectExtractor(object):
                or token['pos'] == 'NOUN' \
                or token['pos'] == 'ADJ'
 
-    def extract(self, text_processed_spacy, n_doc=1):
+    def extract(self, text_processed_spacy):
         """
         Extracts all possible aspects - NER, NOUN and NOUN PHRASES,
         potentially other dictionary based aspects.
 
         Parameters
         ----------
-        n_doc : int
-            Number of document already processed.
-
         text_processed_spacy : dictionary
             Dictionary with raw text and spacy object with each
             token information.
@@ -138,8 +135,7 @@ class AspectExtractor(object):
             aspects.append(' '.join(aspect_sequence))
 
         # lower case every aspect and only longer than 1
-        aspects = [x.strip().lower() for x in aspects
-                   if x not in self.aspects_to_skip and x != '']
+        aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
 
         # 3. senticnet
         if config.SENTIC_ASPECTS:
