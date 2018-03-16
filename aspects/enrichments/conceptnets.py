@@ -4,7 +4,7 @@ import pickle
 import pandas as pd
 from repoze.lru import lru_cache
 
-from aspects.data.sentic.senticnet4 import senticnet4
+from aspects.data.sentic.senticnet4.senticnet4 import senticnet
 from aspects.utilities import settings
 
 log = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class Sentic(object):
     def __init__(self):
-        self.sentic_df = pd.DataFrame.from_dict(senticnet4, orient='index')
+        self.sentic_df = pd.DataFrame.from_dict(senticnet, orient='index')
         self.sentic_df.columns = ['pleasantness', 'attention', 'sensivity', 'aptitude', 'modtag1', 'modtag2',
                                   'polarity_value', 'polarity_intensity',
                                   'semantics1', 'semantics2', 'semantics3', 'semantics4', 'semantics5']
