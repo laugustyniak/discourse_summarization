@@ -62,7 +62,7 @@ class Sentic(object):
 
 
 @lru_cache(maxsize=None)
-def load_conceptnet_io(self):
+def load_conceptnet_io():
     log.info('ConceptNet.io temp files will be load from: {}'.format(settings.CONCEPTNET_IO_PKL))
-    with open(settings.CONCEPTNET_IO_PKL, 'rb') as f:
-        self.concepts_io = pickle.load(f)
+    with open(settings.CONCEPTNET_IO_PKL.as_posix(), 'rb') as f:
+        return pickle.load(f)

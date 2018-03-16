@@ -53,5 +53,5 @@ def conceptnet_io_parse(langs={u'en'}):
 
 
 if __name__ == '__main__':
-    # amazon_dataset_parse(str(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ))
+    amazon_dataset_parse(str(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ))
     conceptnet_io_parse()
