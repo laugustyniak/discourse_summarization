@@ -3,7 +3,7 @@ import logging
 import pickle
 import shutil
 from datetime import datetime
-from os import listdir, getcwd
+from os import listdir
 from os.path import basename, exists, join, split, splitext, dirname
 from time import time
 
@@ -17,12 +17,11 @@ from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
-from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.sentiment.sentiment_analyzer import \
-    LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
+from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
+from aspects.utilities import settings
 from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
 from aspects.utilities.utils_multiprocess import batch_with_indexes
@@ -226,7 +225,7 @@ class AspectAnalysisSystem:
         for n_doc, (edu_id, edu) in enumerate(edus.iteritems()):
             if edu_id not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
-                aspects, aspect_concepts, aspect_keywords = extractor.extract(edu, n_doc)
+                aspects, aspect_concepts, aspect_keywords = extractor.extract(edu)
                 aspects_per_edu[edu_id] = aspects
                 logging.info('EDU ID/MAX EDU ID: {}'.format(edu_id))
                 logging.debug('aspects: {}'.format(aspects))
@@ -236,7 +235,7 @@ class AspectAnalysisSystem:
                 doc_info['aspect_concepts'].update({edu_id: aspect_concepts})
                 doc_info['aspect_keywords'].update({edu_id: aspect_keywords})
 
-                if not edu_id % 100:
+                if not edu_id % settings.ASPECT_EXTRACTION_SERIALIZATION_STEP:
                     logging.info('Save partial aspects, edu_id {}'.format(edu_id))
                     self.serializer.save(aspects_per_edu, self.paths.aspects_per_edu)
                     self.serializer.save(documents_info, self.paths.docs_info)
@@ -271,7 +270,7 @@ class AspectAnalysisSystem:
             builder = AspectsGraphBuilder(aspects_per_edu)
             graph, page_ranks = builder.build(rules=dependency_rules,
                                               docs_info=documents_info,
-                                              conceptnet_io=CONCEPTNET_ASPECTS,
+                                              conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
                                               filter_gerani=False,
                                               aht_gerani=False,
                                               aspect_graph_path=self.paths.aspects_graph,
@@ -427,17 +426,13 @@ class AspectAnalysisSystem:
 
 
 if __name__ == "__main__":
-    ROOT_PATH = getcwd()
-    DEFAULT_OUTPUT_PATH = join(ROOT_PATH, 'results')
-    DEFAULT_INPUT_FILE_PATH = join(ROOT_PATH, 'texts', 'test.txt')
-
     arg_parser = argparse.ArgumentParser(description='Process documents.')
     arg_parser.add_argument('-input', type=str, dest='input_file_path',
-                            default=DEFAULT_INPUT_FILE_PATH,
+                            default=settings.DEFAULT_INPUT_FILE_PATH,
                             help='Path to the file with documents '
                                  '(json, csv, pickle)')
     arg_parser.add_argument('-output', type=str, dest='output_file_path',
-                            default=DEFAULT_OUTPUT_PATH,
+                            default=settings.DEFAULT_OUTPUT_PATH,
                             help='Number of processes')
     arg_parser.add_argument('-sent_model', type=str, dest='sent_model_path',
                             default=None,

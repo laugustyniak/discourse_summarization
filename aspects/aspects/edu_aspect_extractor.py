@@ -8,7 +8,7 @@ class EDUAspectExtractor(object):
     def __init__(self):
         self.extractor = AspectExtractor()
 
-    def extract(self, edu, n_doc):
+    def extract(self, edu):
         """
         Extract aspects from edu document.
 
@@ -17,8 +17,6 @@ class EDUAspectExtractor(object):
         edu : dict
             Preprocessed string with tokens, ner and etc.
 
-        n_doc : int
-            Document of document processed.
 
         Returns
         -------
@@ -29,4 +27,4 @@ class EDUAspectExtractor(object):
         keyword_aspects : dict
 
         """
-        return self.extractor.extract(edu, n_doc)
+        return self.extractor.extract(edu)

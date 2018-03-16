@@ -1,11 +1,8 @@
+from os import makedirs
 from os.path import exists, join
 
-from os import makedirs
 
-sample_tree_177 = '../../../data/sample_trees/177'
-sample_tree_189 = '../../../data/sample_trees/189'
-
-
+# TODO: remove class + variables by upper case
 class IOPaths(object):
     def __init__(self, input_path, output_path):
         self.ensure_path_exist(output_path)
