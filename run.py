@@ -226,7 +226,7 @@ class AspectAnalysisSystem:
         for n_doc, (edu_id, edu) in enumerate(edus.iteritems()):
             if edu_id not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
-                aspects, aspect_concepts, aspect_keywords = extractor.extract(edu, n_doc)
+                aspects, aspect_concepts, aspect_keywords = extractor.extract(edu)
                 aspects_per_edu[edu_id] = aspects
                 logging.info('EDU ID/MAX EDU ID: {}'.format(edu_id))
                 logging.debug('aspects: {}'.format(aspects))
