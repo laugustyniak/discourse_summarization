@@ -4,7 +4,7 @@ import pickle
 import pandas as pd
 from repoze.lru import lru_cache
 
-from aspects.data.sentic.senticnet4.senticnet4 import senticnet
+from aspects.data.sentic.senticnet5 import senticnet
 from aspects.utilities import settings
 
 log = logging.getLogger(__name__)

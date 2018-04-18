@@ -6,6 +6,7 @@ from aspects.utilities import settings
 
 
 class AspectExtractionTest(unittest.TestCase):
+
     def test_get_aspects_nouns(self):
         aspects_expected = [u'car', u'phone']
         preprocesser = Preprocesser()
@@ -73,11 +74,8 @@ class AspectExtractionTest(unittest.TestCase):
         if settings.SENTIC_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
-            self.assertTrue(
-                True if concept in concepts_obtained[
-                    'sentic'].keys() else False)
-            self.assertEquals(
-                len(concepts_obtained['sentic'][concept][concept]), 5)
+            self.assertTrue(True if concept in concepts_obtained['sentic'].keys() else False)
+            self.assertEquals(len(concepts_obtained['sentic'][concept][concept]), 5)
 
     def test_conceptnet_io_concept_extraction(self):
         concept = 'screen'
