@@ -53,5 +53,8 @@ optional arguments:
   -p MAX_PROCESSES      Number of processes
 ```
 
+## Prapare conceptnet.io pickle and amazon reviews
+`python aspects/io.parser.py`
+
 ## Run
 `python run.py -input data/reviews/ipod.json -output results -batch 1000 -p 23`
