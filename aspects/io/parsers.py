@@ -9,16 +9,16 @@ from tqdm import tqdm
 from aspects.utilities import settings
 
 
-def parse_reviews(path):
-    with gzip.open(path, 'rb') as g:
-        for l in g:
-            yield eval(l)
+def parse_gzip(path):
+    with gzip.open(path, 'rb') as gzip_file:
+        for line in gzip_file:
+            yield eval(line)
 
 
 def amazon_dataset_parse(dataset_path, column='reviewText', n_reviews=100000):
     i = 0
     reviews = {}
-    for d in tqdm(parse_reviews(dataset_path)):
+    for d in tqdm(parse_gzip(dataset_path)):
         reviews[i] = d[column]
         i += 1
         if i > n_reviews:

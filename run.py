@@ -120,6 +120,8 @@ class AspectAnalysisSystem:
                         self.serializer.save(document, join(self.paths.extracted_docs, str(ref_id)))
                         self.serializer.save(str(doc_id), join(self.paths.extracted_docs_ids, str(ref_id)))
                         documents_count += 1
+                        if self.max_docs < documents_count:
+                            break
             # this is {'doc_id': {'text', text, 'metadata1': xxx}}
             # text with additional metadata
             elif f_extension in ['pkl', 'p', 'pickle']:
@@ -129,6 +131,8 @@ class AspectAnalysisSystem:
                     self.serializer.save(document['text'], join(self.paths.extracted_docs, str(ref_id)))
                     self.serializer.save({doc_id: document}, join(self.paths.extracted_docs_metadata, str(ref_id)))
                     documents_count += 1
+                    if self.max_docs < documents_count:
+                        break
             elif f_extension in ['csv', 'txt']:
                 raw_documents = {}
                 with open(self.input_file_path, 'r') as f:
@@ -137,14 +141,14 @@ class AspectAnalysisSystem:
                         self.serializer.save(line, self.paths.extracted_docs + str(idx))
                         self.serializer.save({idx: line}, self.paths.extracted_docs_metadata + str(idx))
                         documents_count += 1
+                        if self.max_docs < documents_count:
+                            break
             else:
                 raise WrongTypeException()
             logging.info('Number of all documents to analyse: {}'.format(len(raw_documents)))
         return documents_count
 
     def _perform_edu_parsing(self, documents_count, batch_size=None):
-        if self.max_docs is not None:
-            documents_count = self.max_docs
         logging.info('Documents: #{} will be processed'.format(documents_count))
         if batch_size is None:
             batch_size = documents_count / self.jobs
