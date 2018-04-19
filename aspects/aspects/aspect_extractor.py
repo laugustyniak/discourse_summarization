@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import RAKE
 
-from aspects.enrichments.conceptnets import Sentic, load_conceptnet_io
+from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
 from aspects.utilities import settings
 
 reload(sys)
@@ -139,12 +139,12 @@ class AspectExtractor(object):
 
         # 3. senticnet
         if settings.SENTIC_ASPECTS:
-            sentic = Sentic()
+            sentic_df = load_sentic
             sentic_aspects = {}
             for aspect in aspects:
                 aspect = aspect.replace(' ', '_')
-                sentic_aspects[aspect] = sentic.get_semantic_concept_by_concept(
-                    aspect, settings.SENTIC_EXACT_MATCH_CONCEPTS)
+                sentic_aspects[aspect] = get_semantic_concept_by_concept(
+                    sentic_df, aspect, settings.SENTIC_EXACT_MATCH_CONCEPTS)
             concept_aspects['sentic'] = sentic_aspects
 
         # 4. ConceptNet.io
