@@ -76,8 +76,9 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
 class AspectAnalysisSystem:
     def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
-                 n_logger=1000, batch_size=None):
+                 n_logger=1000, batch_size=None, max_docs=None):
 
+        self.max_docs = max_docs
         self.batch_size = batch_size
         self.gold_standard_path = gold_standard_path
         self.analysis_results_path = analysis_results_path
@@ -142,6 +143,8 @@ class AspectAnalysisSystem:
         return documents_count
 
     def _perform_edu_parsing(self, documents_count, batch_size=None):
+        if self.max_docs is not None:
+            documents_count = self.max_docs
         logging.info('Documents: #{} will be processed'.format(documents_count))
         if batch_size is None:
             batch_size = documents_count / self.jobs
@@ -427,20 +430,16 @@ class AspectAnalysisSystem:
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(description='Process documents.')
-    arg_parser.add_argument('-input', type=str, dest='input_file_path',
-                            default=settings.DEFAULT_INPUT_FILE_PATH,
-                            help='Path to the file with documents '
-                                 '(json, csv, pickle)')
-    arg_parser.add_argument('-output', type=str, dest='output_file_path',
-                            default=settings.DEFAULT_OUTPUT_PATH,
+    arg_parser.add_argument('-input', type=str, dest='input_file_path', default=settings.DEFAULT_INPUT_FILE_PATH,
+                            help='Path to the file with documents (json, csv, pickle)')
+    arg_parser.add_argument('-output', type=str, dest='output_file_path', default=settings.DEFAULT_OUTPUT_PATH,
                             help='Number of processes')
-    arg_parser.add_argument('-sent_model', type=str, dest='sent_model_path',
-                            default=None,
+    arg_parser.add_argument('-sent_model', type=str, dest='sent_model_path', default=None,
                             help='path to sentiment model')
-    arg_parser.add_argument('-analysis_results_path', type=str,
-                            dest='analysis_results_path',
-                            default=None,
+    arg_parser.add_argument('-analysis_results_path', type=str, dest='analysis_results_path', default=None,
                             help='path to analysis results')
+    arg_parser.add_argument('-max_docs', type=int, dest='max_docs', default=None,
+                            help='Maximum number of documents to analyse')
     arg_parser.add_argument('-batch', type=int, dest='batch_size', default=None,
                             help='batch size for each process')
     arg_parser.add_argument('-p', type=int, dest='max_processes', default=1,
@@ -450,13 +449,15 @@ if __name__ == "__main__":
     input_file_full_name = split(args.input_file_path)[1]
     input_file_name = splitext(input_file_full_name)[0]
     output_path = join(args.output_file_path, input_file_name)
-    gold_standard_path = dirname(
-        args.input_file_path) + input_file_name + '_aspects_list.ser'
-    AAS = AspectAnalysisSystem(input_path=args.input_file_path,
-                               output_path=output_path,
-                               gold_standard_path=gold_standard_path,
-                               analysis_results_path=args.analysis_results_path,
-                               jobs=args.max_processes,
-                               sent_model_path=args.sent_model_path,
-                               batch_size=args.batch_size)
+    gold_standard_path = dirname(args.input_file_path) + input_file_name + '_aspects_list.ser'
+    AAS = AspectAnalysisSystem(
+        input_path=args.input_file_path,
+        output_path=output_path,
+        gold_standard_path=gold_standard_path,
+        analysis_results_path=args.analysis_results_path,
+        jobs=args.max_processes,
+        sent_model_path=args.sent_model_path,
+        batch_size=args.batch_size,
+        max_docs=args.max_docs
+    )
     AAS.run()
