@@ -9,6 +9,8 @@ from aspects.utilities import settings
 
 log = logging.getLogger(__name__)
 
+SEMANTIC_COL_NAME = ['semantics1', 'semantics2', 'semantics3', 'semantics4', 'semantics5']
+
 
 @lru_cache(None)
 def load_sentic():
@@ -53,13 +55,12 @@ def get_semantic_concept_by_concept(sentic_df, partname, exact_match=False):
         values: list of related concepts
     """
     concepts = {}
-    semantic_col_name = ['semantics1', 'semantics2', 'semantics3', 'semantics4', 'semantics5']
     if exact_match:
         df = sentic_df[sentic_df.index == partname].sort_index()
     else:
         df = sentic_df[sentic_df.index.str.contains(partname)].sort_index()
     for row in df.iterrows():
-        concepts[row[0]] = [row[1][col] for col in semantic_col_name]
+        concepts[row[0]] = [row[1][col] for col in SEMANTIC_COL_NAME]
     return concepts
 
 

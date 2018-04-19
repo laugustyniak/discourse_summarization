@@ -139,7 +139,7 @@ class AspectExtractor(object):
 
         # 3. senticnet
         if settings.SENTIC_ASPECTS:
-            sentic_df = load_sentic
+            sentic_df = load_sentic()
             sentic_aspects = {}
             for aspect in aspects:
                 aspect = aspect.replace(' ', '_')
