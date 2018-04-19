@@ -60,8 +60,7 @@ class AspectExtractor(object):
                                     u'don',
                                     ]
         if ner_types is None:
-            self.ner_types = [u'PERSON', u'GPE', u'ORG',
-                              u'PRODUCT', u'FAC', u'LOC']
+            self.ner_types = settings.NER_TYPES
         else:
             self.ner_types = ner_types
 
