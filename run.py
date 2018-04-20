@@ -7,12 +7,12 @@ from os import listdir
 from os.path import basename, exists, join, split, splitext, dirname
 from time import time
 
-import networkx as nx
 import simplejson
 from joblib import Parallel
 from joblib import delayed
 from tqdm import tqdm
 
+import networkx as nx
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
@@ -27,13 +27,14 @@ from aspects.utilities.data_paths import IOPaths
 from aspects.utilities.utils_multiprocess import batch_with_indexes
 from parse import DiscourseParser
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s;%(filename)s:%(lineno)s;'
-                           '%(funcName)s();%(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    filename='logs/run.log',
-                    filemode='w',
-                    )
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s;%(filename)s:%(lineno)s;'
+           '%(funcName)s();%(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    filename='logs/run.log',
+    filemode='w',
+)
 
 
 def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_documents_dir):
@@ -76,7 +77,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
 class AspectAnalysisSystem:
     def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
-                 n_logger=1000, batch_size=None, max_docs=None):
+                 n_logger=1000, batch_size=None, max_docs=None, cycle_in_relations=True):
 
         self.max_docs = max_docs
         self.batch_size = batch_size
@@ -86,6 +87,7 @@ class AspectAnalysisSystem:
         self.paths = IOPaths(input_path, output_path)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
+        self.cycle_in_relations = cycle_in_relations
 
         # number of all processes
         self.jobs = jobs
@@ -274,14 +276,15 @@ class AspectAnalysisSystem:
             aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
             documents_info = self.serializer.load(self.paths.docs_info)
 
-            builder = AspectsGraphBuilder(aspects_per_edu)
-            graph, page_ranks = builder.build(rules=dependency_rules,
-                                              docs_info=documents_info,
-                                              conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
-                                              filter_gerani=False,
-                                              aht_gerani=False,
-                                              aspect_graph_path=self.paths.aspects_graph,
-                                              )
+            builder = AspectsGraphBuilder(aspects_per_edu, with_cycles_between_aspects=self.cycle_in_relations)
+            graph, page_ranks = builder.build(
+                rules=dependency_rules,
+                docs_info=documents_info,
+                conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
+                filter_gerani=False,
+                aht_gerani=False,
+                aspect_graph_path=self.paths.aspects_graph,
+            )
 
             self.serializer.save(graph, self.paths.aspects_graph)
             self.serializer.save(page_ranks, self.paths.aspects_importance)
@@ -448,6 +451,8 @@ if __name__ == "__main__":
                             help='batch size for each process')
     arg_parser.add_argument('-p', type=int, dest='max_processes', default=1,
                             help='Number of processes')
+    arg_parser.add_argument('-cycles', type=int, dest='cycles', default=0,
+                            help='Do we want to have cycles in aspect realation? 1->True, 0->False')
     args = arg_parser.parse_args()
 
     input_file_full_name = split(args.input_file_path)[1]
@@ -462,6 +467,7 @@ if __name__ == "__main__":
         jobs=args.max_processes,
         sent_model_path=args.sent_model_path,
         batch_size=args.batch_size,
-        max_docs=args.max_docs
+        max_docs=args.max_docs,
+        cycle_in_relations=True if args.cycles else False
     )
     AAS.run()
