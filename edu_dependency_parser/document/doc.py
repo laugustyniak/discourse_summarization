@@ -1,19 +1,8 @@
-'''
-Created on Aug 8, 2013
-
-@author: Vanessa
-'''
 from base_representation import BaseRepresentation
 
 
 class Document(BaseRepresentation):
-    def __init__(self,
-                 ssplit_filename=None,
-                 dis_filename=None,
-                 edu_filename=None,
-                 parse_filename=None,
-                 heads_filename=None,
-                 deps_filename=None):
+    def __init__(self):
         BaseRepresentation.__init__(self)
 
         self.preprocessed = False
