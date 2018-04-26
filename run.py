@@ -124,7 +124,7 @@ class AspectAnalysisSystem:
                         self.serializer.save(document, join(self.paths.extracted_docs, str(ref_id)))
                         self.serializer.save(str(doc_id), join(self.paths.extracted_docs_ids, str(ref_id)))
                         documents_count += 1
-                        if self.max_docs < documents_count:
+                        if self.max_docs < documents_count and self.max_docs is not None:
                             break
             # this is {'doc_id': {'text', text, 'metadata1': xxx}}
             # text with additional metadata
@@ -135,7 +135,7 @@ class AspectAnalysisSystem:
                     self.serializer.save(document['text'], join(self.paths.extracted_docs, str(ref_id)))
                     self.serializer.save({doc_id: document}, join(self.paths.extracted_docs_metadata, str(ref_id)))
                     documents_count += 1
-                    if self.max_docs < documents_count:
+                    if self.max_docs < documents_count and self.max_docs is not None:
                         break
             elif f_extension in ['csv', 'txt']:
                 raw_documents = {}
@@ -145,7 +145,7 @@ class AspectAnalysisSystem:
                         self.serializer.save(line, self.paths.extracted_docs + str(idx))
                         self.serializer.save({idx: line}, self.paths.extracted_docs_metadata + str(idx))
                         documents_count += 1
-                        if self.max_docs < documents_count:
+                        if self.max_docs < documents_count and self.max_docs is not None:
                             break
             else:
                 raise WrongTypeException()
