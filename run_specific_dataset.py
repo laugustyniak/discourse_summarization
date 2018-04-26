@@ -1,18 +1,22 @@
 import logging
 import multiprocessing
+from os.path import join, basename
 
 from aspects.utilities import settings
 from run import AspectAnalysisSystem
 
 log = logging.getLogger(__name__)
 
+datast_path = settings.BING_LIU_LINKSYS_ROUTER.as_posix()
+
 AAS = AspectAnalysisSystem(
-    # input_path=str(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON),
-    input_path=settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON.as_posix(),
-    output_path='/datasets/sentiment/aspects/results/amazon',
+    input_path=datast_path,
+    output_path=join('results', basename(datast_path).replace('.json', '')),
     gold_standard_path=None,
     analysis_results_path=None,
     jobs=multiprocessing.cpu_count() - 1,
+    batch_size=50,
+    # max_docs=15000,
 )
 
 AAS.run()
