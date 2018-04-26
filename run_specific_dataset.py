@@ -7,11 +7,11 @@ from run import AspectAnalysisSystem
 
 log = logging.getLogger(__name__)
 
-datast_path = settings.BING_LIU_LINKSYS_ROUTER.as_posix()
+dataset_path = settings.BING_LIU_LINKSYS_ROUTER.as_posix()
 
 AAS = AspectAnalysisSystem(
-    input_path=datast_path,
-    output_path=join('results', basename(datast_path).replace('.json', '')),
+    input_path=dataset_path,
+    output_path=join('results', basename(dataset_path).replace('.json', '')),
     gold_standard_path=None,
     analysis_results_path=None,
     jobs=multiprocessing.cpu_count() - 1,
