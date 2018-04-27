@@ -35,10 +35,13 @@ morfeusz2 == 0.3.0
 `pip install -r requirements.txt`
 
 ## Process documents
+## Install crf
 
 ```
 optional arguments:
+## Process documents
 
+`optional arguments:
   -h, --help            show this help message and exit
   -input INPUT_FILE_PATH
                         Path to the file with documents (json, csv, pickle)
@@ -49,6 +52,9 @@ optional arguments:
   -batch BATCH_SIZE     batch size for each process
   -p MAX_PROCESSES      Number of processes
 ```
+
+## Prapare conceptnet.io pickle and amazon reviews
+`python aspects/io.parser.py`
 
 ## Run
 `python run.py -input data/reviews/ipod.json -output results -batch 1000 -p 23`

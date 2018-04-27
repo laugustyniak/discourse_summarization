@@ -1,10 +1,8 @@
 import logging
-
 from collections import defaultdict
 
 import networkx as nx
 import numpy as np
-
 from tqdm import tqdm
 
 log = logging.getLogger(__name__)
@@ -29,7 +27,7 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
                 log.info('Aspect: {} not extracted from edu: {}'.format(str(err), edu_id))
     for aspect, sentiments in aspect_sentiments.iteritems():
         try:
-            # fixme GEXF write error with list
+            graph.node[aspect]['count'] = len(sentiments)
             graph.node[aspect]['sentiment_avg'] = float(np.average(sentiments))
             graph.node[aspect]['sentiment_sum'] = float(np.sum(sentiments))
             graph.node[aspect]['dir_moi'] = float(np.sum([x ** 2 for x in sentiments]))

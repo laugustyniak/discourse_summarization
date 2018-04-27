@@ -35,6 +35,7 @@ edu_dependency_parser/rhetorical-installation/nltk-2\.0b9/
 edu_dependency_parser/rhetorical-installation/gCRF_dist/
 
 edu_dependency_parser/rhetorical-installation/\._nltk-2\.0b9
-/aspects/data/reviews/amazon/
 
-aspects/data/conceptnet/conceptnet-assertions-5\.5\.5\.csv\.gz
+notebooks/vis/node_modules/
+
+notebooks/vis/

@@ -27,13 +27,14 @@ from aspects.utilities.data_paths import IOPaths
 from aspects.utilities.utils_multiprocess import batch_with_indexes
 from parse import DiscourseParser
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s;%(filename)s:%(lineno)s;'
-                           '%(funcName)s();%(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    filename='logs/run.log',
-                    filemode='w',
-                    )
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s;%(filename)s:%(lineno)s;'
+           '%(funcName)s();%(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    filename='logs/run.log',
+    filemode='w',
+)
 
 
 def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_documents_dir):
@@ -43,7 +44,9 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
     n_docs = docs_id_range[1] - docs_id_range[0]
 
-    for n_doc, document_id in tqdm(enumerate(range(docs_id_range[0], docs_id_range[1]), start=1), desc='Parsing'):
+    for n_doc, document_id in tqdm(enumerate(range(docs_id_range[0], docs_id_range[1]), start=1),
+                                   desc='Parsing',
+                                   total=docs_id_range[1] - docs_id_range[0]):
         start_time = datetime.now()
         logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
         try:
@@ -76,8 +79,13 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
 class AspectAnalysisSystem:
     def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
-                 n_logger=1000, batch_size=None):
+                 n_logger=1000, batch_size=None, max_docs=None, cycle_in_relations=True, filter_gerani=False,
+                 aht_gerani=False, neutral_sent=False):
 
+        self.neutral_sent = neutral_sent
+        self.aht_gerani = aht_gerani
+        self.filter_gerani = filter_gerani
+        self.max_docs = max_docs
         self.batch_size = batch_size
         self.gold_standard_path = gold_standard_path
         self.analysis_results_path = analysis_results_path
@@ -85,6 +93,7 @@ class AspectAnalysisSystem:
         self.paths = IOPaths(input_path, output_path)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
+        self.cycle_in_relations = cycle_in_relations
 
         # number of all processes
         self.jobs = jobs
@@ -119,6 +128,8 @@ class AspectAnalysisSystem:
                         self.serializer.save(document, join(self.paths.extracted_docs, str(ref_id)))
                         self.serializer.save(str(doc_id), join(self.paths.extracted_docs_ids, str(ref_id)))
                         documents_count += 1
+                        if self.max_docs < documents_count and self.max_docs is not None:
+                            break
             # this is {'doc_id': {'text', text, 'metadata1': xxx}}
             # text with additional metadata
             elif f_extension in ['pkl', 'p', 'pickle']:
@@ -128,6 +139,8 @@ class AspectAnalysisSystem:
                     self.serializer.save(document['text'], join(self.paths.extracted_docs, str(ref_id)))
                     self.serializer.save({doc_id: document}, join(self.paths.extracted_docs_metadata, str(ref_id)))
                     documents_count += 1
+                    if self.max_docs < documents_count and self.max_docs is not None:
+                        break
             elif f_extension in ['csv', 'txt']:
                 raw_documents = {}
                 with open(self.input_file_path, 'r') as f:
@@ -136,6 +149,8 @@ class AspectAnalysisSystem:
                         self.serializer.save(line, self.paths.extracted_docs + str(idx))
                         self.serializer.save({idx: line}, self.paths.extracted_docs_metadata + str(idx))
                         documents_count += 1
+                        if self.max_docs < documents_count and self.max_docs is not None:
+                            break
             else:
                 raise WrongTypeException()
             logging.info('Number of all documents to analyse: {}'.format(len(raw_documents)))
@@ -199,7 +214,7 @@ class AspectAnalysisSystem:
                     }
                 docs_info[edu['source_document_id']]['sentiment'].update({edu_id: sentiment})
                 docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
-                if sentiment:
+                if sentiment or self.neutral_sent:
                     edu['sentiment'].append(sentiment)
                     docs_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
                     filtered_edus[edu_id] = edu
@@ -267,14 +282,15 @@ class AspectAnalysisSystem:
             aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
             documents_info = self.serializer.load(self.paths.docs_info)
 
-            builder = AspectsGraphBuilder(aspects_per_edu)
-            graph, page_ranks = builder.build(rules=dependency_rules,
-                                              docs_info=documents_info,
-                                              conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
-                                              filter_gerani=False,
-                                              aht_gerani=False,
-                                              aspect_graph_path=self.paths.aspects_graph,
-                                              )
+            builder = AspectsGraphBuilder(aspects_per_edu, with_cycles_between_aspects=self.cycle_in_relations)
+            graph, page_ranks = builder.build(
+                rules=dependency_rules,
+                docs_info=documents_info,
+                conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
+                filter_gerani=self.filter_gerani,
+                aht_gerani=self.aht_gerani,
+                aspect_graph_path=self.paths.aspects_graph,
+            )
 
             self.serializer.save(graph, self.paths.aspects_graph)
             self.serializer.save(page_ranks, self.paths.aspects_importance)
@@ -422,41 +438,52 @@ class AspectAnalysisSystem:
         logging.info('Save graph with Gephi suitable extension')
         aspects_graph = self.serializer.load(self.paths.aspects_graph)
         nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
+        # for gehpi
         nx.write_gexf(aspects_graph, self.paths.aspects_graph_gexf)
 
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(description='Process documents.')
-    arg_parser.add_argument('-input', type=str, dest='input_file_path',
-                            default=settings.DEFAULT_INPUT_FILE_PATH,
-                            help='Path to the file with documents '
-                                 '(json, csv, pickle)')
-    arg_parser.add_argument('-output', type=str, dest='output_file_path',
-                            default=settings.DEFAULT_OUTPUT_PATH,
+    arg_parser.add_argument('-input', type=str, dest='input_file_path', default=settings.DEFAULT_INPUT_FILE_PATH,
+                            help='Path to the file with documents (json, csv, pickle)')
+    arg_parser.add_argument('-output', type=str, dest='output_file_path', default=settings.DEFAULT_OUTPUT_PATH,
                             help='Number of processes')
-    arg_parser.add_argument('-sent_model', type=str, dest='sent_model_path',
-                            default=None,
+    arg_parser.add_argument('-sent_model', type=str, dest='sent_model_path', default=None,
                             help='path to sentiment model')
-    arg_parser.add_argument('-analysis_results_path', type=str,
-                            dest='analysis_results_path',
-                            default=None,
+    arg_parser.add_argument('-analysis_results_path', type=str, dest='analysis_results_path', default=None,
                             help='path to analysis results')
+    arg_parser.add_argument('-max_docs', type=int, dest='max_docs', default=None,
+                            help='Maximum number of documents to analyse')
     arg_parser.add_argument('-batch', type=int, dest='batch_size', default=None,
                             help='batch size for each process')
     arg_parser.add_argument('-p', type=int, dest='max_processes', default=1,
                             help='Number of processes')
+    arg_parser.add_argument('-cycles', type=bool, dest='cycles', default=False,
+                            help='Do we want to have cycles in aspect realation? False by default')
+    arg_parser.add_argument('-filter_gerani', type=bool, dest='filter_gerani', default=False,
+                            help='Do we want to follow Gerani paper?')
+    arg_parser.add_argument('-aht_gerani', type=bool, dest='aht_gerani', default=False,
+                            help='Do we want to create AHT by Gerani?')
+    arg_parser.add_argument('-neutral_sent', type=bool, dest='neutral_sent', default=False,
+                            help='Do we want to use neutral sentiment aspects too?')
     args = arg_parser.parse_args()
 
     input_file_full_name = split(args.input_file_path)[1]
     input_file_name = splitext(input_file_full_name)[0]
     output_path = join(args.output_file_path, input_file_name)
-    gold_standard_path = dirname(
-        args.input_file_path) + input_file_name + '_aspects_list.ser'
-    AAS = AspectAnalysisSystem(input_path=args.input_file_path,
-                               output_path=output_path,
-                               gold_standard_path=gold_standard_path,
-                               analysis_results_path=args.analysis_results_path,
-                               jobs=args.max_processes,
-                               sent_model_path=args.sent_model_path,
-                               batch_size=args.batch_size)
+    gold_standard_path = dirname(args.input_file_path) + input_file_name + '_aspects_list.ser'
+    AAS = AspectAnalysisSystem(
+        input_path=args.input_file_path,
+        output_path=output_path,
+        gold_standard_path=gold_standard_path,
+        analysis_results_path=args.analysis_results_path,
+        jobs=args.max_processes,
+        sent_model_path=args.sent_model_path,
+        batch_size=args.batch_size,
+        max_docs=args.max_docs,
+        cycle_in_relations=True if args.cycles else False,
+        filter_gerani=args.filter_gerani,
+        aht_gerani=args.aht_gerani,
+        neutral_sent=args.neutral_sent
+    )
     AAS.run()
