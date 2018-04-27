@@ -80,8 +80,9 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 class AspectAnalysisSystem:
     def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
                  n_logger=1000, batch_size=None, max_docs=None, cycle_in_relations=True, filter_gerani=False,
-                 aht_gerani=False):
+                 aht_gerani=False, neutral_sent=False):
 
+        self.neutral_sent = neutral_sent
         self.aht_gerani = aht_gerani
         self.filter_gerani = filter_gerani
         self.max_docs = max_docs
@@ -213,7 +214,7 @@ class AspectAnalysisSystem:
                     }
                 docs_info[edu['source_document_id']]['sentiment'].update({edu_id: sentiment})
                 docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
-                if sentiment:
+                if sentiment or self.neutral_sent:
                     edu['sentiment'].append(sentiment)
                     docs_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
                     filtered_edus[edu_id] = edu
@@ -462,6 +463,8 @@ if __name__ == "__main__":
                             help='Do we want to follow Gerani paper?')
     arg_parser.add_argument('-aht_gerani', type=bool, dest='aht_gerani', default=False,
                             help='Do we want to create AHT by Gerani?')
+    arg_parser.add_argument('-neutral_sent', type=bool, dest='neutral_sent', default=False,
+                            help='Do we want to use neutral sentiment aspects too?')
     args = arg_parser.parse_args()
 
     input_file_full_name = split(args.input_file_path)[1]
@@ -479,6 +482,7 @@ if __name__ == "__main__":
         max_docs=args.max_docs,
         cycle_in_relations=True if args.cycles else False,
         filter_gerani=args.filter_gerani,
-        aht_gerani=args.aht_gerani
+        aht_gerani=args.aht_gerani,
+        neutral_sent=args.neutral_sent
     )
     AAS.run()
