@@ -438,6 +438,8 @@ class AspectAnalysisSystem:
         logging.info('Save graph with Gephi suitable extension')
         aspects_graph = self.serializer.load(self.paths.aspects_graph)
         nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
+        # for gehpi
+        nx.write_gexf(aspects_graph, self.paths.aspects_graph_gexf)
 
 
 if __name__ == "__main__":
