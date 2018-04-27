@@ -7,12 +7,12 @@ from os import listdir
 from os.path import basename, exists, join, split, splitext, dirname
 from time import time
 
+import networkx as nx
 import simplejson
 from joblib import Parallel
 from joblib import delayed
 from tqdm import tqdm
 
-import networkx as nx
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
@@ -79,8 +79,11 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
 class AspectAnalysisSystem:
     def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
-                 n_logger=1000, batch_size=None, max_docs=None, cycle_in_relations=True):
+                 n_logger=1000, batch_size=None, max_docs=None, cycle_in_relations=True, filter_gerani=False,
+                 aht_gerani=False):
 
+        self.aht_gerani = aht_gerani
+        self.filter_gerani = filter_gerani
         self.max_docs = max_docs
         self.batch_size = batch_size
         self.gold_standard_path = gold_standard_path
@@ -283,8 +286,8 @@ class AspectAnalysisSystem:
                 rules=dependency_rules,
                 docs_info=documents_info,
                 conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
-                filter_gerani=False,
-                aht_gerani=False,
+                filter_gerani=self.filter_gerani,
+                aht_gerani=self.aht_gerani,
                 aspect_graph_path=self.paths.aspects_graph,
             )
 
@@ -453,8 +456,12 @@ if __name__ == "__main__":
                             help='batch size for each process')
     arg_parser.add_argument('-p', type=int, dest='max_processes', default=1,
                             help='Number of processes')
-    arg_parser.add_argument('-cycles', type=int, dest='cycles', default=0,
-                            help='Do we want to have cycles in aspect realation? 1->True, 0->False')
+    arg_parser.add_argument('-cycles', type=bool, dest='cycles', default=False,
+                            help='Do we want to have cycles in aspect realation? False by default')
+    arg_parser.add_argument('-filter_gerani', type=bool, dest='filter_gerani', default=False,
+                            help='Do we want to follow Gerani paper?')
+    arg_parser.add_argument('-aht_gerani', type=bool, dest='aht_gerani', default=False,
+                            help='Do we want to create AHT by Gerani?')
     args = arg_parser.parse_args()
 
     input_file_full_name = split(args.input_file_path)[1]
@@ -470,6 +477,8 @@ if __name__ == "__main__":
         sent_model_path=args.sent_model_path,
         batch_size=args.batch_size,
         max_docs=args.max_docs,
-        cycle_in_relations=True if args.cycles else False
+        cycle_in_relations=True if args.cycles else False,
+        filter_gerani=args.filter_gerani,
+        aht_gerani=args.aht_gerani
     )
     AAS.run()
