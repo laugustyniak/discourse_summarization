@@ -3,7 +3,7 @@ import logging
 from sklearn.externals import joblib
 
 log = logging.getLogger(__name__)
-from aspects.configs.sentiment_config import SENTIMENT_MODEL_PATH
+from aspects.utilities import settings
 
 
 class LogisticRegressionSentimentAnalyzer(object):
@@ -12,9 +12,8 @@ class LogisticRegressionSentimentAnalyzer(object):
         log.info('Sentiment Analyzer - status: initializing')
 
         if model_path is None:
-            log.info('Defaul sentiment model will be loaded: {}'.format(
-                SENTIMENT_MODEL_PATH))
-            self.model = joblib.load(SENTIMENT_MODEL_PATH)
+            log.info('Defaul sentiment model will be loaded: {}'.format(settings.SENTIMENT_MODEL_PROD.as_posix()))
+            self.model = joblib.load(settings.SENTIMENT_MODEL_PROD.as_posix())
         else:
             self.model = joblib.load(model_path)
 

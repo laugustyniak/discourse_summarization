@@ -4,11 +4,10 @@ from collections import OrderedDict
 
 import networkx as nx
 
-from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, \
-    RelationAspects
+from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, RelationAspects
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
+from aspects.utilities import settings
 
 sys.path.append("../edu_dependency_parser/src")
 
@@ -20,10 +19,10 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.serializer = Serializer()
 
     def _setup_link_parse_tree_177(self):
-        self.link_tree = self.serializer.load(sample_tree_177)
+        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_177.as_posix())
 
     def _setup_link_parse_tree_189(self):
-        self.link_tree = self.serializer.load(sample_tree_189)
+        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_189.as_posix())
 
     def _set_rst_rules_document_info(self):
         self.rules = {1: [(514, 513, 'Elaboration', 0.25),

@@ -1,15 +1,14 @@
 import logging
-
+import operator
 from collections import OrderedDict, defaultdict, Counter, namedtuple
 from itertools import groupby
 from operator import itemgetter
 
 import networkx as nx
-import operator
 
-from aspects.utilities.transformations import flatten_list
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
 from aspects.io.serializer import Serializer
+from aspects.utilities.transformations import flatten_list
 
 log = logging.getLogger(__name__)
 
@@ -88,6 +87,7 @@ class AspectsGraphBuilder(object):
 
         aspect = None
         # fixme please fix fucking iteration via aspects_concept dicts
+        # started rewriting for data frames in other branch
         if conceptnet_io:
             # add relation from conceptnet
             for doc_id, doc_info in docs_info.iteritems():
@@ -131,7 +131,6 @@ class AspectsGraphBuilder(object):
         for doc_id, rules_list in rules.iteritems():
             for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
-
                 if isinstance(rule, RelationAspects):
                     aspect_left, aspect_right, relation, gerani_weight = rule
                     graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)

@@ -35,3 +35,7 @@ edu_dependency_parser/rhetorical-installation/nltk-2\.0b9/
 edu_dependency_parser/rhetorical-installation/gCRF_dist/
 
 edu_dependency_parser/rhetorical-installation/\._nltk-2\.0b9
+
+notebooks/vis/node_modules/
+
+notebooks/vis/

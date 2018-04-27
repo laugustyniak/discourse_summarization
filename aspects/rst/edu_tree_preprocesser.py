@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-
-import os
 import sys
 
 from aspects.preprocessing.preprocesser import Preprocesser
+from aspects.utilities import settings
 
-sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
+sys.path.append(str(settings.EDU_DEPENDENCY_PARSER_PATH))
 from trees.parse_tree import ParseTree
 
 
@@ -15,26 +12,16 @@ class EDUTreePreprocesser(object):
         self.edus = []
         self.preprocesser = Preprocesser()
 
-    def processTree(self, tree, document_id):
+    def process_tree(self, tree, document_id):
         for index, subtree in enumerate(tree):
             if isinstance(subtree, ParseTree):
-                self.processTree(subtree, document_id)
+                self.process_tree(subtree, document_id)
             else:
                 subtree = subtree[2:-2]
-
-                extractionResult = self.preprocesser.preprocess(subtree)
-
+                extraction_result = self.preprocesser.preprocess(subtree)
                 tree[index] = len(self.edus)
+                extraction_result['source_document_id'] = document_id
+                self.edus.append(extraction_result)
 
-                extractionResult['source_document_id'] = document_id
-
-                self.edus.append(extractionResult)
-
-    def getPreprocessedEdusList(self):
-
-        eduDict = {}
-
-        for id, edu in enumerate(self.edus):
-            eduDict[id] = edu
-
-        return eduDict
+    def get_preprocessed_edus_list(self):
+        return {idx: edu for idx, edu in enumerate(self.edus)}

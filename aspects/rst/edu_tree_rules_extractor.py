@@ -1,6 +1,5 @@
-import sys
 import os
-
+import sys
 from collections import defaultdict, namedtuple
 
 sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
@@ -83,23 +82,18 @@ class EDUTreeRulesExtractor(object):
                 self.right_leaf = tree
                 relation = self.rst_relation_type()
                 # relation name, nucleus/satellite, nucleus/satellite
-                rel_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(
-                    relation)
-                if self.only_hierarchical_relations \
-                        and not self.check_hierarchical_rst_relation(nuc_sat_1,
-                                                                     nuc_sat_2):
+                rel_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(relation)
+                if self.only_hierarchical_relations and not self.check_hierarchical_rst_relation(nuc_sat_1, nuc_sat_2):
                     return
                 else:
                     if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
                         self.rules[self.doc_id].append(
-                            Relation(self.right_leaf, self.left_leaf, rel_name,
-                                     self.calculate_gerani_weight()))
+                            Relation(self.right_leaf, self.left_leaf, rel_name, self.calculate_gerani_weight()))
                     else:
                         # [S][N]
                         self.rules[self.doc_id].append(
-                            Relation(self.left_leaf, self.right_leaf, rel_name,
-                                     self.calculate_gerani_weight()))
+                            Relation(self.left_leaf, self.right_leaf, rel_name, self.calculate_gerani_weight()))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):

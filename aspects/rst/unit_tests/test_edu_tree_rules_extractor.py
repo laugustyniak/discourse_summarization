@@ -1,10 +1,10 @@
-import unittest
 import sys
+import unittest
 
 from aspects.io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.utilities.data_paths import sample_tree_177, sample_tree_189
 from aspects.rst.edu_tree_rules_extractor import Relation
+from aspects.utilities import settings
 
 sys.path.append("../../../edu_dependency_parser/src")
 
@@ -15,10 +15,10 @@ class AspectExtractionTest(unittest.TestCase):
     def setUp(self):
         self.serializer = Serializer()
         self.rules_extractor = EDUTreeRulesExtractor()
-        self.link_tree = self.serializer.load(sample_tree_177)
+        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_177.as_posix())
 
     def _multi_aspect_per_edu_tree(self):
-        self.link_tree = self.serializer.load(sample_tree_189)
+        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_189.as_posix())
 
     def test_load_serialized_tree(self):
         self.assertEqual(isinstance(self.link_tree, ParseTree), True)
