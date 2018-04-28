@@ -3,19 +3,14 @@ from glob import glob
 from os.path import basename
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 all_reviews_path = '../../aspects/data/aspects/Reviews-9-products/'
 reviews_paths = glob(all_reviews_path + '*')
 
 AspectSentiment = namedtuple('AspectSentiment', 'aspect, sentiment')
-DatasetSize = namedtuple('DatasetSize', 'dataset, size')
-
-
-def parse_reviews(reviews_path: str) -> str:
-    with open(reviews_path, 'r') as review_file:
-        for line in review_file:
-            yield line
+DatasetSize = namedtuple('DatasetSize', 'dataset, size, reviews_word_average')
 
 
 def load_reviews(reviews_path: str) -> pd.DataFrame:
@@ -34,7 +29,7 @@ def get_aspects(reviews_path: str) -> pd.DataFrame:
 def get_sentiment_from_aspect_sentiment_text(aspect_with_sentiment: str) -> AspectSentiment:
     aspect_with_sentiment = aspect_with_sentiment.strip()
     aspect_with_sentiment = aspect_with_sentiment.replace('[u]', '').replace('[s]', '').replace('[p]', '')
-    aspect_with_sentiment = aspect_with_sentiment.replace('[cs]', '')
+    aspect_with_sentiment = aspect_with_sentiment.replace('[cs]', '').replace('(cs)', '').replace('[cc]', '')
     aspect_with_sentiment = aspect_with_sentiment.replace('{', '[').replace('}', ']')
 
     aspect_splitted = aspect_with_sentiment.split('[')
@@ -59,13 +54,15 @@ def get_sentiment_from_aspect_sentiment_text(aspect_with_sentiment: str) -> Aspe
     return AspectSentiment(aspect=aspect.lower(), sentiment=sentiment)
 
 
-def draw_aspect_distribution(reviews_path: str):
+def aspect_distribution(reviews_path: str, draw: bool = False, freq_threshold=2) -> pd.Series:
     df = get_aspects(reviews_path)
-    plt.figure(figsize=(20, 8))
-    plt.title(f'Aspect distribution for {basename(reviews_path)}')
     counts = df.aspect.value_counts()
-    # take only aspects that appeared at least once 
-    counts[counts > 1].plot(kind='bar')
+    # take only aspects that appeared at least once
+    if draw:
+        plt.figure(figsize=(20, 8))
+        plt.title(f'Aspect distribution for {basename(reviews_path)}')
+        counts[counts >= freq_threshold].plot(kind='bar')
+    return counts
 
 
 def get_number_of_reviews(reviews_path: str) -> int:
@@ -78,11 +75,18 @@ def get_number_of_reviews_with_aspects(reviews_path: str) -> int:
 
 def get_datasets_sizes(reviews_paths: str) -> pd.DataFrame:
     return pd.DataFrame([
-        DatasetSize(dataset=basename(reviews_path), size=get_number_of_reviews(reviews_path))
+        DatasetSize(
+            dataset=basename(reviews_path),
+            size=get_number_of_reviews(reviews_path),
+            reviews_word_average=np.average(load_reviews(reviews_path).text.apply(lambda t: len(t.split())))
+        )
         for reviews_path in reviews_paths
     ])
 
 
 for reviews_path in reviews_paths:
-    get_aspects(reviews_path)
-    # get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset')
+    df = aspect_distribution(reviews_path)
+    pass
+    # get_aspects(reviews_path)
+    # get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='size')
+    # get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='reviews_word_average')
