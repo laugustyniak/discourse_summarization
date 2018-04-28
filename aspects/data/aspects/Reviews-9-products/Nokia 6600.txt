@@ -48,7 +48,7 @@ upgradibility[+3]##It has great upgradibility.
 log[+3]##The log functions helps you track down the incoming , outgoing calls in the most easy of ways.
 handsfree[+3]##The handsfree provided by the phone is useful for those who talk on the phone while driving.
 ##I wouldn't do that because it's not worth my life.
-processor[-3]ear volume[-2][cs]##Anyhow some demerits of this phone, The phone has a slow processor and the ear volume is lower than 6610 but then the 6610 has the best ear volume among most Nokia variants.
+processor[-3],ear volume[-2][cs]##Anyhow some demerits of this phone, The phone has a slow processor and the ear volume is lower than 6610 but then the 6610 has the best ear volume among most Nokia variants.
 battery life[-2]##The battery life of this phone is at most 2 days and at least one day at excessive use.
 Video recording[-2]##Video recording is limited at just 9 seconds.
 upgrade[-1][u]##You can upgrade but then there's a certain level of trouble involved.
