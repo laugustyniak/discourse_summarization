@@ -432,7 +432,7 @@ set up[+3] ##To set up the xbox, wap, and ethernest bridge, with the encryption 
 setup software[+3] ##The setup software did everything. 
 ##This is my first foray in!
 ##to the wrld of wireless and it couldn't have gone better. 
-connection+3] ##My Xbox connection seems as good as with a cable. 
+connection[+3] ##My Xbox connection seems as good as with a cable.
 ##My Xbox is about 70ft and 3 walls away from the WRT54G. 
 router[+2] ##In a week of use i've never had to reboot the router. 
 ##There is also a Panasonic cordless phone (2.4 Ghz) between the wap and the ethernet bridge but it never causes a problem. 
