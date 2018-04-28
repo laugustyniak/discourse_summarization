@@ -10,20 +10,21 @@ class EDUAspectExtractor(object):
 
     def extract(self, edu):
         """
-        Extract aspects and apsect_concepts
-        :param edu:
-        :return:
+        Extract aspects from edu document.
+
+        Parameters
+        ----------
+        edu : dict
+            Preprocessed string with tokens, ner and etc.
+
+
+        Returns
+        -------
+        aspects : dict
+
+        concept_aspects : dict
+
+        keyword_aspects : dict
+
         """
         return self.extractor.extract(edu)
-
-    def get_aspects_in_document(self, documents_aspects, aspects):
-
-        if documents_aspects is None:
-            return aspects
-        else:
-            doc_asp = documents_aspects + aspects
-
-            # wymuszamy unikalnosc
-            doc_asp = list(set(doc_asp))
-
-            return doc_asp

@@ -1,12 +1,12 @@
 import unittest
 
 from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
-    CONCEPTNET_ASPECTS, CONCEPTNET_LANG
 from aspects.preprocessing.preprocesser import Preprocesser
+from aspects.utilities import settings
 
 
 class AspectExtractionTest(unittest.TestCase):
+
     def test_get_aspects_nouns(self):
         aspects_expected = [u'car', u'phone']
         preprocesser = Preprocesser()
@@ -36,6 +36,16 @@ class AspectExtractionTest(unittest.TestCase):
         aspects_obtained, _, _ = aspects_extractor.extract(text)
         self.assertEqual(aspects_obtained, aspects_expected)
 
+    def test_get_aspects_ner_false(self):
+        aspects_expected = []
+        preprocesser = Preprocesser()
+        # sample text, don't correct :)
+        raw_text = u'this is the biggest in Europe!'
+        text = preprocesser.preprocess(raw_text)
+        aspects_extractor = AspectExtractor(is_ner=False)
+        aspects_obtained, _, _ = aspects_extractor.extract(text)
+        self.assertEqual(aspects_obtained, aspects_expected)
+
     def test_1_char_aspects_and_donts(self):
         aspects_expected = []
         preprocesser = Preprocesser()
@@ -61,28 +71,23 @@ class AspectExtractionTest(unittest.TestCase):
         preprocesser = Preprocesser()
         raw_text = u'i wonder if you can propose for me better screen'
         text = preprocesser.preprocess(raw_text)
-        if SENTIC_ASPECTS:
+        if settings.SENTIC_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
-            self.assertTrue(
-                True if concept in concepts_obtained[
-                    'sentic'].keys() else False)
-            self.assertEquals(
-                len(concepts_obtained['sentic'][concept][concept]), 5)
+            self.assertTrue(True if concept in concepts_obtained['sentic'].keys() else False)
+            self.assertEquals(len(concepts_obtained['sentic'][concept][concept]), 5)
 
     def test_conceptnet_io_concept_extraction(self):
         concept = 'screen'
         preprocesser = Preprocesser()
         raw_text = u'i wonder if you can propose for me better screen'
         text = preprocesser.preprocess(raw_text)
-        if CONCEPTNET_ASPECTS:
+        if settings.CONCEPTNET_IO_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
-            self.assertTrue(
-                True if concept in concepts_obtained[
-                    'conceptnet_io'].keys() else False)
+            self.assertTrue(True if concept in concepts_obtained['conceptnet_io'].keys() else False)
             # get at least one concept
             self.assertGreater(len(concepts), 0)
             # check if all keys in dictionary are in dict with concepts,
@@ -96,38 +101,49 @@ class AspectExtractionTest(unittest.TestCase):
         preprocesser = Preprocesser()
         raw_text = u'i wonder if you can propose for me better converter'
         text = preprocesser.preprocess(raw_text)
-        if CONCEPTNET_ASPECTS:
+        if settings.CONCEPTNET_IO_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
             for c in concepts:
-                self.assertEqual(True, CONCEPTNET_LANG == c['start-lang'])
-                self.assertEqual(True, CONCEPTNET_LANG == c['end-lang'])
+                self.assertEqual(True, settings.CONCEPTNET_IO_LANG == c['start-lang'])
+                self.assertEqual(True, settings.CONCEPTNET_IO_LANG == c['end-lang'])
 
     def test_conceptnet_io_concept_extraction_en_filtered_phone(self):
         concept = 'phone'
         preprocesser = Preprocesser()
         raw_text = u'i wonder if you can propose for me better phone'
         text = preprocesser.preprocess(raw_text)
-        if CONCEPTNET_ASPECTS:
+        if settings.CONCEPTNET_IO_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
             for c in concepts:
-                self.assertEqual(True, CONCEPTNET_LANG == c['start-lang'])
-                self.assertEqual(True, CONCEPTNET_LANG == c['end-lang'])
+                self.assertEqual(True, settings.CONCEPTNET_IO_LANG == c['start-lang'])
+                self.assertEqual(True, settings.CONCEPTNET_IO_LANG == c['end-lang'])
 
     def test_conceptnet_io_concept_extraction_paggination(self):
         concept = 'phone'
         preprocesser = Preprocesser()
         raw_text = u'i wonder if you can propose for me better phone'
         text = preprocesser.preprocess(raw_text)
-        if CONCEPTNET_ASPECTS:
+        if settings.CONCEPTNET_IO_ASPECTS:
             aspects_extractor = AspectExtractor()
-            _, concepts_obtained, _ = aspects_extractor.extract(
-                text)
+            _, concepts_obtained, _ = aspects_extractor.extract(text)
+            concepts = concepts_obtained['conceptnet_io'][concept]
+
+            self.assertGreater(len(concepts), 20)
+
+    def test_conceptnet_io_concept_extraction_paggination_same_concepts(self):
+        concept = 'device'
+        preprocesser = Preprocesser()
+        raw_text = u'this device is really good device, but this phone'
+        text = preprocesser.preprocess(raw_text)
+        if settings.CONCEPTNET_IO_ASPECTS:
+            aspects_extractor = AspectExtractor()
+            _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
             self.assertGreater(len(concepts), 20)

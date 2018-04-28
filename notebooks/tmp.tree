@@ -1,0 +1,265 @@
+(Elaboration[N][S]
+  (Elaboration[N][S]
+    (Elaboration[N][S]
+      (Elaboration[N][S]
+        (Joint[N][N]
+          _!T$ Brexit is getting messy!_
+          (Elaboration[N][S]
+            _!and the UK is facing a political crisis!_
+            _!Jane Merrick is a British political journalist and former political editor of the Independent on Sunday newspaper . <s>!_))
+        (same-unit[N][N]
+          (Elaboration[N][S]
+            _!The opinions!_
+            _!expressed in this commentary!_)
+          _!are hers . <P>!_))
+      (Joint[N][N]
+        _!( CNN ) British Prime Minister Theresa May has lost two Cabinet ministers in the last two weeks ,!_
+        _!and the future of a third rests with an ongoing investigation into his conduct . <s>!_))
+    _!A fourth is at the center of a growing diplomatic row with Iran . <P>!_)
+  (Explanation[N][S]
+    (Contrast[S][N]
+      (Elaboration[N][S]
+        (Elaboration[N][S]
+          _!This sense of crisis would hamper a government at the best of times!_
+          _!--!_)
+        (same-unit[N][N]
+          (Elaboration[N][S]
+            _!even one!_
+            _!that had a parliamentary majority , something May!_)
+          _!lacks . <s>!_))
+      (Elaboration[N][S]
+        (Elaboration[N][S]
+          (Elaboration[N][S]
+            _!But against this backdrop of disarray , the British Prime Minister has just been confronted with the prospect!_
+            _!that she wo n't be able to get Brexit through Parliament --!_)
+          _!meaning the entire project could fall into chaos . <s>!_)
+        (Elaboration[N][S]
+          (Attribution[S][N]
+            _!Top UK politicians want!_
+            (Joint[N][N]
+              _!Boris Johnson sacked over Zaghari-Ratcliffe case Top UK politicians want Boris Johnson sacked over Zaghari-Ratcliffe case Talks between officials from Britain!_
+              (Joint[N][N]
+                _!and negotiators for the European Union have progressed slowly ,!_
+                _!and are now at a near-stalemate . <s>!_)))
+          (Background[N][S]
+            (Enablement[N][S]
+              _!The EU has given Britain a deadline of two weeks!_
+              (Elaboration[N][S]
+                _!to agree on a figure for the so-called " divorce bill "!_
+                (Elaboration[N][S]
+                  _!-- the money!_
+                  _!May 's government must pay into the EU budget as part of its membership obligations . <s>!_)))
+            (Elaboration[N][S]
+              (Background[S][N]
+                _!As negotiations with the EU reach the crunch point ,!_
+                (Elaboration[N][S]
+                  _!May 's government is finding itself in ever-deeper trouble over its attempts to push through the legislation!_
+                  (Elaboration[N][S]
+                    _!that will allow!_
+                    _!leaving the EU to happen at all . <s>!_)))
+              (Elaboration[N][S]
+                (Elaboration[N][S]
+                  (Joint[N][N]
+                    _!Lawmakers from all parties have put forward hundreds of amendments to the EU Withdrawal Bill ,!_
+                    _!and debates and votes are expected to take a month . <s>!_)
+                  (same-unit[N][N]
+                    (Elaboration[N][S]
+                      _!At the heart of the problem is!_
+                      (Elaboration[N][S]
+                        _!that the lack of progress in talks between the UK and EU!_
+                        _!-- which must conclude by summer next year --!_))
+                    (Attribution[S][N]
+                      _!has meant!_
+                      (Elaboration[N][S]
+                        _!that May 's government has recently had to concede a new alarming reality :!_
+                        (Elaboration[N][S]
+                          _!that the differences are so great!_
+                          _!that no deal may be done at all . <s>!_)))))
+                (Elaboration[N][S]
+                  (Elaboration[N][S]
+                    _!This prospect has made the many UK legislators!_
+                    (Attribution[S][N]
+                      _!who always feared!_
+                      (Enablement[N][S]
+                        _!that Brexit would be damaging to the UK!_
+                        _!even more fearful . <s>!_)))
+                  (Elaboration[N][S]
+                    (Attribution[S][N]
+                      _!Now they are worried!_
+                      (Elaboration[N][S]
+                        _!that the UK will be stepping into a complete unknown with no transition deal or trade deal!_
+                        _!planned with the EU . <s>!_))
+                    (Evaluation[N][S]
+                      (Cause[N][S]
+                        _!But hardline pro-Brexiters still want the UK to leave ,!_
+                        _!whatever the short-term damage . <s>!_)
+                      (Attribution[S][N]
+                        _!This is!_
+                        (Elaboration[N][S]
+                          _!why the content of the Withdrawal Bill is now!_
+                          (Attribution[S][N]
+                            _!being even more strongly contested!_
+                            _!than it was just a few weeks ago . <P>!_))))))))))))
+    (Elaboration[N][S]
+      (same-unit[N][N]
+        (Elaboration[N][S]
+          _!Brexit showdown bringing uncertainty to UK 01:48!_
+          (Manner-Means[N][S]
+            (Elaboration[N][S]
+              _!On Monday night , May 's minister in charge of Britain 's exit from the European Union , David Davis , attempted to buy off MPs!_
+              (Elaboration[N][S]
+                _!worried about a " cliff edge " hard-Brexit!_
+                (Elaboration[N][S]
+                  _!--!_
+                  _!under which the UK would leave all the EU institutions such as the single market , customs union and laws --!_)))
+            _!by promising they!_))
+        (Elaboration[N][S]
+          (Elaboration[N][S]
+            _!would by able to vote on the final deal!_
+            _!agreed with Brussels on Brexit ,!_)
+          _!including the cost to Britain of leaving and its post-Brexit trading rights . <s>!_))
+      (Elaboration[N][S]
+        (Explanation[N][S]
+          _!Yet the move backfired ,!_
+          (same-unit[N][N]
+            (Elaboration[N][S]
+              _!because it presented lawmakers with only two choices : backing!_
+              (Elaboration[N][S]
+                _!whatever deal had!_
+                _!been reached!_))
+            (Elaboration[N][S]
+              _!even if it was a bad one in their eyes , or voting against it ,!_
+              _!which would mean crashing out with no deal at all . <s>!_)))
+        (Elaboration[N][S]
+          (same-unit[N][N]
+            (Elaboration[N][S]
+              _!What a majority of MPs!_
+              _!-- including the Opposition Labour Party --!_)
+            (Elaboration[N][S]
+              _!want is!_
+              (Joint[N][N]
+                (Joint[N][N]
+                  _!to be able to ask to return to the negotiating table ,!_
+                  _!or ask for a pause ,!_)
+                (Cause[N][S]
+                  _!or in some cases just agree to stay in the EU ,!_
+                  _!rather than be forced to choose between what they see as two undesirable outcomes . <s>!_))))
+          (Elaboration[N][S]
+            (same-unit[N][N]
+              (Elaboration[N][S]
+                _!Many MPs!_
+                _!-- including some Conservatives --!_)
+              (Elaboration[N][S]
+                _!are also furious!_
+                _!that the government is trying to enshrine into law the actual precise leaving date and time : 11 p.m. <s>!_))
+            (Elaboration[N][S]
+              _!GMT on March 29 , 2019 . <s>!_
+              (Explanation[N][S]
+                (Contrast[S][N]
+                  (Enablement[N][S]
+                    _!This was put forward by May!_
+                    (Elaboration[N][S]
+                      _!to appease hardline Brexiters!_
+                      (Elaboration[N][S]
+                        _!who want reassurance!_
+                        _!that Brexit will definitely happen ,!_)))
+                  (Attribution[S][N]
+                    _!but the moderates worry!_
+                    (Joint[N][N]
+                      _!that it ties the UK 's hands!_
+                      (Joint[N][N]
+                        _!and commits it to exit!_
+                        (Elaboration[N][S]
+                          _!and the prospect of high tariffs trade under World Trade Organization rules!_
+                          _!if no deal is reached . <s>!_)))))
+                (Elaboration[N][S]
+                  _!The parliamentary difficulties for May are not unconnected to the problems inside her Cabinet . <s>!_
+                  (Elaboration[N][S]
+                    (Explanation[N][S]
+                      _!Both sides are hardening their positions!_
+                      (Attribution[S][N]
+                        _!because they know!_
+                        _!she is a weak Prime Minister . <s>!_))
+                    (Elaboration[N][S]
+                      (Background[S][N]
+                        _!Having lost her government majority in parliament ,!_
+                        (Background[N][S]
+                          _!the sense of crisis caused by the resignation of Michael Fallon as defence secretary and Priti Patel!_
+                          (Attribution[S][N]
+                            _!as international development secretary has made!_
+                            _!it look like May is not in control of events . <s>!_)))
+                      (Explanation[N][S]
+                        _!Her de facto deputy prime minister , Damian Green , is being investigated over allegations of sexual harassment and pornography . <s>!_
+                        (Elaboration[N][S]
+                          (Explanation[N][S]
+                            _!There is nobody in charge of the United Kingdom!_
+                            (Elaboration[N][S]
+                              _!The foreign secretary , Boris Johnson , is under pressure!_
+                              (same-unit[N][N]
+                                (Attribution[S][N]
+                                  _!for incorrectly stating!_
+                                  (Elaboration[N][S]
+                                    _!that a British-Iranian citizen , Nazanin Zaghari-Ratcliffe!_
+                                    (Elaboration[N][S]
+                                      _!--!_
+                                      (Elaboration[N][S]
+                                        _!who has been!_
+                                        _!jailed by Tehran --!_))))
+                                (Elaboration[N][S]
+                                  _!was in the country training journalists!_
+                                  _!when she was on holiday with her family . <s>!_))))
+                          (Elaboration[N][S]
+                            (Evaluation[N][S]
+                              (Manner-Means[N][S]
+                                _!For his part , the foreign secretary has tried to bolster his chances of survival!_
+                                (Elaboration[N][S]
+                                  _!by rekindling an alliance with another Cabinet minister!_
+                                  (Elaboration[N][S]
+                                    _!-- a move!_
+                                    _!which could be interpreted as the first strike against May 's premiership . <s>!_)))
+                              (Contrast[S][N]
+                                (same-unit[N][N]
+                                  (Elaboration[N][S]
+                                    _!Johnson and Environment Secretary Michael Gove ,!_
+                                    (Elaboration[N][S]
+                                      _!who together led the successful campaign for Britain!_
+                                      _!to leave the EU last year ,!_))
+                                  _!fell out over their own leadership ambitions . <s>!_)
+                                (Attribution[S][N]
+                                  (same-unit[N][N]
+                                    (Elaboration[N][S]
+                                      _!But a memo!_
+                                      _!leaked to a newspaper over the weekend!_)
+                                    _!revealed!_)
+                                  (Elaboration[N][S]
+                                    (Enablement[N][S]
+                                      _!they are now working together!_
+                                      (Enablement[N][S]
+                                        _!to put pressure on the Prime Minister!_
+                                        _!to deliver Brexit ,!_))
+                                    (Attribution[S][N]
+                                      _!fearing!_
+                                      (Joint[N][N]
+                                        (Elaboration[N][S]
+                                          _!that Britain is heading toward a no-deal scenario!_
+                                          (Elaboration[N][S]
+                                            _!without preparations!_
+                                            _!being made for businesses ,!_))
+                                        _!or even that Brexit may not happen at all . <s>!_))))))
+                            (Background[N][S]
+                              (Elaboration[N][S]
+                                _!The PM is reluctant to sack Johnson in case!_
+                                (Joint[N][N]
+                                  _!it leads to a revolt among his pro-Brexit supporters in her own party ,!_
+                                  _!and in turn triggers her own downfall . <s>!_))
+                              (Explanation[N][S]
+                                (Elaboration[N][S]
+                                  _!May is ultimately left with a rebellion both in Parliament and inside her own Cabinet --!_
+                                  (Attribution[S][N]
+                                    _!and she is so weak!_
+                                    _!she is running out of options . <s>!_))
+                                (Contrast[N][S]
+                                  (Cause[N][S]
+                                    _!Brexit has been a hugely contentious issue ever!_
+                                    _!since the referendum divided the country in half . <s>!_)
+                                  _!As it reaches its climax in Parliament and in Brussels , those divisions are sharper than ever . q . <P>!_)))))))))))))))))

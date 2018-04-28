@@ -1,10 +1,6 @@
 # Aspect-based Sentiment Analysis using Rhetorical Structure Analysis (RST) 
 
-`usage: run.py [-h] [-input INPUT_FILE_PATH] [-output OUTPUT_FILE_PATH]
-              [-sent_model SENT_MODEL_PATH] [-batch BATCH_SIZE]
-              [-p MAX_PROCESSES]`
-
-## Installation with conda virtualenv [WIP]
+## Installation with conda virtualenv
 
 ### Install anaconda for python 2
 
@@ -14,15 +10,21 @@
 
 `conda update setuptools`
 
- # Update old packages for python 2.7.8
+### Update old packages for python 2.7.8
+Sentiment model are serialized with scikit-learn 0.18
+
 `conda install scikit-learn==0.18.2`
 
 ### Install other requirements
 
-#### Must be install externally - see rhetorical-installation folder and rhetorical-parser-installation.sh for:
+#### Must be install externally:
 
 PyYAML <= 3.09
 nltk<=2.0b9  special version to install and use by RST parser
+
+The best way to install RST parser is execute this script:
+
+`rhetorical-installation folder and rhetorical-parser-installation.sh`
 
 #### Must be installed for ubuntu machine - description on web
 
@@ -32,10 +34,11 @@ morfeusz2 == 0.3.0
 
 `pip install -r requirements.txt`
 
-``
-
+## Process documents
 ## Install crf
 
+```
+optional arguments:
 ## Process documents
 
 `optional arguments:
@@ -48,7 +51,10 @@ morfeusz2 == 0.3.0
                         path to sentiment model
   -batch BATCH_SIZE     batch size for each process
   -p MAX_PROCESSES      Number of processes
-`
+```
 
-## Exemplary execution
+## Prapare conceptnet.io pickle and amazon reviews
+`python aspects/io.parser.py`
+
+## Run
 `python run.py -input data/reviews/ipod.json -output results -batch 1000 -p 23`

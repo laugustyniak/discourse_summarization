@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-# update: Lukasz Augustyniak
-
 import logging
-import requests
+import sys
+from collections import defaultdict
 
 import RAKE
 
-from aspects.configs.conceptnets_config import CONCEPTNET_ASPECTS
-from aspects.configs.conceptnets_config import SENTIC_ASPECTS, \
-    SENTIC_EXACT_MATCH_CONCEPTS, CONCEPTNET_URL, CONCEPTNET_RELATIONS, \
-    CONCEPTNET_LANG, CONCEPTNET_API_URL
-from aspects.enrichments.conceptnets import Sentic
+from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
+from aspects.utilities import settings
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +16,7 @@ log = logging.getLogger(__name__)
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types=None, aspects_to_skip=None):
+    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True):
         """
         Initialize extractor aspect extractor.
 
@@ -33,7 +30,11 @@ class AspectExtractor(object):
 
         aspects_to_skip : list
             List of aspects that should be removed.
+
+        is_ner : bool
+            Do we want to extract Named Entity as aspects?
         """
+        self.is_ner = is_ner
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
         else:
@@ -59,12 +60,14 @@ class AspectExtractor(object):
                                     u'don',
                                     ]
         if ner_types is None:
-            self.ner_types = [u'PERSON', u'GPE', u'ORG',
-                              u'PRODUCT', u'FAC', u'LOC']
+            self.ner_types = settings.NER_TYPES
         else:
             self.ner_types = ner_types
 
         self.Rake = RAKE.Rake(RAKE.SmartStopList())
+
+        if settings.CONCEPTNET_IO_ASPECTS:
+            self.conceptnet_io = load_conceptnet_io()
 
     def _is_interesting_main(self, token):
         return token['pos'] == 'NOUN'
@@ -75,14 +78,14 @@ class AspectExtractor(object):
                or token['pos'] == 'NOUN' \
                or token['pos'] == 'ADJ'
 
-    def extract(self, input_text):
+    def extract(self, text_processed_spacy):
         """
         Extracts all possible aspects - NER, NOUN and NOUN PHRASES,
         potentially other dictionary based aspects.
 
         Parameters
         ----------
-        input_text : dictionary
+        text_processed_spacy : dictionary
             Dictionary with raw text and spacy object with each
             token information.
 
@@ -99,29 +102,26 @@ class AspectExtractor(object):
                     {'screen': ['display', 'pixel', ...]}}
 
         """
-        tokens = input_text['tokens']
-        text = input_text['raw_text']
+        tokens = text_processed_spacy['tokens']
+        text = text_processed_spacy['raw_text']
         aspect_sequence = []
         aspect_sequence_main_encountered = False
         aspect_sequence_enabled = False
         concept_aspects = {}
+        aspects = []
 
-        # todo add config with NER flag
         # 1. look for NER examples
-        # aspects = [ent.text for ent in tokens.ents
-        # if ent.label_ in self.ner_types]
-        aspects = input_text['entities']
+        if self.is_ner:
+            aspects = text_processed_spacy['entities']
 
         # 2. NOUN and NOUN phrases
         for idx, token in enumerate(tokens):
-            # jesli jest główny (rzeczownik) - akceptujemy od razu
             if self._is_interesting_main(token) and len(token) > 1:
                 if not token['is_stop']:
                     aspect_sequence.append(token['lemma'])
                 aspect_sequence_enabled = True
                 aspect_sequence_main_encountered = True
             else:
-                # akceptujemy sekwencje, jesli byl w niej element główny
                 if aspect_sequence_enabled and aspect_sequence_main_encountered:
                     aspect = ' '.join(aspect_sequence)
                     if aspect not in aspects:
@@ -130,60 +130,29 @@ class AspectExtractor(object):
                 aspect_sequence_enabled = False
                 aspect_sequence = []
 
-        # dodajemy ostatnią sekwencje
         if aspect_sequence_enabled and aspect_sequence_main_encountered:
             aspects.append(' '.join(aspect_sequence))
 
         # lower case every aspect and only longer than 1
-        aspects = [x.strip().lower() for x in aspects
-                   if x not in self.aspects_to_skip and x != '']
+        aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
 
         # 3. senticnet
-        if SENTIC_ASPECTS:
-            sentic = Sentic()
-            # dict with concepts and related concepts
-            concept_aspects_ = {}
-            for asp in aspects:
-                asp = asp.replace(' ', '_')
-                concept_aspects_[asp] = \
-                    sentic.get_semantic_concept_by_concept(asp,
-                                                           SENTIC_EXACT_MATCH_CONCEPTS)
-            # save conceptnet name
-            concept_aspects['sentic'] = concept_aspects_
+        if settings.SENTIC_ASPECTS:
+            sentic_df = load_sentic()
+            sentic_aspects = {}
+            for aspect in aspects:
+                aspect = aspect.replace(' ', '_')
+                sentic_aspects[aspect] = get_semantic_concept_by_concept(
+                    sentic_df, aspect, settings.SENTIC_EXACT_MATCH_CONCEPTS)
+            concept_aspects['sentic'] = sentic_aspects
 
         # 4. ConceptNet.io
-        if CONCEPTNET_ASPECTS:
-            concept_aspects_ = {}
-            for asp in aspects:
-                concept_aspects_[asp] = []
-                next_page = CONCEPTNET_URL + asp + u'?offset=0&limit=20'
-                while next_page:
-                    response = requests.get(next_page).json()
-                    cn_view = response['view']
-                    cn_edges = response['edges']
-                    try:
-                        next_page = CONCEPTNET_API_URL + cn_view['nextPage']
-                        log.info(
-                            'Next page from ConceptNet.io: {}'.format(
-                                next_page))
-                    except KeyError:
-                        next_page = None
-
-                    for edge in cn_edges:
-                        relation = edge['rel']['label']
-                        if relation in CONCEPTNET_RELATIONS \
-                                and (edge['start'][
-                                         'language'] == CONCEPTNET_LANG
-                                     and edge['end'][
-                                        'language'] == CONCEPTNET_LANG):
-                            concept_aspects_[asp].append(
-                                {'start': edge['start']['label'].lower(),
-                                 'start-lang': edge['start']['language'],
-                                 'end': edge['end']['label'].lower(),
-                                 'end-lang': edge['end']['language'],
-                                 'relation': relation,
-                                 'weight': edge['weight']})
-            concept_aspects['conceptnet_io'] = concept_aspects_
+        if settings.CONCEPTNET_IO_ASPECTS:
+            conceptnet_aspects = defaultdict(list)
+            for aspect in aspects:
+                if aspect not in self.conceptnet_io:
+                    conceptnet_aspects[aspect] += self.conceptnet_io[aspect]
+            concept_aspects['conceptnet_io'] = conceptnet_aspects
 
         # 5. keyword extraction
         if text:
