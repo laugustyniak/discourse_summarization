@@ -19,7 +19,7 @@ Norton[-3]##Norton has been on a downhill slid recently with their products, but
 product[-3] ##As a loyal customer of Norton/Symantec products, I purchased Internet Security 2004 as a software firewall and could not be any more dissatisfied with the product (and hence the one star rating).
 ##Here's why:
 program[-3]##Yeah - this program protects your computer all right - by locking you off the internet.
-Anti-Spam##Anti-Spam is Good
+Anti-Spam[1]##Anti-Spam is Good
 antispam function[2]##The latest of Internet Security has antispam function that is helpful because I has received a mountain of those these days.
 updates[-2]##Other than that it is all the same except the new updates.
 Symantec softwares [+2] ##But that is good for me because Symantec softwares are a bit hard to master for me who are not savvy on computers.
@@ -311,7 +311,7 @@ antivirus[+2], internet security[-1](cs)##The Antivirus is good, but "Internet S
 performance[+2]##I've owned many Norton products in my time, and for the most part, I've been pleased with their performance.
 NIS 2004[+2] ##This is also the case with NIS 2004.
 ##I've seen many reviews praising 2003 and cursing 2004.
-upgrade[+2] performance[+1]##I upgraded from NIS 2003, and the change in performance has not been noticeable.
+upgrade[+2],performance[+1]##I upgraded from NIS 2003, and the change in performance has not been noticeable.
 upgrade[+3]##On the contrary, I'm quite pleased with my upgrade.
 performance[+3][u][cs], features[+3]##It works better and has more useful features than NIS 2003.
 ##I bought this product after reading the Editor's Choice article at PC Magazine and had a great experience with Amazon (as usual).
