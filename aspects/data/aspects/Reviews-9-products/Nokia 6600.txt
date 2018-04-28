@@ -10,7 +10,7 @@ phone[+3]##If you are looking for an upgrade, this is definitely the phone for y
 size[cs][+2]##3660 had similar features, but that is big in size.
 6600[+3]##6600 looks and feels nice.
 bluetooth[+3]##This one is full of features(has bluetooth).
-LCD[+3]camera quality[+3]##Especially the LCD is big and the camera quality is among the very best around.
+LCD[+3],camera quality[+3]##Especially the LCD is big and the camera quality is among the very best around.
 PDA[+3]##I have set up it's PDA features with avantgo.com where you can download info from sites like weather,mapquest maps/directions into it, which is great.
 s/w[+3]##Using supplied s/w, you can transfer all addresses from a different nokia phone into it.
 battery life[+3][u]##Goes ~3 days after a charge.
@@ -82,9 +82,9 @@ camera[-3]##who in the hell needs a frigging *VGA* camera on their CELLPHONE???
 ##Ha!
 ##i bought this phone last march, almost a year ago, in saudi arabia (it came out there before it did here).
 phone[+3][p]##since then, i have not found one major problem with it.
-camera[+3]PDA[+3]##i highly recommend it if you are looking for a phone with great camera quality and/or lots of features you would find in a PDA.
+camera[+3],PDA[+3]##i highly recommend it if you are looking for a phone with great camera quality and/or lots of features you would find in a PDA.
 bulky[-1][u],features[+3][p]##Sure, it is a relatively bulky, but it is really packed with many great features.
-bluetooth[+3]transfer[+3]##I own this phone for about 6 months now, I have used the following features: bluetooth connection to laptop and desktop for sync contacts and calendars with Outlook, transfer files (movies, songs), I have many movies on it now with a 512MB memory card that it takes.
+bluetooth[+3],transfer[+3]##I own this phone for about 6 months now, I have used the following features: bluetooth connection to laptop and desktop for sync contacts and calendars with Outlook, transfer files (movies, songs), I have many movies on it now with a 512MB memory card that it takes.
 ##Bought a bluetooth headset and it works like a wonder.
 Handsfree[+2]##Handsfree future is good, but not too exciting.
 Camera[+2],video recording[-1]##Camera is nice, and video recording for some reason is only limited to 9 seconds.
@@ -105,7 +105,7 @@ phone[-1][p]##But not good enough for me.
 color[+3]##:! OK, score 7.0 Oh yes, the newest color of this phone is quite cool.
 Nokia[-2][cc]##I have overall been disappointed with Nokia in the past, finding that Samsung and Motorola tended to have better quality phones.
 6600[+2][cc]##While this phone obviously doesn't have the same quality construction as Motorola does, the Nokia 6600 is one of the better phones I've used.
-versatility[+3]features[+3]##What makes it so great is the versatility and the number of features it has.
+versatility[+3],features[+3]##What makes it so great is the versatility and the number of features it has.
 ##The best features that I use most often are:
 audio quality[+3]##1) Great audio quality overall.
 audio quality[+3]##Handset quality is great, as is the speakerphone quality and the headset audio quality.
