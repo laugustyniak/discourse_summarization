@@ -972,7 +972,7 @@ usage with subscription service[-2][u] ##To use the Creative Zen player with a s
 ##At the time of this writing, that firmware is a "beta release." 
 set up[-1] ##I haven't seen any problems yet, but if you don't like to tinker a bit, this player can be a little challenging to set up.  
 ##2. 
-transfer speed[-2] #Right now, the Creative software transfers subscription music files very slowly. 
+transfer speed[-2] ##Right now, the Creative software transfers subscription music files very slowly.
 ##It makes USB 2.0 feel like USB 1.1. 
 subscription WMA[-1] ##This doesn't affect standard MP3 files - just subscription WMA files. 
 ##The solution? 
