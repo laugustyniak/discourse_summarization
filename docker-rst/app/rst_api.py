@@ -1,8 +1,6 @@
-# !/usr/bin/python
-
-import sys
 import json
 import logging
+import sys
 
 import falcon
 
@@ -14,13 +12,7 @@ logger = logging.getLogger('simple_example')
 logger.setLevel(logging.DEBUG)
 
 try:
-    parser = DiscourseParser(output_dir='/tmp',
-                             # verbose=True,
-                             # skip_parsing=True,
-                             # global_features=True,
-                             # save_preprocessed_doc=True,
-                             # preprocesser=None
-                             )
+    parser = DiscourseParser(output_dir='/tmp')
 except Exception as e:
     print('Error: {}'.format(str(e)))
     raise Exception
@@ -28,10 +20,6 @@ except Exception as e:
 
 class RSTAPI(object):
     def max_body(limit):
-        """
-        method for limiting request size
-        """
-
         def hook(req, resp, resource, params):
             length = req.content_length
             if length is not None and length > limit:
@@ -44,54 +32,33 @@ class RSTAPI(object):
 
     @falcon.before(max_body(64 * 1024))
     def on_post(self, req, resp):
-        """
-        Handles POST requests
-        """
         try:
             text = req.context['doc']['text']
-            resp.body = json.dumps(parser.classify(text))
+            resp.body = json.dumps(parser.parse(filename='tmp', parse_text=text))
         except Exception as ex:
-            raise falcon.HTTPServiceUnavailable('Error',
-                                                'Service error, try '
-                                                'again later',
-                                                30)
+            raise falcon.HTTPServiceUnavailable('Error', 'Service error, try ' 'again later', 30)
 
         resp.status = falcon.HTTP_200  # This is the default status
         resp.set_header('X-Powered-By', 'sentimentAPI')
 
     def on_get(self, req, resp):
-        """
-        Handles GET requests
-        """
         try:
-            # resp.body = self.model.predict(['It awesome!'])
             resp.body = "Testujemy!"
         except Exception as ex:
             logger.error(repr(ex))
-            raise falcon.HTTPServiceUnavailable('Error',
-                                                'Service error, '
-                                                'try again later: {}'.format(
-                                                    repr(ex)), 30)
+            raise falcon.HTTPServiceUnavailable('Error', 'Service error, ' 'try again later: {}'.format(repr(ex)), 30)
 
         resp.status = falcon.HTTP_200  # This is the default status
-        resp.set_header('X-Powered-By', 'sentimentAPI')
+        resp.set_header('X-Powered-By', 'rst_parsing')
 
 
 class ErrorHandler(Exception):
-    """
-    Error handle
-    """
-
     @staticmethod
     def handle(ex, req, resp, params):
         raise falcon.HTTPError(falcon.HTTP_725, 'Error', repr(ex))
 
 
 class RequireJSON(object):
-    """
-    forces json
-    """
-
     def process_request(self, req, resp):
         if not req.client_accepts_json:
             raise falcon.HTTPNotAcceptable(
@@ -111,17 +78,14 @@ class JSONTranslator(object):
 
         body = req.stream.read()
         if not body:
-            raise falcon.HTTPBadRequest('Empty request body',
-                                        'A valid JSON document is required.')
+            raise falcon.HTTPBadRequest('Empty request body', 'A valid JSON document is required.')
 
         try:
             req.context['doc'] = json.loads(body.decode('utf-8'))
         except (ValueError, UnicodeDecodeError):
-            raise falcon.HTTPError(falcon.HTTP_753,
-                                   'Malformed JSON',
-                                   'Could not decode the request body. The '
-                                   'JSON was incorrect or not encoded as '
-                                   'UTF-8.')
+            raise falcon.HTTPError(
+                falcon.HTTP_753, 'Malformed JSON',
+                'Could not decode the request body. The JSON was incorrect or not encoded as UTF-8.')
 
         # did they pass text var
         if 'text' not in req.context['doc']:
