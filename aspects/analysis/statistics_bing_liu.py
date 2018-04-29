@@ -1,7 +1,7 @@
 from collections import namedtuple
 from glob import glob
 from os.path import basename
-from typing import Dict
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -85,9 +85,14 @@ def get_datasets_sizes(reviews_paths: str) -> pd.DataFrame:
     ])
 
 
-def get_aspect_frequency_ranking(reviews_path: str, top_n: int = 10) -> Dict:
+def get_aspect_frequency_ranking_with_counts(reviews_path: str, top_n: int = 10) -> Dict:
     df = get_aspects(reviews_path)
     return df.aspect.value_counts().head(top_n).to_dict()
+
+
+def get_aspect_frequency_ranking(reviews_path: str, top_n: int = 10) -> List:
+    df = get_aspects(reviews_path)
+    return list(df.aspect.value_counts().head(top_n).index)
 
 
 for reviews_path in reviews_paths:
