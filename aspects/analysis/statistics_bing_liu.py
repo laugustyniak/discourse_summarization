@@ -1,6 +1,7 @@
 from collections import namedtuple
 from glob import glob
 from os.path import basename
+from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,14 +15,14 @@ DatasetSize = namedtuple('DatasetSize', 'dataset, size, reviews_word_average')
 
 
 def load_reviews(reviews_path: str) -> pd.DataFrame:
-    return pd.read_csv(reviews_path, sep='##', names=['aspects', 'text'])
+    return pd.read_csv(reviews_path, sep='##', names=['aspects', 'text'], engine='python')
 
 
 def get_aspects(reviews_path: str) -> pd.DataFrame:
     all_aspects = []
     for aspect_str in list(load_reviews(reviews_path).dropna('index').aspects):
         aspects = aspect_str.split(',')
-        for aspect in [a for a in aspects if a]:
+        for aspect in [a for a in aspects if len(a) > 5]:
             all_aspects.append(get_sentiment_from_aspect_sentiment_text(aspect))
     return pd.DataFrame(all_aspects)
 
@@ -84,7 +85,13 @@ def get_datasets_sizes(reviews_paths: str) -> pd.DataFrame:
     ])
 
 
+def get_aspect_frequency_ranking(reviews_path: str, top_n: int = 10) -> Dict:
+    df = get_aspects(reviews_path)
+    return df.aspect.value_counts().head(top_n).to_dict()
+
+
 for reviews_path in reviews_paths:
+    get_aspect_frequency_ranking(reviews_path)
     df = aspect_distribution(reviews_path)
     pass
     # get_aspects(reviews_path)
