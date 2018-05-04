@@ -49,7 +49,7 @@ def get_spearman_and_kendalltau_correlations():
         correlations[dataset_name] = {
             'Spearman Correlation': spearman_correlation[0],
             'Spearman p-value': spearman_correlation[1],
-            'Kendall Tau Corralation': kendalltau_correlation[0],
+            'Kendall Tau Correlation': kendalltau_correlation[0],
             'Kendall Tau p-value': kendalltau_correlation[1]
         }
     return correlations
