@@ -29,7 +29,7 @@ BING_LIU_MICRO_MP3 = BING_LIU_DATASETS_PATH / 'MicroMP3.json'
 BING_LIU_NOKIA_6600 = BING_LIU_DATASETS_PATH / 'Nokia 6600.json'
 BING_LIU_NORTON = BING_LIU_DATASETS_PATH / 'norton.json'
 
-ALL_BING_LIU_REVIEWS_PATH = ROOT_PATH.parent / 'aspects' / 'data' / 'aspects', 'Reviews-9-products'
+ALL_BING_LIU_REVIEWS_PATH = ROOT_PATH.parent / 'aspects' / 'data' / 'aspects' / 'Reviews-9-products'
 ALL_BING_LIU_REVIEWS_PATHS = [p.as_posix() for p in ALL_BING_LIU_REVIEWS_PATH.glob('*')]
 
 # SENITMENT MODELS
