@@ -11,7 +11,7 @@ all_reviews_path = '../../aspects/data/aspects/Reviews-9-products/'
 reviews_paths = glob(all_reviews_path + '*')
 
 AspectSentiment = namedtuple('AspectSentiment', 'aspect, sentiment')
-DatasetSize = namedtuple('DatasetSize', 'dataset, size, reviews_word_average')
+DatasetSize = namedtuple('DatasetSize', 'dataset, size, reviews_word_average, aspect_coverage')
 
 
 def load_reviews(reviews_path: str) -> pd.DataFrame:
@@ -74,12 +74,13 @@ def get_number_of_reviews_with_aspects(reviews_path: str) -> int:
     return load_reviews(reviews_path).dropna('index').shape[0]
 
 
-def get_datasets_sizes(reviews_paths: str) -> pd.DataFrame:
+def get_datasets_sizes(reviews_paths):
     return pd.DataFrame([
         DatasetSize(
             dataset=basename(reviews_path),
             size=get_number_of_reviews(reviews_path),
-            reviews_word_average=np.average(load_reviews(reviews_path).text.apply(lambda t: len(t.split())))
+            reviews_word_average=np.average(load_reviews(reviews_path).text.apply(lambda t: len(t.split()))),
+            aspect_coverage=get_number_of_reviews_with_aspects(reviews_path) / get_number_of_reviews(reviews_path)
         )
         for reviews_path in reviews_paths
     ])
