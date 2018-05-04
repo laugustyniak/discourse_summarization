@@ -47,8 +47,10 @@ def get_spearman_and_kendalltau_correlations():
         print(f'{dataset_name}, KendalTau correlation of ranking: {kendalltau_correlation}')
 
         correlations[dataset_name] = {
-            'spearman': spearman_correlation,
-            'kendalltau': kendalltau_correlation
+            'Spearman Correlation': spearman_correlation[0],
+            'Spearman p-value': spearman_correlation[1],
+            'Kendall Tau Corralation': kendalltau_correlation[0],
+            'Kendall Tau p-value': kendalltau_correlation[1]
         }
     return correlations
 
