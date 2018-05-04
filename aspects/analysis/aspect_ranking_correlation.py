@@ -1,18 +1,17 @@
 from os.path import basename
 
-import click
 from scipy.stats import stats
 from sklearn import preprocessing
 
-from aspects.analysis.statistics_bing_liu import get_aspect_frequency_ranking, reviews_paths
+from aspects.analysis.statistics_bing_liu import get_aspect_frequency_ranking
 from aspects.analysis.statistics_rst_graphs import get_aspect_ranking_based_on_rst_and_pagerank, ASPECTS_GRAPH_PATHS
+from aspects.utilities import settings
 
 
-@click.command()
 def get_spearman_and_kendalltau_correlations():
     correlations = {}
 
-    for reviews_path in reviews_paths:
+    for reviews_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
         label_encoder = preprocessing.LabelEncoder()
         dataset_name = basename(reviews_path).split('.')[0]
         click.echo(f'Dataset to analyze: {dataset_name}')

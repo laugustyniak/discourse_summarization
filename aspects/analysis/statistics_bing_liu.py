@@ -1,14 +1,12 @@
 from collections import namedtuple
-from glob import glob
 from os.path import basename
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import Dict, List
 
-all_reviews_path = '../../aspects/data/aspects/Reviews-9-products/'
-reviews_paths = glob(all_reviews_path + '*')
+from aspects.utilities import settings
 
 AspectSentiment = namedtuple('AspectSentiment', 'aspect, sentiment')
 DatasetSize = namedtuple('DatasetSize', 'dataset, size, reviews_word_average, aspect_coverage')
@@ -100,7 +98,7 @@ if __name__ == '__main__':
     # for reviews_path in reviews_paths:
     #     get_aspect_frequency_ranking(reviews_path)
     #     df = aspect_distribution(reviews_path)
-        # example for jupyter
-    datasets_sizes_df = get_datasets_sizes(reviews_paths)
-    datasets_reviews_word_average_df = get_datasets_sizes(reviews_paths).plot(
+    # example for jupyter
+    datasets_sizes_df = get_datasets_sizes(settings.ALL_BING_LIU_REVIEWS_PATHS)
+    datasets_reviews_word_average_df = get_datasets_sizes(settings.ALL_BING_LIU_REVIEWS_PATHS).plot(
         kind='bar', x='dataset', y='reviews_word_average')
