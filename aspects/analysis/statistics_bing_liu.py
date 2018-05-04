@@ -95,10 +95,10 @@ def get_aspect_frequency_ranking(reviews_path: str, top_n: int = 10) -> List:
     return list(df.aspect.value_counts().head(top_n).index)
 
 
-for reviews_path in reviews_paths:
-    get_aspect_frequency_ranking(reviews_path)
-    df = aspect_distribution(reviews_path)
-    pass
-    # get_aspects(reviews_path)
-    # get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='size')
-    # get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='reviews_word_average')
+if __name__ == '__main__':
+    for reviews_path in reviews_paths:
+        get_aspect_frequency_ranking(reviews_path)
+        df = aspect_distribution(reviews_path)
+        # example for jupyter
+        get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='size')
+        get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='reviews_word_average')
