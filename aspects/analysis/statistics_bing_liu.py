@@ -1,11 +1,11 @@
 from collections import namedtuple
 from glob import glob
 from os.path import basename
-from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from typing import Dict, List
 
 all_reviews_path = '../../aspects/data/aspects/Reviews-9-products/'
 reviews_paths = glob(all_reviews_path + '*')
@@ -97,9 +97,10 @@ def get_aspect_frequency_ranking(reviews_path: str, top_n: int = 10) -> List:
 
 
 if __name__ == '__main__':
-    for reviews_path in reviews_paths:
-        get_aspect_frequency_ranking(reviews_path)
-        df = aspect_distribution(reviews_path)
+    # for reviews_path in reviews_paths:
+    #     get_aspect_frequency_ranking(reviews_path)
+    #     df = aspect_distribution(reviews_path)
         # example for jupyter
-        get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='size')
-        get_datasets_sizes(reviews_paths).plot(kind='bar', x='dataset', y='reviews_word_average')
+    datasets_sizes_df = get_datasets_sizes(reviews_paths)
+    datasets_reviews_word_average_df = get_datasets_sizes(reviews_paths).plot(
+        kind='bar', x='dataset', y='reviews_word_average')
