@@ -9,7 +9,9 @@ from aspects.analysis.statistics_rst_graphs import get_aspect_ranking_based_on_r
 
 
 @click.command()
-def main():
+def get_spearman_and_kendalltau_correlations():
+    correlations = {}
+
     for reviews_path in reviews_paths:
         label_encoder = preprocessing.LabelEncoder()
         dataset_name = basename(reviews_path).split('.')[0]
@@ -45,6 +47,12 @@ def main():
             aspects_freq_manual_assignment_vector, aspects_from_rst_based_on_pagerank_vector)
         click.echo(f'{dataset_name}, KendalTau correlation of ranking: {kendalltau_correlation}')
 
+        correlations[dataset_name] = {
+            'spearman': spearman_correlation,
+            'kendalltau': kendalltau_correlation
+        }
+    return correlations
+
 
 if __name__ == '__main__':
-    main()
+    correlations = get_spearman_and_kendalltau_correlations()
