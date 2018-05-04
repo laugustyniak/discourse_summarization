@@ -11,9 +11,10 @@ ASPECTS_GRAPH_PATHS = [
     'results/norton/aspects_graph.gpkl',
     'results/Linksys Router/aspects_graph.gpkl',
     'results/MicroMP3/aspects_graph.gpkl',
-    'results/Canon_S100/aspects_graph.gpkl',
+    'results/Canon S100/aspects_graph.gpkl',
     'results/Canon PowerShot SD500/aspects_graph.gpkl',
     'results/Nokia 6600/aspects_graph.gpkl',
+    'results/Hitachi router/aspects_graph.gpkl',
 ]
 
 ASPECTS_GRAPH_PATHS = [
