@@ -7,7 +7,7 @@ from aspects.analysis.statistics_rst_graphs import get_aspects_rankings_from_rst
 from aspects.utilities import settings
 
 
-def get_spearman_and_kendalltau_correlations():
+def get_spearman_and_kendalltau_correlations(top_n_aspects: int = 10):
     correlations = {}
 
     for reviews_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
@@ -15,7 +15,7 @@ def get_spearman_and_kendalltau_correlations():
         print(f'Dataset to analyze: {dataset_name}')
 
         # get freq aspects from Bing Liu manually created datasets
-        aspects_freq_manual_assignment = get_aspect_frequency_ranking(reviews_path)
+        aspects_freq_manual_assignment = get_aspect_frequency_ranking(reviews_path=reviews_path, top_n=top_n_aspects)
         print(aspects_freq_manual_assignment)
 
         # get aspects from RST + PageRank
