@@ -1,3 +1,4 @@
+matplotlib
 tqdm
 jellyfish>=0.5.6
 joblib>=0.9.4
