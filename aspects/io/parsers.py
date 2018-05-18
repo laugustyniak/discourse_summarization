@@ -3,7 +3,9 @@ import json
 import pickle
 from collections import defaultdict
 
+import pandas as pd
 import simplejson
+from more_itertools import flatten
 from tqdm import tqdm
 
 from aspects.utilities import settings
@@ -52,8 +54,20 @@ def conceptnet_io_parse(langs={u'en'}):
         pickle.dump(conceptnet_relations, conceptnet_io_file)
 
 
+def conceptnet_dump_to_df():
+    with open(settings.CONCEPTNET_IO_PKL.as_posix(), 'rb') as conceptnet_io_file:
+        conceptnetio = pickle.load(conceptnet_io_file)
+    return pd.DataFrame(list(flatten(
+        [
+            concepts_relations
+            for concept, concepts_relations
+            in conceptnetio.items()
+        ])))
+
+
 if __name__ == '__main__':
+    df = conceptnet_dump_to_df()
     conceptnet_io_parse()
-    amazon_dataset_parse(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ.as_posix())
-    amazon_dataset_parse(settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_GZ.as_posix())
-    amazon_dataset_parse(settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_GZ.as_posix())
+    # amazon_dataset_parse(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ.as_posix())
+    # amazon_dataset_parse(settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_GZ.as_posix())
+    # amazon_dataset_parse(settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_GZ.as_posix())
