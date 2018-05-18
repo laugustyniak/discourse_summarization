@@ -62,7 +62,7 @@ def conceptnet_dump_to_df():
             concepts_relations
             for concept, concepts_relations
             in conceptnetio.items()
-        ])))
+        ]))).drop_duplicates()
 
 
 if __name__ == '__main__':
