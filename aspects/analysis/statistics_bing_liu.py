@@ -94,7 +94,16 @@ def get_aspect_frequency_ranking(reviews_path: str, top_n: int = 10) -> List:
     return list(df.aspect.value_counts().head(top_n).index)
 
 
+def load_all_datasets() -> Dict:
+    return {
+        basename(review_path): get_aspects(review_path)
+        for review_path
+        in settings.ALL_BING_LIU_REVIEWS_PATHS
+    }
+
+
 if __name__ == '__main__':
+    all_datasets = load_all_datasets()
     # for reviews_path in reviews_paths:
     #     get_aspect_frequency_ranking(reviews_path)
     #     df = aspect_distribution(reviews_path)
