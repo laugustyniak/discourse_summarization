@@ -86,14 +86,11 @@ class AspectExtractionTest(unittest.TestCase):
             _, concepts_obtained, _ = aspects_extractor.extract(text)
             concepts = concepts_obtained['conceptnet_io'][concept]
 
-            self.assertTrue(True if concept in concepts_obtained['conceptnet_io'].keys() else False)
-            # get at least one concept
             self.assertGreater(len(concepts), 0)
             # check if all keys in dictionary are in dict with concepts,
             # keys like in ConceptNet: start, end, relation
             for k in ['start', 'end', 'relation']:
-                self.assertTrue(
-                    True if k in concepts[0].keys() else False)
+                self.assertTrue(True if k in concepts[0].keys() else False)
 
     def test_conceptnet_io_concept_extraction_en_filtered(self):
         concept = 'converter'

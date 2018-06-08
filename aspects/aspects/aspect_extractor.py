@@ -122,7 +122,7 @@ class AspectExtractor(object):
         conceptnet_io = load_conceptnet_io()
         conceptnet_aspects = defaultdict(list)
         for aspect in aspects:
-            if aspect not in conceptnet_io:
+            if aspect in conceptnet_io:
                 conceptnet_aspects[aspect] += conceptnet_io[aspect]
         return conceptnet_aspects
 
