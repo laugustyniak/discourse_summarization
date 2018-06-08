@@ -27,14 +27,14 @@ class AspectExtractionTest(unittest.TestCase):
         self.assertEqual(aspects_obtained, aspects_expected)
 
     def test_get_aspects_ner(self):
-        aspects_expected = [u'angela merkel', u'merkel', u'europe']
+        aspects_expected = [u'angela merkel', u'europe']
         preprocesser = Preprocesser()
         # sample text, don't correct :)
         raw_text = u'Angela Merkel is German, angela merkel is europe!'
         text = preprocesser.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         aspects_obtained, _, _ = aspects_extractor.extract(text)
-        self.assertEqual(aspects_obtained, aspects_expected)
+        self.assertEqual(set(aspects_obtained), set(aspects_expected))
 
     def test_get_aspects_ner_false(self):
         aspects_expected = []

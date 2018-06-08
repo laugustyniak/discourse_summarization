@@ -138,9 +138,15 @@ class AspectExtractor(object):
     def extract_keywords(self, text):
         rake = common_nlp.load_rake()
         if text:
+            try:
+                text_rank_keywords = keywords(text)
+            except:
+                log.error('Cant get keywords from text: {}'.format(text))
+                text_rank_keywords = []
+
             return {
                 'rake': rake.run(text),
-                'text_rank': keywords(text)
+                'text_rank': text_rank_keywords
             }
         else:
             return {
