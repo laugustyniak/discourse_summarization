@@ -84,11 +84,11 @@ class AspectExtractor(object):
         # lower case every aspect and only longer than 1
         aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
 
-        # 3. senticnet
+        aspects = [common_nlp.spelling(aspect) for aspect in aspects]
+
         if settings.SENTIC_ASPECTS:
             concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects)
 
-        # 4. ConceptNet.io
         if settings.CONCEPTNET_IO_ASPECTS:
             concept_aspects['conceptnet_io'] = self.extract_concept_from_conceptnet_io(aspects)
 

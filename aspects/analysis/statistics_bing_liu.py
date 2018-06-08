@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from aspects.utilities import settings
+from aspects.utilities.common_nlp import spelling
 
 AspectSentiment = namedtuple('AspectSentiment', 'aspect, sentiment')
 DatasetSize = namedtuple('DatasetSize', 'dataset, size, reviews_word_average, aspect_coverage')
@@ -50,7 +51,7 @@ def get_sentiment_from_aspect_sentiment_text(aspect_with_sentiment: str) -> Aspe
             sentiment = 1
     else:
         sentiment = int(sentiment_str)
-    return AspectSentiment(aspect=aspect.lower(), sentiment=sentiment)
+    return AspectSentiment(aspect=spelling(aspect.lower()), sentiment=sentiment)
 
 
 def aspect_distribution(reviews_path: str, draw: bool = False, freq_threshold=2) -> pd.Series:
