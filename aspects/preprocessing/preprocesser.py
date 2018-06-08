@@ -1,15 +1,16 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-
-import spacy
 import re
+from datetime import datetime
+from typing import Iterable, Dict
+
+import jellyfish
+from tqdm import tqdm
+
+from aspects.utilities.common_nlp import load_spacy
 
 
 class Preprocesser(object):
     def __init__(self):
-        # load spacy with parsers and entities,
-        # it will be useful in next steps of analysis
-        self.nlp = spacy.load('en')
+        self.nlp = load_spacy()
 
     def preprocess(self, text):
         # preprocessing tekstu do analizy
@@ -44,3 +45,25 @@ class Preprocesser(object):
                 #     print('Strange potential aspect: {}'.format(token))
 
         return result
+
+    def lemmatize(self, aspect_text: str) -> str:
+        return ' '.join([token.lemma_ for token in self.nlp(aspect_text)])
+
+    def get_most_similar_text_pairs(self, texts: Iterable[str], threshold: int = 0.75) -> Dict[str, float]:
+        """ Similarity based on Jaro-Wrinkler distance """
+        print(f'{datetime.now()} for #{len(texts)} of texts and #{len(texts) * len(texts)} of pairs')
+        similar_pairs = {}
+        for text_1 in tqdm(set(texts)):
+            for text_2 in set(texts):
+                jaro = jellyfish.jaro_winkler(text_1, text_2)
+
+                # lemma with spacy
+                text_1 = self.lemmatize(text_1)
+                text_2 = self.lemmatize(text_2)
+
+                texts_pair = f'{text_1} ## {text_2}'
+                texts_pair_inverse = f'{text_2} ## {text_1}'
+                if text_1 != text_2 and jellyfish.jaro_winkler(
+                        text_1, text_2) > threshold and texts_pair_inverse not in similar_pairs:
+                    similar_pairs[texts_pair] = jaro
+        return similar_pairs
