@@ -1,7 +1,7 @@
 import unittest
 
 from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.preprocessing import preprocesser
+from aspects.preprocessing import preprocessing
 from aspects.utilities import settings
 
 
@@ -10,7 +10,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_get_aspects_nouns(self):
         aspects_expected = [u'car', u'phone']
         raw_text = u'i have car and phone'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         # _ we don not want any concepts to test now
         aspects_obtained, _, _ = aspects_extractor.extract(text)
@@ -19,7 +19,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_get_aspects_noun_phrase(self):
         aspects_expected = [u'car', u'phone']
         raw_text = u'i have a nice car and awesome phone'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         aspects_obtained, _, _ = aspects_extractor.extract(text)
         self.assertEqual(aspects_obtained, aspects_expected)
@@ -28,7 +28,7 @@ class AspectExtractionTest(unittest.TestCase):
         aspects_expected = [u'angela merkel', u'europe']
         # sample text, don't correct :)
         raw_text = u'Angela Merkel is German, angela merkel is europe!'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         aspects_obtained, _, _ = aspects_extractor.extract(text)
         self.assertEqual(set(aspects_obtained), set(aspects_expected))
@@ -37,7 +37,7 @@ class AspectExtractionTest(unittest.TestCase):
         aspects_expected = []
         # sample text, don't correct :)
         raw_text = u'this is the biggest in Europe!'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         aspects_extractor = AspectExtractor(is_ner=False)
         aspects_obtained, _, _ = aspects_extractor.extract(text)
         self.assertEqual(aspects_obtained, aspects_expected)
@@ -45,7 +45,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_1_char_aspects_and_donts(self):
         aspects_expected = []
         raw_text = u'I don\'t like it, it is not, do not'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         aspects_obtained, _, _ = aspects_extractor.extract(text)
         self.assertEqual(aspects_obtained, aspects_expected)
@@ -55,7 +55,7 @@ class AspectExtractionTest(unittest.TestCase):
         raw_text = u'i wonder if you can propose for me better plan and ' \
                    u'encourage me to not leave for sprint i could get a ' \
                    u'better plan there'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         aspects_obtained, _, _ = aspects_extractor.extract(text)
         self.assertEqual(set(aspects_obtained), set(aspects_expected))
@@ -70,7 +70,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_sentic_concept_extraction(self):
         concept = 'screen'
         raw_text = u'i wonder if you can propose for me better screen'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         if settings.SENTIC_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
@@ -80,7 +80,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_conceptnet_io_concept_extraction(self):
         concept = 'screen'
         raw_text = u'i wonder if you can propose for me better screen'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         if settings.CONCEPTNET_IO_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
@@ -95,7 +95,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_conceptnet_io_concept_extraction_en_filtered(self):
         concept = 'converter'
         raw_text = u'i wonder if you can propose for me better converter'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         if settings.CONCEPTNET_IO_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
@@ -108,7 +108,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_conceptnet_io_concept_extraction_en_filtered_phone(self):
         concept = 'phone'
         raw_text = u'i wonder if you can propose for me better phone'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         if settings.CONCEPTNET_IO_ASPECTS:
             aspects_extractor = AspectExtractor()
             _, concepts_obtained, _ = aspects_extractor.extract(text)
@@ -121,7 +121,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_keyword_aspect_extraction(self):
         keywords_expected_rake = [(u'propose', 1.0), (u'screen', 1.0)]
         raw_text = u'i wonder if you can propose for me better screen'
-        text = preprocesser.preprocess(raw_text)
+        text = preprocessing.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         _, _, keywords_obtained = aspects_extractor.extract(text)
         # check if rake key exists
