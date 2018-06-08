@@ -1,11 +1,18 @@
+import logging
 import re
 from datetime import datetime
 
 import jellyfish
 from tqdm import tqdm
-from wordfreq import zipf_frequency
 
 from aspects.utilities.common_nlp import load_spacy
+
+log = logging.getLogger(__name__)
+
+try:
+    from wordfreq import zipf_frequency
+except:
+    log.error('No wordfreq lib installed')
 
 
 class Preprocesser(object):
@@ -14,7 +21,6 @@ class Preprocesser(object):
 
     def preprocess(self, text):
         text = text.strip()
-        text = text.decode('utf8')
 
         # FIXME: temporary cleaning of char that are specific to RQT trees
         # FIXME: this was the problem with word with q in the end!!

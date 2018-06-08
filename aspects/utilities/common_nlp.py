@@ -1,6 +1,12 @@
+try:
+    from repoze.lru import lru_cache
+except:
+    from functools import lru_cache
+import RAKE
 import spacy
 
 
+@lru_cache(None)
 def load_spacy(model='en_core_web_sm'):
     return spacy.load(model)
 
@@ -27,3 +33,8 @@ ASPECTS_TO_SKIP = [
     u'password',
     u'don',
 ]
+
+
+@lru_cache(None)
+def load_rake():
+    return RAKE.Rake(RAKE.SmartStopList())

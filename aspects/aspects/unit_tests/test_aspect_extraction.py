@@ -64,6 +64,13 @@ class AspectExtractionTest(unittest.TestCase):
         text = preprocesser.preprocess(raw_text)
         aspects_extractor = AspectExtractor()
         aspects_obtained, _, _ = aspects_extractor.extract(text)
+        self.assertEqual(set(aspects_obtained), set(aspects_expected))
+
+    def test_extract_noun_and_noun_phrases_very_long_aspects_trimming(self):
+        aspects_expected = [u'word explorer netscape']
+        text = u'i wonder if you can propose word explorer netscape acrobat reader photoshop and others'
+        aspects_extractor = AspectExtractor()
+        aspects_obtained = aspects_extractor.extract_noun_and_noun_phrases(text)
         self.assertEqual(aspects_obtained, aspects_expected)
 
     def test_sentic_concept_extraction(self):

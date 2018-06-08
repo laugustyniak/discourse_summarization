@@ -1,7 +1,6 @@
 import logging
 from collections import defaultdict
 
-import RAKE
 from gensim.summarization import keywords
 
 from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
@@ -45,11 +44,6 @@ class AspectExtractor(object):
             self.ner_types = settings.NER_TYPES
         else:
             self.ner_types = ner_types
-
-        self.Rake = RAKE.Rake(RAKE.SmartStopList())
-
-        if settings.CONCEPTNET_IO_ASPECTS:
-            self.conceptnet_io = load_conceptnet_io()
 
     def _is_interesting_main(self, token):
         return token.pos_ == 'NOUN'
@@ -107,7 +101,7 @@ class AspectExtractor(object):
         aspect_sequence_enabled = False
         for token in nlp(text):
             if self._is_interesting_main(token):
-                if not token.is_stop and len(aspect_sequence) < 4:
+                if not token.is_stop and len(aspect_sequence) < 3:
                     aspect_sequence.append(token.lemma_)
                 aspect_sequence_enabled = True
                 aspect_sequence_main_encountered = True
@@ -122,13 +116,14 @@ class AspectExtractor(object):
 
         if aspect_sequence_enabled and aspect_sequence_main_encountered:
             aspects.append(' '.join(aspect_sequence))
-        return aspects
+        return [aspect for aspect in aspects if aspect]
 
     def extract_concept_from_conceptnet_io(self, aspects):
+        conceptnet_io = load_conceptnet_io()
         conceptnet_aspects = defaultdict(list)
         for aspect in aspects:
-            if aspect not in self.conceptnet_io:
-                conceptnet_aspects[aspect] += self.conceptnet_io[aspect]
+            if aspect not in conceptnet_io:
+                conceptnet_aspects[aspect] += conceptnet_io[aspect]
         return conceptnet_aspects
 
     def extract_concepts_from_sentic(self, aspects):
@@ -141,9 +136,10 @@ class AspectExtractor(object):
         return sentic_aspects
 
     def extract_keywords(self, text):
+        rake = common_nlp.load_rake()
         if text:
             return {
-                'rake': self.Rake.run(text),
+                'rake': rake.run(text),
                 'text_rank': keywords(text)
             }
         else:
