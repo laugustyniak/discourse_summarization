@@ -53,7 +53,7 @@ def get_most_similar_text_pairs(texts, threshold=0.75):
     return similar_pairs
 
 
-def filter_words_by_zipf(self, words, max_zipf_freq=4.0):
+def filter_words_by_zipf(words, max_zipf_freq=4.0):
     """ Zipf equal to 4 is boarder between common [zipf higher than 4] and uncommon words [otherwise]. """
     return [
         word
