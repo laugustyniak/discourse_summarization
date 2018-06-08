@@ -16,8 +16,8 @@ nlp = common_nlp.load_spacy()
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types={u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC'}, aspects_to_skip=None,
-                 is_ner=True):
+    def __init__(
+            self, ner_types={u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC'}, aspects_to_skip=None, is_ner=True):
         """
         Initialize extractor aspect extractor.
 
