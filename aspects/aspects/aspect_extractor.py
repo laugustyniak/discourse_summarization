@@ -4,6 +4,7 @@ from collections import defaultdict
 from gensim.summarization import keywords
 
 from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
+from aspects.preprocessing.preprocessing import filter_words_by_zipf
 from aspects.utilities import common_nlp
 from aspects.utilities import settings
 
@@ -84,7 +85,7 @@ class AspectExtractor(object):
         # lower case every aspect and only longer than 1
         aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
 
-        aspects = [common_nlp.spelling(aspect) for aspect in aspects]
+        aspects = filter_words_by_zipf([common_nlp.spelling(aspect) for aspect in aspects], 6)
 
         if settings.SENTIC_ASPECTS:
             concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects)
