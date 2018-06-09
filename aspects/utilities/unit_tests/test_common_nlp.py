@@ -1,5 +1,4 @@
 import pytest
-from hamcrest import assert_that, equal_to
 
 from aspects.utilities.common_nlp import spelling
 
@@ -10,4 +9,4 @@ from aspects.utilities.common_nlp import spelling
 ])
 def test_spelling(word, corrected_word):
     word_obtained = spelling(word)
-    assert_that(corrected_word, equal_to(word_obtained))
+    assert corrected_word == word_obtained
