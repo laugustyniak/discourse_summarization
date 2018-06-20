@@ -1,30 +1,23 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from aspects.preprocessing import transform_formats
+from aspects.preprocessing.transform_formats import TextTag, TextTagged, _create_bio_replacement
 
 
-@pytest.mark.parametrize("text, tag, bio_replacer", [
+@pytest.mark.parametrize("text_tag, bio_replacer", [
     (
-            'ipod',
-            'aspect',
-            {
-                'ipod': 'ipod B-aspect'
-            }
+            [TextTag('ipod', 'aspect')],
+            [TextTagged('ipod', 'ipod B-aspect')]
     ),
     (
-            'samsung note II',
-            'aspect',
-            {
-                'samsung note II': 'samsung B-aspect note I-aspect II I-aspect'
-            }
+            [TextTag('samsung note II', 'aspect')],
+            [TextTagged('samsung note II', 'samsung B-aspect note I-aspect II I-aspect')]
     ),
     (
-            '',
-            'aspect',
-            {}
+            [TextTag('', 'aspect')],
+            [TextTagged('', '')]
     ),
 ])
-def test_create_bio_regex_replacer(text, tag, bio_replacer):
-    bio_replacer_obtained = transform_formats._create_bio_regex_replacer(text, tag)
+def test_create_bio_regex_replacer(text_tag, bio_replacer):
+    bio_replacer_obtained = list(_create_bio_replacement(text_tag))
     assert_that(bio_replacer, equal_to(bio_replacer_obtained))

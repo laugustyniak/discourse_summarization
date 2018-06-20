@@ -6,6 +6,7 @@ from aspects.utilities import common_nlp
 from aspects.utilities import settings
 
 TextTag = namedtuple('TextTag', 'text, tag')
+TextTagged = namedtuple('TextTag', 'text, tagged')
 
 nlp = common_nlp.load_spacy()
 
@@ -28,10 +29,9 @@ def bing_liu_2_conll_format():
                     for a
                     in aspects_str.split()
                 ]
+                for aspect in aspects:
+                    pass
 
-                for aspect_str in aspects:
-                    for aspect in aspects_str.split():
-                        pass
 
             else:
                 aspects = []
@@ -48,18 +48,21 @@ def extend_text_with_bio_tags(text: str, tags: List[TextTag]):
     return
 
 
-def _create_bio_regex_replacer(text: str, tag: str):
-    if not text:
-        return {}
+def _create_bio_replacement(text_tags: List[TextTag]):
+    for text_tag in text_tags:
+        if text_tag.text:
+            for token_id, token in enumerate(nlp(text_tag.text), start=1):
+                if token_id == 1:  # begin bio tag
+                    text_with_tags = f'{token.text} B-{text_tag.tag}'
+                else:  # inside bio tags
+                    text_with_tags += f' {token.text} I-{text_tag.tag}'
+            yield TextTagged(text_tag.text, text_with_tags)
+        else:
+            yield TextTagged('', '')
 
-    for token_id, token in enumerate(nlp(text), start=1):
-        if token_id == 1:  # begin bio tag
-            text_with_tags = f'{token.text} B-{tag}'
-        else:  # inside bio tags
-            text_with_tags += f' {token.text} I-{tag}'
-    return {
-        text: text_with_tags
-    }
+
+def _create_tags_replacements():
+    pass
 
 
 def tag_token(token: str, tags, prev_tag):
