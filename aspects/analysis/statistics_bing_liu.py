@@ -26,6 +26,14 @@ def get_aspects(reviews_path: str) -> pd.DataFrame:
     return pd.DataFrame(all_aspects)
 
 
+def get_aspects_for_each_line(aspects_str: str) -> pd.DataFrame:
+    all_aspects = []
+    aspects = aspects_str.split(',')
+    for aspect in [a for a in aspects if len(a) > 5]:
+        all_aspects.append(get_sentiment_from_aspect_sentiment_text(aspect))
+    return pd.DataFrame(all_aspects)
+
+
 def get_sentiment_from_aspect_sentiment_text(aspect_with_sentiment: str) -> AspectSentiment:
     aspect_with_sentiment = aspect_with_sentiment.strip()
     aspect_with_sentiment = aspect_with_sentiment.replace('[u]', '').replace('[s]', '').replace('[p]', '')
@@ -95,7 +103,7 @@ def get_aspect_frequency_ranking(reviews_path: str, top_n: int = 10) -> List:
     return list(df.aspect.value_counts().head(top_n).index)
 
 
-def load_all_datasets() -> Dict:
+def load_all_aspects_from_datasets() -> Dict:
     return {
         basename(review_path): get_aspects(review_path)
         for review_path
@@ -104,7 +112,7 @@ def load_all_datasets() -> Dict:
 
 
 if __name__ == '__main__':
-    all_datasets = load_all_datasets()
+    all_datasets = load_all_aspects_from_datasets()
     # for reviews_path in reviews_paths:
     #     get_aspect_frequency_ranking(reviews_path)
     #     df = aspect_distribution(reviews_path)
