@@ -61,6 +61,14 @@ def _create_bio_replacement(text_tags: List[TextTag]):
             yield TextTagged('', '')
 
 
+def _add_bio_o_tag(text_tag: TextTag) -> str:
+    return ' '.join([
+        f'{token.text} O-{text_tag.tag}'
+        for token
+        in nlp(text_tag.text)
+    ])
+
+
 def _create_tags_replacements():
     pass
 
