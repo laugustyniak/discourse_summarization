@@ -1,5 +1,8 @@
+import re
 from collections import namedtuple
-from typing import List
+from typing import List, Iterable
+
+from tqdm import tqdm
 
 from aspects.analysis.statistics_bing_liu import load_reviews, get_sentiment_from_aspect_sentiment_text
 from aspects.utilities import common_nlp
@@ -11,7 +14,7 @@ TextTagged = namedtuple('TextTagged', 'text, tagged')
 nlp = common_nlp.load_spacy()
 
 
-def bing_liu_2_conll_format():
+def bing_liu_2_conll_format() -> Iterable[str]:
     """
     Parse lines such as
 
@@ -22,33 +25,26 @@ def bing_liu_2_conll_format():
     """
     for review_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
         review_df = load_reviews(review_path)
-        for idx, aspects_str, text in review_df.itertuples():
-            if isinstance(aspects_str, str):
+        for idx, aspects_str, text in tqdm(review_df.itertuples()):
+            if isinstance(aspects_str, str) and len(aspects_str) > 0:
                 aspects = [
                     get_sentiment_from_aspect_sentiment_text(a).aspect
                     for a
-                    in aspects_str.split()
+                    in aspects_str.split(',')
                 ]
-                for aspect in aspects:
-                    pass
+                aspects_replacement = _create_bio_replacement([
+                    TextTag(text=aspect, tag='aspect')
+                    for aspect
+                    in aspects
+                ])
 
+                yield _entity_replecement(text, aspects_replacement)
 
             else:
-                aspects = []
-
-    return review_df
+                yield _add_bio_o_tag(text)
 
 
-# def extend_text_with_bio_tags(text: str, tags: List[TextTag]):
-#     tokens_with_bio_tags = []
-#     for token in nlp(text):
-#         tokens_with_bio_tags.append(token)
-#         tokens_with_bio_tags.append(tag_token(token, [], tokens_with_bio_tags[-1]))
-#
-#     return
-
-
-def _create_bio_replacement(text_tags: List[TextTag]):
+def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
     for text_tag in text_tags:
         if text_tag.text:
             for token_id, token in enumerate(nlp(text_tag.text), start=1):
@@ -69,14 +65,13 @@ def _add_bio_o_tag(text: str) -> str:
     ])
 
 
-# def _create_tags_replacements():
-#     pass
-#
-#
-# def tag_token(token: str, tags, prev_tag):
-#     return
+def _entity_replecement(text: str, texts_tagged: Iterable[TextTagged]) -> str:
+    text = _add_bio_o_tag(text)
+    for text_tagged in texts_tagged:
+        text = re.sub(text_tagged.text, text_tagged.tagged, text)
+    return text
 
 
 if __name__ == '__main__':
-    outcome = bing_liu_2_conll_format()
+    outcome = list(bing_liu_2_conll_format())
     pass

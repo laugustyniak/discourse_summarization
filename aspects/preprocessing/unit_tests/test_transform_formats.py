@@ -1,7 +1,8 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from aspects.preprocessing.transform_formats import TextTag, TextTagged, _create_bio_replacement, _add_bio_o_tag
+from aspects.preprocessing.transform_formats import (
+    TextTag, TextTagged, _create_bio_replacement, _add_bio_o_tag, _entity_replecement)
 
 
 @pytest.mark.parametrize("text_tag, bio_replacer", [
@@ -36,3 +37,25 @@ def test_create_bio_regex_replacer(text_tag, bio_replacer):
 def test_add_bio_o_tag(text, text_tagged):
     bio_replacer_obtained = _add_bio_o_tag(text)
     assert_that(bio_replacer_obtained, equal_to(text_tagged))
+
+
+@pytest.mark.parametrize("text, texts_tagged, text_expected", [
+    (
+            'I like samsung note II',
+            [
+                TextTagged('samsung O-tag note O-tag II O-tag', 'samsung B-aspect note I-aspect II I-aspect')
+            ],
+            'I O-tag like O-tag samsung B-aspect note I-aspect II I-aspect',
+
+    ),
+    (
+            'I like this iphone',
+            [
+                TextTagged('iphone O-tag', 'iphone B-product')
+            ],
+            'I O-tag like O-tag this O-tag iphone B-product'
+    ),
+])
+def test_entity_replecement(text, texts_tagged, text_expected):
+    text_obtained = _entity_replecement(text, texts_tagged)
+    assert_that(text_obtained, equal_to(text_expected))
