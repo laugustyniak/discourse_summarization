@@ -6,7 +6,7 @@ from aspects.utilities import common_nlp
 from aspects.utilities import settings
 
 TextTag = namedtuple('TextTag', 'text, tag')
-TextTagged = namedtuple('TextTag', 'text, tagged')
+TextTagged = namedtuple('TextTagged', 'text, tagged')
 
 nlp = common_nlp.load_spacy()
 
@@ -39,13 +39,13 @@ def bing_liu_2_conll_format():
     return review_df
 
 
-def extend_text_with_bio_tags(text: str, tags: List[TextTag]):
-    tokens_with_bio_tags = []
-    for token in nlp(text):
-        tokens_with_bio_tags.append(token)
-        tokens_with_bio_tags.append(tag_token(token, [], tokens_with_bio_tags[-1]))
-
-    return
+# def extend_text_with_bio_tags(text: str, tags: List[TextTag]):
+#     tokens_with_bio_tags = []
+#     for token in nlp(text):
+#         tokens_with_bio_tags.append(token)
+#         tokens_with_bio_tags.append(tag_token(token, [], tokens_with_bio_tags[-1]))
+#
+#     return
 
 
 def _create_bio_replacement(text_tags: List[TextTag]):
@@ -56,25 +56,25 @@ def _create_bio_replacement(text_tags: List[TextTag]):
                     text_with_tags = f'{token.text} B-{text_tag.tag}'
                 else:  # inside bio tags
                     text_with_tags += f' {token.text} I-{text_tag.tag}'
-            yield TextTagged(text_tag.text, text_with_tags)
+            yield TextTagged(f'{_add_bio_o_tag(text_tag.text)}', text_with_tags)
         else:
             yield TextTagged('', '')
 
 
-def _add_bio_o_tag(text_tag: TextTag) -> str:
+def _add_bio_o_tag(text: str) -> str:
     return ' '.join([
-        f'{token.text} O-{text_tag.tag}'
+        f'{token.text} O-tag'
         for token
-        in nlp(text_tag.text)
+        in nlp(text)
     ])
 
 
-def _create_tags_replacements():
-    pass
-
-
-def tag_token(token: str, tags, prev_tag):
-    return
+# def _create_tags_replacements():
+#     pass
+#
+#
+# def tag_token(token: str, tags, prev_tag):
+#     return
 
 
 if __name__ == '__main__':
