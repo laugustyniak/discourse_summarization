@@ -93,14 +93,14 @@ def create_train_test_files(output_path: Path, text_col: str = 'text', test_size
 
 def _new_line_every_tag(sentence: str):
     return ''.join([
-        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token.startswith('O-') else f'{token}\t'
+        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token.startswith('O-') else f'{token} '
         for token
         in sentence.split()
     ]) + '\n'  # additional space to split documents in BIO conll format
 
 
 if __name__ == '__main__':
-    # df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset'])
-    # settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
-    # df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
+    df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset'])
+    settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
+    df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
     create_train_test_files(settings.BING_LIU_BIO_DATASET)
