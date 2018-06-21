@@ -70,7 +70,7 @@ def test_entity_replecement(text, texts_tagged, text_expected):
 @pytest.mark.parametrize("text, text_output", [
     (
             'I O-tag like O-tag samsung B-aspect note I-aspect II I-aspect',
-            'I\tO-tag\nlike\tO-tag\nsamsung\tB-aspect\nnote\tI-aspect\nII\tI-aspect\n\n'
+            'I O-tag\nlike O-tag\nsamsung B-aspect\nnote I-aspect\nII I-aspect\n\n'
     )
 ])
 def test_new_line_every_tag(text, text_output):
