@@ -1,8 +1,11 @@
-import csv
 import re
 from collections import namedtuple
-from typing import List, Iterable
+from os.path import basename
+from pathlib import Path
+from typing import List, Iterable, Tuple
 
+import pandas as pd
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from aspects.analysis.statistics_bing_liu import load_reviews, get_sentiment_from_aspect_sentiment_text
@@ -15,7 +18,7 @@ TextTagged = namedtuple('TextTagged', 'text, tagged')
 nlp = common_nlp.load_spacy()
 
 
-def bing_liu_2_conll_format(min_aspect_len: int = 5) -> Iterable[str]:
+def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str]]:
     """
     Parse lines such as
 
@@ -27,23 +30,24 @@ def bing_liu_2_conll_format(min_aspect_len: int = 5) -> Iterable[str]:
     for review_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
         review_df = load_reviews(review_path)
         for idx, aspects_str, text in tqdm(review_df.itertuples(), desc=f'Dataset: {review_path}'):
+            text = text.strip()
             if isinstance(aspects_str, str) and len(aspects_str) > 0:
                 aspects = [
-                        get_sentiment_from_aspect_sentiment_text(a).aspect
-                        for a
-                        in aspects_str.split(',')
-                        if len(a) > min_aspect_len
-                    ]
+                    get_sentiment_from_aspect_sentiment_text(a).aspect
+                    for a
+                    in aspects_str.split(',')
+                    if len(a) > min_aspect_len
+                ]
                 aspects_replacement = _create_bio_replacement([
                     TextTag(text=aspect, tag='aspect')
                     for aspect
                     in aspects
                 ])
 
-                yield _entity_replecement(text, aspects_replacement)
+                yield _entity_replecement(text, aspects_replacement), basename(review_path)
 
             else:
-                yield _add_bio_o_tag(text)
+                yield _add_bio_o_tag(text), basename(review_path)
 
 
 def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
@@ -51,9 +55,9 @@ def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
         if text_tag.text:
             for token_id, token in enumerate(nlp(text_tag.text), start=1):
                 if token_id == 1:  # begin bio tag
-                    text_with_tags = f'{token.text} B-{text_tag.tag}'
+                    text_with_tags = f'{token.text}\tB-{text_tag.tag}'
                 else:  # inside bio tags
-                    text_with_tags += f' {token.text} I-{text_tag.tag}'
+                    text_with_tags += f'\n{token.text}\tI-{text_tag.tag}'
             yield TextTagged(f'{_add_bio_o_tag(text_tag.text)}', text_with_tags)
         else:
             yield TextTagged('', '')
@@ -64,6 +68,7 @@ def _add_bio_o_tag(text: str) -> str:
         f'{token.text} O-tag'
         for token
         in nlp(text)
+        if token.text
     ])
 
 
@@ -74,10 +79,28 @@ def _entity_replecement(text: str, texts_tagged: Iterable[TextTagged]) -> str:
     return text
 
 
-if __name__ == '__main__':
-    outcome = list(bing_liu_2_conll_format())
+def create_train_test_files(output_path: Path, text_col: str = 'text', test_size: float = 0.2):
+    df = pd.read_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
+    df = df.sample(frac=1)  # shuffle rows
+    X = df[text_col].tolist()
+    X_train, X_test, _, _ = train_test_split(X, range(len(X)), test_size=test_size, random_state=42)
 
-    settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
-    with open(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(outcome)
+    with open(output_path / 'train.csv', 'w') as train_file:
+        train_file.write(''.join([_new_line_every_tag(x) for x in X_train]))
+    with open(output_path / 'test.csv', 'w') as test_file:
+        test_file.write(''.join([_new_line_every_tag(x) for x in X_test]))
+
+
+def _new_line_every_tag(sentence: str):
+    return ''.join([
+        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token.startswith('O-') else f'{token}\t'
+        for token
+        in sentence.split()
+    ]) + '\n'  # additional space to split documents in BIO conll format
+
+
+if __name__ == '__main__':
+    # df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset'])
+    # settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
+    # df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
+    create_train_test_files(settings.BING_LIU_BIO_DATASET)

@@ -2,17 +2,17 @@ import pytest
 from hamcrest import assert_that, equal_to
 
 from aspects.preprocessing.transform_formats import (
-    TextTag, TextTagged, _create_bio_replacement, _add_bio_o_tag, _entity_replecement)
+    TextTag, TextTagged, _create_bio_replacement, _add_bio_o_tag, _entity_replecement, _new_line_every_tag)
 
 
 @pytest.mark.parametrize("text_tag, bio_replacer", [
     (
             [TextTag('ipod', 'aspect')],
-            [TextTagged('ipod O-tag', 'ipod B-aspect')]
+            [TextTagged('ipod O-tag', 'ipod\tB-aspect')]
     ),
     (
             [TextTag('samsung note II', 'aspect')],
-            [TextTagged('samsung O-tag note O-tag II O-tag', 'samsung B-aspect note I-aspect II I-aspect')]
+            [TextTagged('samsung O-tag note O-tag II O-tag', 'samsung\tB-aspect\nnote\tI-aspect\nII\tI-aspect')]
     ),
     (
             [TextTag('', 'aspect')],
@@ -43,7 +43,10 @@ def test_add_bio_o_tag(text, text_tagged):
     (
             'I like samsung note II',
             [
-                TextTagged('samsung O-tag note O-tag II O-tag', 'samsung B-aspect note I-aspect II I-aspect')
+                TextTagged(
+                    'samsung O-tag note O-tag II O-tag',
+                    'samsung B-aspect note I-aspect II I-aspect'
+                )
             ],
             'I O-tag like O-tag samsung B-aspect note I-aspect II I-aspect',
 
@@ -51,7 +54,10 @@ def test_add_bio_o_tag(text, text_tagged):
     (
             'I like this iphone',
             [
-                TextTagged('iphone O-tag', 'iphone B-product')
+                TextTagged(
+                    'iphone O-tag',
+                    'iphone B-product'
+                )
             ],
             'I O-tag like O-tag this O-tag iphone B-product'
     ),
@@ -59,3 +65,14 @@ def test_add_bio_o_tag(text, text_tagged):
 def test_entity_replecement(text, texts_tagged, text_expected):
     text_obtained = _entity_replecement(text, texts_tagged)
     assert_that(text_obtained, equal_to(text_expected))
+
+
+@pytest.mark.parametrize("text, text_output", [
+    (
+            'I O-tag like O-tag samsung B-aspect note I-aspect II I-aspect',
+            'I\tO-tag\nlike\tO-tag\nsamsung\tB-aspect\nnote\tI-aspect\nII\tI-aspect\n\n'
+    )
+])
+def test_new_line_every_tag(text, text_output):
+    text_obtained = _new_line_every_tag(text)
+    assert_that(text_obtained, equal_to(text_output))
