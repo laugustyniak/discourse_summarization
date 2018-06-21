@@ -65,3 +65,6 @@ ASPECT_EXTRACTION_SERIALIZATION_STEP = 10000
 # sample trees
 SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177'
 SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189'
+
+# Bing Liu BIO tags
+BING_LIU_BIO_DATASET = BING_LIU_DATASETS_PATH / 'bio_tags'

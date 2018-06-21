@@ -1,3 +1,4 @@
+import csv
 import re
 from collections import namedtuple
 from typing import List, Iterable
@@ -14,7 +15,7 @@ TextTagged = namedtuple('TextTagged', 'text, tagged')
 nlp = common_nlp.load_spacy()
 
 
-def bing_liu_2_conll_format() -> Iterable[str]:
+def bing_liu_2_conll_format(min_aspect_len: int = 5) -> Iterable[str]:
     """
     Parse lines such as
 
@@ -25,13 +26,14 @@ def bing_liu_2_conll_format() -> Iterable[str]:
     """
     for review_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
         review_df = load_reviews(review_path)
-        for idx, aspects_str, text in tqdm(review_df.itertuples()):
+        for idx, aspects_str, text in tqdm(review_df.itertuples(), desc=f'Dataset: {review_path}'):
             if isinstance(aspects_str, str) and len(aspects_str) > 0:
                 aspects = [
-                    get_sentiment_from_aspect_sentiment_text(a).aspect
-                    for a
-                    in aspects_str.split(',')
-                ]
+                        get_sentiment_from_aspect_sentiment_text(a).aspect
+                        for a
+                        in aspects_str.split(',')
+                        if len(a) > min_aspect_len
+                    ]
                 aspects_replacement = _create_bio_replacement([
                     TextTag(text=aspect, tag='aspect')
                     for aspect
@@ -68,10 +70,14 @@ def _add_bio_o_tag(text: str) -> str:
 def _entity_replecement(text: str, texts_tagged: Iterable[TextTagged]) -> str:
     text = _add_bio_o_tag(text)
     for text_tagged in texts_tagged:
-        text = re.sub(text_tagged.text, text_tagged.tagged, text)
+        text = re.sub(text_tagged.text, text_tagged.tagged, text, flags=re.I)
     return text
 
 
 if __name__ == '__main__':
     outcome = list(bing_liu_2_conll_format())
-    pass
+
+    settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
+    with open(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(outcome)
