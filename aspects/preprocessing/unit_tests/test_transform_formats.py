@@ -8,11 +8,11 @@ from aspects.preprocessing.transform_formats import (
 @pytest.mark.parametrize("text_tag, bio_replacer", [
     (
             [TextTag('ipod', 'aspect')],
-            [TextTagged('ipod O-tag', 'ipod\tB-aspect')]
+            [TextTagged('ipod O', 'ipod B-aspect')]
     ),
     (
             [TextTag('samsung note II', 'aspect')],
-            [TextTagged('samsung O-tag note O-tag II O-tag', 'samsung\tB-aspect\nnote\tI-aspect\nII\tI-aspect')]
+            [TextTagged('samsung O note O II O', 'samsung B-aspect note I-aspect II I-aspect')]
     ),
     (
             [TextTag('', 'aspect')],
@@ -27,11 +27,11 @@ def test_create_bio_regex_replacer(text_tag, bio_replacer):
 @pytest.mark.parametrize("text, text_tagged", [
     (
             'samsung note II',
-            'samsung O-tag note O-tag II O-tag'
+            'samsung O note O II O'
     ),
     (
             'I like it iphone',
-            'I O-tag like O-tag it O-tag iphone O-tag'
+            'I O like O it O iphone O'
     ),
 ])
 def test_add_bio_o_tag(text, text_tagged):
@@ -44,22 +44,22 @@ def test_add_bio_o_tag(text, text_tagged):
             'I like samsung note II',
             [
                 TextTagged(
-                    'samsung O-tag note O-tag II O-tag',
+                    'samsung O note O II O',
                     'samsung B-aspect note I-aspect II I-aspect'
                 )
             ],
-            'I O-tag like O-tag samsung B-aspect note I-aspect II I-aspect',
+            'I O like O samsung B-aspect note I-aspect II I-aspect',
 
     ),
     (
             'I like this iphone',
             [
                 TextTagged(
-                    'iphone O-tag',
+                    'iphone O',
                     'iphone B-product'
                 )
             ],
-            'I O-tag like O-tag this O-tag iphone B-product'
+            'I O like O this O iphone B-product'
     ),
 ])
 def test_entity_replecement(text, texts_tagged, text_expected):
@@ -69,8 +69,8 @@ def test_entity_replecement(text, texts_tagged, text_expected):
 
 @pytest.mark.parametrize("text, text_output", [
     (
-            'I O-tag like O-tag samsung B-aspect note I-aspect II I-aspect',
-            'I O-tag\nlike O-tag\nsamsung B-aspect\nnote I-aspect\nII I-aspect\n\n'
+            'I O like O samsung B-aspect note I-aspect II I-aspect',
+            'I O\nlike O\nsamsung B-aspect\nnote I-aspect\nII I-aspect\n\n'
     )
 ])
 def test_new_line_every_tag(text, text_output):

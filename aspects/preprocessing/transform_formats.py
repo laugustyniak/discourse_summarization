@@ -9,13 +9,10 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from aspects.analysis.statistics_bing_liu import load_reviews, get_sentiment_from_aspect_sentiment_text
-from aspects.utilities import common_nlp
 from aspects.utilities import settings
 
 TextTag = namedtuple('TextTag', 'text, tag')
 TextTagged = namedtuple('TextTagged', 'text, tagged')
-
-nlp = common_nlp.load_spacy()
 
 
 def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str]]:
@@ -30,7 +27,7 @@ def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str]]:
     for review_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
         review_df = load_reviews(review_path)
         for idx, aspects_str, text in tqdm(review_df.itertuples(), desc=f'Dataset: {review_path}'):
-            text = text.strip()
+            text = text.strip().replace(' o ', '').replace(' O ', '')
             if isinstance(aspects_str, str) and len(aspects_str) > 0:
                 aspects = [
                     get_sentiment_from_aspect_sentiment_text(a).aspect
@@ -53,11 +50,11 @@ def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str]]:
 def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
     for text_tag in text_tags:
         if text_tag.text:
-            for token_id, token in enumerate(nlp(text_tag.text), start=1):
+            for token_id, token in enumerate(text_tag.text.split(), start=1):
                 if token_id == 1:  # begin bio tag
-                    text_with_tags = f'{token.text}\tB-{text_tag.tag}'
+                    text_with_tags = f'{token} B-{text_tag.tag}'
                 else:  # inside bio tags
-                    text_with_tags += f'\n{token.text}\tI-{text_tag.tag}'
+                    text_with_tags += f' {token} I-{text_tag.tag}'
             yield TextTagged(f'{_add_bio_o_tag(text_tag.text)}', text_with_tags)
         else:
             yield TextTagged('', '')
@@ -65,10 +62,10 @@ def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
 
 def _add_bio_o_tag(text: str) -> str:
     return ' '.join([
-        f'{token.text} O-tag'
+        f'{token} O'
         for token
-        in nlp(text)
-        if token.text
+        in text.split()
+        if token
     ])
 
 
@@ -93,7 +90,7 @@ def create_train_test_files(output_path: Path, text_col: str = 'text', test_size
 
 def _new_line_every_tag(sentence: str):
     return ''.join([
-        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token.startswith('O-') else f'{token} '
+        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token.startswith('O') else f'{token} '
         for token
         in sentence.split()
     ]) + '\n'  # additional space to split documents in BIO conll format
