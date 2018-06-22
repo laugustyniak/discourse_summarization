@@ -6,6 +6,7 @@ from typing import List, Iterable, Tuple
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from nltk.tokenize import word_tokenize
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
@@ -31,7 +32,7 @@ def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str, s
     for review_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
         review_df = load_reviews(review_path)
         for idx, aspects_str, text in tqdm(review_df.itertuples(), desc=f'Dataset: {review_path}'):
-            text = text.strip().replace(' o ', '').replace(' O ', '')
+            text = text.strip().replace(' o ', '').replace(' O ', '').replace('I-', 'I')
             if isinstance(aspects_str, str) and len(aspects_str) > 0:
                 aspects = [
                     get_sentiment_from_aspect_sentiment_text(a).aspect
@@ -66,9 +67,9 @@ def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
 
 def _add_bio_o_tag(text: str) -> str:
     return ' '.join([
-        f'{token.text} O'
+        f'{token} O'
         for token
-        in nlp(text)
+        in word_tokenize(text)
         if token
     ])
 
@@ -88,18 +89,20 @@ def create_train_test_files(output_path: Path, text_col: str = 'text', test_size
     X = df[text_col].tolist()
     X_train, X_test, _, _ = train_test_split(X, range(len(X)), test_size=test_size, random_state=42)
 
-    with open(output_path / 'train.csv', 'w') as train_file:
-        train_file.write(''.join([_new_line_every_tag(x) for x in X_train]))
-    with open(output_path / 'test.csv', 'w') as test_file:
-        test_file.write(''.join([_new_line_every_tag(x) for x in X_test]))
+    save_bio_file(output_path=(output_path / 'train.csv').as_posix(), sentences=X_train)
+    save_bio_file(output_path=(output_path / 'test.csv').as_posix(), sentences=X_test)
+
+
+def save_bio_file(output_path: str, sentences: Iterable[str]):
+    with open(output_path, 'w') as train_file:
+        train_file.write(''.join([_new_line_every_tag(sentence) for sentence in sentences]))
 
 
 def _new_line_every_tag(sentence: str):
     return ''.join([
-        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or (
-                token.startswith('O') and len(token) == 1) else f'{token} '
+        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token == 'O' else f'{token} '
         for token
-        in sentence.split()
+        in word_tokenize(sentence)
     ]) + '\n'  # additional space to split documents in BIO conll format
 
 
@@ -114,14 +117,30 @@ def parse_semeval_xml(xml_path: str):
         yield text, aspects, aspects_categories
 
 
-if __name__ == '__main__':
-    df = pd.DataFrame(
-        parse_semeval_xml(settings.SEMEVAL_RESTAURANTS_TRAIN_XML),
-        columns=['text', 'aspects', 'aspects_categories']
-    )
-    print(df)
+def validate_bio_format(file_path: str, n_tags: int = 1):
+    n_errors = 0
+    n_tokens = n_tags + 1
+    with open(file_path, 'r') as bio_file:
+        for line_number, line in enumerate(bio_file, start=1):
+            tokens = line.split()
+            if len(tokens) != n_tokens and len(tokens):
+                print(f'Error in line number {line_number}: {line}')
+                n_errors += 1
+    if not n_errors:
+        print(f'No errors found in {file_path}.')
 
-    # df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
-    # settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
-    # df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
-    # create_train_test_files(settings.BING_LIU_BIO_DATASET)
+
+if __name__ == '__main__':
+    # df = pd.DataFrame(
+    #     parse_semeval_xml(settings.SEMEVAL_RESTAURANTS_TRAIN_XML),
+    #     columns=['text', 'aspects', 'aspects_categories']
+    # )
+    # print(df)
+
+    df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
+    settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
+    df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
+
+    create_train_test_files(settings.BING_LIU_BIO_DATASET)
+    validate_bio_format(settings.BING_LIU_BIO_DATASET / 'train.csv')
+    validate_bio_format(settings.BING_LIU_BIO_DATASET / 'test.csv')
