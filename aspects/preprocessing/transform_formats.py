@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Iterable, Tuple
 
 import pandas as pd
+from bs4 import BeautifulSoup
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
@@ -79,8 +80,10 @@ def _entity_replecement(text: str, texts_tagged: Iterable[TextTagged]) -> str:
     return text
 
 
-def create_train_test_files(output_path: Path, text_col: str = 'text', test_size: float = 0.2):
+def create_train_test_files(output_path: Path, text_col: str = 'text', test_size: float = 0.2, dataset: str = None):
     df = pd.read_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
+    if dataset is not None:
+        df = df[df.dataset == dataset]
     df = df.sample(frac=1)  # shuffle rows
     X = df[text_col].tolist()
     X_train, X_test, _, _ = train_test_split(X, range(len(X)), test_size=test_size, random_state=42)
@@ -100,8 +103,25 @@ def _new_line_every_tag(sentence: str):
     ]) + '\n'  # additional space to split documents in BIO conll format
 
 
+def parse_semeval_xml(xml_path: str):
+    with open(xml_path) as xml_file:
+        soup = BeautifulSoup(xml_file, 'lxml')
+
+    for sentence in tqdm(soup.findAll('sentence')):
+        text = sentence.text.strip()
+        aspects = [aspect['term'] for aspect in sentence.findAll('aspectterm')]
+        aspects_categories = [aspect['category'] for aspect in sentence.findAll('aspectcategory')]
+        yield text, aspects, aspects_categories
+
+
 if __name__ == '__main__':
-    df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
-    settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
-    df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
-    create_train_test_files(settings.BING_LIU_BIO_DATASET)
+    df = pd.DataFrame(
+        parse_semeval_xml(settings.SEMEVAL_RESTAURANTS_TRAIN_XML),
+        columns=['text', 'aspects', 'aspects_categories']
+    )
+    print(df)
+
+    # df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
+    # settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
+    # df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
+    # create_train_test_files(settings.BING_LIU_BIO_DATASET)

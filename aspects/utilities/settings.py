@@ -32,6 +32,10 @@ BING_LIU_NORTON = BING_LIU_DATASETS_PATH / 'norton.json'
 ALL_BING_LIU_REVIEWS_PATH = ROOT_PATH.parent / 'aspects' / 'data' / 'aspects' / 'Reviews-9-products'
 ALL_BING_LIU_REVIEWS_PATHS = [p.as_posix() for p in ALL_BING_LIU_REVIEWS_PATH.glob('*')]
 
+# semeval datasets
+SEMEVAL_DATASETS = DATA_PATH / 'semeval'
+SEMEVAL_RESTAURANTS_TRAIN_XML = SEMEVAL_DATASETS / 'Restaurants_Train.xml'
+
 # SENITMENT MODELS
 SENTIMENT_MODELS_PATH = DATA_PATH / 'models'
 SENTIMENT_MODEL_PROD = SENTIMENT_MODELS_PATH / \
