@@ -10,12 +10,15 @@ from tqdm import tqdm
 
 from aspects.analysis.statistics_bing_liu import load_reviews, get_sentiment_from_aspect_sentiment_text
 from aspects.utilities import settings
+from aspects.utilities.common_nlp import load_spacy
 
 TextTag = namedtuple('TextTag', 'text, tag')
 TextTagged = namedtuple('TextTagged', 'text, tagged')
 
+nlp = load_spacy()
 
-def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str]]:
+
+def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str, str, List]]:
     """
     Parse lines such as
 
@@ -41,10 +44,10 @@ def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str]]:
                     in aspects
                 ])
 
-                yield _entity_replecement(text, aspects_replacement), basename(review_path)
+                yield _entity_replecement(text, aspects_replacement), basename(review_path), aspects_str, aspects
 
             else:
-                yield _add_bio_o_tag(text), basename(review_path)
+                yield _add_bio_o_tag(text), basename(review_path), aspects_str, []
 
 
 def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
@@ -62,9 +65,9 @@ def _create_bio_replacement(text_tags: List[TextTag]) -> Iterable[TextTagged]:
 
 def _add_bio_o_tag(text: str) -> str:
     return ' '.join([
-        f'{token} O'
+        f'{token.text} O'
         for token
-        in text.split()
+        in nlp(text)
         if token
     ])
 
@@ -97,7 +100,7 @@ def _new_line_every_tag(sentence: str):
 
 
 if __name__ == '__main__':
-    df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset'])
+    df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
     settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
     df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
     create_train_test_files(settings.BING_LIU_BIO_DATASET)
