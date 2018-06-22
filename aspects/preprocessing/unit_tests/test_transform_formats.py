@@ -71,6 +71,10 @@ def test_entity_replecement(text, texts_tagged, text_expected):
     (
             'I O like O samsung B-aspect note I-aspect II I-aspect',
             'I O\nlike O\nsamsung B-aspect\nnote I-aspect\nII I-aspect\n\n'
+    ),
+    (
+            'I O like O this O Organization B-ORG',
+            'I O\nlike O\nthis O\nOrganization B-ORG\n\n'
     )
 ])
 def test_new_line_every_tag(text, text_output):

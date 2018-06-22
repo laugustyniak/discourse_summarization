@@ -93,7 +93,8 @@ def create_train_test_files(output_path: Path, text_col: str = 'text', test_size
 
 def _new_line_every_tag(sentence: str):
     return ''.join([
-        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token.startswith('O') else f'{token} '
+        f'{token}\n' if token.startswith('B-') or token.startswith('I-') or (
+                token.startswith('O') and len(token) == 1) else f'{token} '
         for token
         in sentence.split()
     ]) + '\n'  # additional space to split documents in BIO conll format
