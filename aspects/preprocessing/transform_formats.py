@@ -99,7 +99,7 @@ def save_bio_file(output_path: str, sentences: Iterable[str]):
 
 
 def _new_line_every_tag(sentence: str):
-    return ''.join([
+    return '-DOCSTART- -X- O O\n\n' + ''.join([
         f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token == 'O' else f'{token} '
         for token
         in word_tokenize(sentence)
@@ -122,10 +122,11 @@ def validate_bio_format(file_path: str, n_tags: int = 1):
     n_tokens = n_tags + 1
     with open(file_path, 'r') as bio_file:
         for line_number, line in enumerate(bio_file, start=1):
-            tokens = line.split()
-            if len(tokens) != n_tokens and len(tokens):
-                print(f'Error in line number {line_number}: {line}')
-                n_errors += 1
+            if '-DOCSTART- -X- O O' not in line:
+                tokens = line.split()
+                if len(tokens) != n_tokens and len(tokens):
+                    print(f'Error in line number {line_number}: {line}')
+                    n_errors += 1
     if not n_errors:
         print(f'No errors found in {file_path}.')
 
