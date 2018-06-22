@@ -133,10 +133,10 @@ def validate_conll_format(file_path: str, n_tags: int = 1):
             if '-DOCSTART- -X- O O' not in line:
                 tokens = line.split()
                 if len(tokens) != n_tokens and len(tokens):
-                    print(f'Error in line number {line_number}: {line}')
+                    click.echo(f'Error in line number {line_number}: {line}')
                     n_errors += 1
     if not n_errors:
-        print(f'No errors found in {file_path}.')
+        click.echo(f'No errors found in {file_path}.')
 
 
 def transform_semeval_xml_to_conll(xml_path: Path):
