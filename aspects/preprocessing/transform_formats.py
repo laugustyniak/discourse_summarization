@@ -103,15 +103,19 @@ def create_bing_liu_train_test_as_conll_files(
 def save_as_conll_file(output_path: Path, sentences: Iterable[str]):
     with open(output_path, 'w') as train_file:
         train_file.write(
-            ''.join([_split_sentence_with_tags_into_word_tags_per_line(sentence) for sentence in sentences]))
+            ''.join([
+                _split_sentence_with_tags_into_word_tags_per_line(sentence.replace('\nO\n', '\n'))
+                for sentence
+                in sentences
+            ]))
 
 
 def _split_sentence_with_tags_into_word_tags_per_line(sentence: str):
     return '-DOCSTART- -X- O O\n\n' + ''.join([
         f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token == 'O' else f'{token} '
         for token
-        in word_tokenize(sentence)
-    ]) + '\n'  # additional space to split documents in BIO conll format
+        in sentence.split()
+    ]) + '\n'.replace('\nO\nO\n', '\n')  # additional space to split documents in BIO conll format
 
 
 def parse_semeval_xml(xml_path: Path):
@@ -125,10 +129,10 @@ def parse_semeval_xml(xml_path: Path):
         yield text, aspects, aspects_categories
 
 
-def validate_conll_format(file_path: str, n_tags: int = 1):
+def validate_conll_format(conll_file_path: str, n_tags: int = 1):
     n_errors = 0
     n_tokens = n_tags + 1
-    with open(file_path, 'r') as conll_file:
+    with open(conll_file_path, 'r') as conll_file:
         for line_number, line in enumerate(conll_file, start=1):
             if '-DOCSTART- -X- O O' not in line:
                 tokens = line.split()
@@ -136,13 +140,15 @@ def validate_conll_format(file_path: str, n_tags: int = 1):
                     click.echo(f'Error in line number {line_number}: {line}')
                     n_errors += 1
     if not n_errors:
-        click.echo(f'No errors found in {file_path}.')
+        click.echo(f'No errors found in {conll_file_path}.')
+    else:
+        click.echo(f'#{n_errors} found in file {conll_file_path}')
 
 
 def transform_semeval_xml_to_conll(xml_path: Path):
     conll_file_path = xml_path.with_suffix('.conll')
     df = pd.DataFrame(parse_semeval_xml(xml_path), columns=['text', 'aspects', 'aspects_categories'])
-    df.text = df.text.apply(lambda text: _add_o_tag_after_every_word(_clean_text_for_conll_format(text)))
+    df.text = df.text.apply(lambda text: _clean_text_for_conll_format(text))
 
     df['texts_tagged'] = ([
         _create_BI_replacement([
@@ -166,6 +172,9 @@ def transform_semeval_xml_to_conll(xml_path: Path):
 
 if __name__ == '__main__':
     transform_semeval_xml_to_conll(settings.SEMEVAL_RESTAURANTS_TRAIN_XML)
+    transform_semeval_xml_to_conll(settings.SEMEVAL_RESTAURANTS_TEST_XML)
+    validate_conll_format(settings.SEMEVAL_RESTAURANTS_TRAIN_XML.with_suffix('.conll'))
+    validate_conll_format(settings.SEMEVAL_RESTAURANTS_TEST_XML.with_suffix('.conll'))
 
     # df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
     # settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)

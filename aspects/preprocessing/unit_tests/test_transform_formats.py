@@ -8,12 +8,22 @@ from aspects.preprocessing.transform_formats import (
 
 @pytest.mark.parametrize("text_tag, bio_replacer", [
     (
-            [TextTag('ipod', 'aspect')],
-            [TextTagged('ipod O', 'ipod B-aspect')]
+            [
+                TextTag('ipod', 'aspect'),
+                TextTag('touch screen', 'aspect')
+            ],
+            [
+                TextTagged('ipod O', 'ipod B-aspect'),
+                TextTagged('touch O screen O', 'touch B-aspect screen I-aspect')
+            ]
     ),
     (
             [TextTag('samsung note II', 'aspect')],
             [TextTagged('samsung O note O II O', 'samsung B-aspect note I-aspect II I-aspect')]
+    ),
+    (
+            [TextTag("samsung", 'aspect')],
+            [TextTagged("samsung O", "samsung B-aspect")]
     ),
     (
             [TextTag('', 'aspect')],
@@ -31,8 +41,12 @@ def test_create_bio_regex_replacer(text_tag, bio_replacer):
             'samsung O note O II O'
     ),
     (
-            'I like it iphone',
-            'I O like O it O iphone O'
+            'I like this iphone',
+            'I O like O this O iphone O'
+    ),
+    (
+            "I don't like this iphone",
+            "I O don't O like O this O iphone O"
     ),
 ])
 def test_add_bio_o_tag(text, text_tagged):
@@ -70,12 +84,12 @@ def test_entity_replecement(text, texts_tagged, text_expected):
 
 @pytest.mark.parametrize("text, text_output", [
     (
-            'I O like O samsung B-aspect note I-aspect II I-aspect',
-            '-DOCSTART- -X- O O\n\nI O\nlike O\nsamsung B-aspect\nnote I-aspect\nII I-aspect\n\n'
+            "I O don't O like O samsung B-aspect note I-aspect II I-aspect",
+            "-DOCSTART- -X- O O\n\nI O\ndon't O\nlike O\nsamsung B-aspect\nnote I-aspect\nII I-aspect\n\n"
     ),
     (
-            'I O like O this O Organization B-ORG',
-            '-DOCSTART- -X- O O\n\nI O\nlike O\nthis O\nOrganization B-ORG\n\n'
+            "I O don't O like O this O Organization B-ORG",
+            "-DOCSTART- -X- O O\n\nI O\ndon't O\nlike O\nthis O\nOrganization B-ORG\n\n"
     )
 ])
 def test_new_line_every_tag(text, text_output):
