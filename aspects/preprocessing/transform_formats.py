@@ -21,7 +21,7 @@ TextTagged = namedtuple('TextTagged', 'text, tagged')
 nlp = load_spacy()
 
 
-def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str, str, List]]:
+def bing_liu_add_bio_tags(review_path: Path, min_aspect_len: int = 5) -> Iterable[Tuple[str, str, str, List]]:
     """
     Parse lines such as
 
@@ -30,27 +30,26 @@ def bing_liu_add_bio_tags(min_aspect_len: int = 5) -> Iterable[Tuple[str, str, s
     into BIO format, each line is one text with added BIO-tags just after each token.
     B-Aspect, I-Aspect, O [no tag]
     """
-    for review_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
-        review_df = load_reviews(review_path)
-        for idx, aspects_str, text in tqdm(review_df.itertuples(), desc=f'Dataset: {review_path}'):
-            text = _clean_text_for_conll_format(text)
-            if isinstance(aspects_str, str) and len(aspects_str) > 0:
-                aspects = [
-                    get_sentiment_from_aspect_sentiment_text(a).aspect
-                    for a
-                    in aspects_str.split(',')
-                    if len(a) > min_aspect_len
-                ]
-                texts_tags_replacement = _create_BI_replacement([
-                    TextTag(text=aspect, tag='aspect')
-                    for aspect
-                    in aspects
-                ])
+    review_df = load_reviews(review_path.as_posix())
+    for idx, aspects_str, text in tqdm(review_df.itertuples(), desc=f'Dataset: {review_path}'):
+        text = _clean_text_for_conll_format(text)
+        if isinstance(aspects_str, str) and len(aspects_str) > 0:
+            aspects = [
+                get_sentiment_from_aspect_sentiment_text(a).aspect
+                for a
+                in aspects_str.split(',')
+                if len(a) > min_aspect_len
+            ]
+            texts_tags_replacement = _create_BI_replacement([
+                TextTag(text=aspect, tag='aspect')
+                for aspect
+                in aspects
+            ])
 
-                yield replace_BI_conll_tags(text, texts_tags_replacement), basename(review_path), aspects_str, aspects
+            yield replace_BI_conll_tags(text, texts_tags_replacement), basename(review_path), aspects_str, aspects
 
-            else:
-                yield _add_o_tag_after_every_word(text), basename(review_path), aspects_str, []
+        else:
+            yield _add_o_tag_after_every_word(text), basename(review_path), aspects_str, []
 
 
 def _clean_text_for_conll_format(text: str):
@@ -88,16 +87,14 @@ def replace_BI_conll_tags(text: str, texts_tagged: Iterable[TextTagged]) -> str:
 
 
 def create_bing_liu_train_test_as_conll_files(
-        output_path: Path, text_col: str = 'text', test_size: float = 0.2, dataset: str = None):
-    df = pd.read_csv(settings.BING_LIU_BIO_DATASET / 'bing_liu_merged_review_datasets_bio_tags.csv')
-    if dataset is not None:
-        df = df[df.dataset == dataset]
+        output_path: Path, dataset_path: Path, text_col: str = 'text', test_size: float = 0.2):
+    df = pd.read_csv(settings.BING_LIU_BIO_DATASET / f'{dataset_path.with_suffix(".csv").name}')
     df = df.sample(frac=1)  # shuffle rows
     X = df[text_col].tolist()
     X_train, X_test, _, _ = train_test_split(X, range(len(X)), test_size=test_size, random_state=42)
 
-    save_as_conll_file(output_path=output_path / 'train.conll', sentences=X_train)
-    save_as_conll_file(output_path=output_path / 'test.conll', sentences=X_test)
+    save_as_conll_file(output_path=output_path / f'{dataset_path.stem}-train.conll', sentences=X_train)
+    save_as_conll_file(output_path=output_path / f'{dataset_path.stem}-test.conll', sentences=X_test)
 
 
 def save_as_conll_file(output_path: Path, sentences: Iterable[str]):
@@ -194,13 +191,22 @@ def prepare_and_validate_semeval_2014_data():
     validate_conll_format(settings.SEMEVAL_LAPTOPS_TEST_XML.with_suffix('.conll'))
 
 
+def prepare_and_validate_bing_liu(dataset_path: Path):
+    df = pd.DataFrame(
+        bing_liu_add_bio_tags(review_path=dataset_path),
+        columns=['text', 'dataset', 'aspect_str', 'aspects']
+    )
+    settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
+    f_name = settings.BING_LIU_BIO_DATASET / f'{dataset_path.with_suffix(".csv").name}'
+    df.to_csv(f_name)
+    click.echo(f'CSV with conll data saved: {f_name}')
+
+    create_bing_liu_train_test_as_conll_files(settings.BING_LIU_BIO_DATASET, dataset_path=dataset_path)
+    validate_conll_format(settings.BING_LIU_BIO_DATASET / f'{dataset_path.stem}-train.conll')
+    validate_conll_format(settings.BING_LIU_BIO_DATASET / f'{dataset_path.stem}-test.conll')
+
+
 if __name__ == '__main__':
-    prepare_and_validate_semeval_2014_data()
-    #
-    # df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
-    # settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
-    # df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
-    #
-    # create_train_test_files(settings.BING_LIU_BIO_DATASET)
-    # validate_bio_format(settings.BING_LIU_BIO_DATASET / 'train.csv')
-    # validate_bio_format(settings.BING_LIU_BIO_DATASET / 'test.csv')
+    # prepare_and_validate_semeval_2014_data()
+    for review_path in settings.ALL_BING_LIU_REVIEWS_PATH.glob('*.txt'):
+        prepare_and_validate_bing_liu(review_path)
