@@ -11,7 +11,7 @@ from aspects.utilities import settings
 def get_spearman_and_kendalltau_correlations(top_n_aspects: int = 10):
     correlations = {}
 
-    for reviews_path in settings.ALL_BING_LIU_REVIEWS_PATHS:
+    for reviews_path in settings.BING_LIU_ASPECT_DATASETS_PATHS:
         dataset_name = basename(reviews_path).split('.')[0]
         print(f'Dataset to analyze: {dataset_name}')
 

@@ -2,19 +2,28 @@ from collections import namedtuple
 from os.path import basename
 from typing import Dict, List
 
+import click
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 from aspects.utilities import settings
-from aspects.utilities.common_nlp import spelling
 
 AspectSentiment = namedtuple('AspectSentiment', 'aspect, sentiment')
 DatasetSize = namedtuple('DatasetSize', 'dataset, size, reviews_word_average, aspect_coverage')
 
 
 def load_reviews(reviews_path: str) -> pd.DataFrame:
-    return pd.read_csv(reviews_path, sep='##', names=['aspects', 'text'], engine='python')
+    df = pd.read_csv(reviews_path, sep='##', names=['aspects', 'text'], engine='python')
+    df = df[df.text.apply(lambda text: bing_liu_line_filter(text))]
+    return df
+
+
+def bing_liu_line_filter(text: str) -> bool:
+    if text is None or text.startswith('[t]') or text.startswith('*') or len(text) < 10:
+        return False
+    else:
+        return True
 
 
 def get_aspects(reviews_path: str) -> pd.DataFrame:
@@ -44,22 +53,23 @@ def get_sentiment_from_aspect_sentiment_text(aspect_with_sentiment: str) -> Aspe
     aspect = aspect_splitted[0]
     try:
         sentiment_str = aspect_splitted[1].replace(']', '')
+        if '-' in sentiment_str:
+            if len(sentiment_str) > 1:
+                sentiment = int(sentiment_str)
+            else:
+                sentiment = -1
+        elif '+' in sentiment_str:
+            if len(sentiment_str) > 1:
+                sentiment = int(sentiment_str)
+            else:
+                sentiment = 1
+        else:
+            sentiment = int(sentiment_str)
     except IndexError:
-        print(f'Error with: {aspect_with_sentiment}')
-        raise Exception
-    if '-' in sentiment_str:
-        if len(sentiment_str) > 1:
-            sentiment = int(sentiment_str)
-        else:
-            sentiment = -1
-    elif '+' in sentiment_str:
-        if len(sentiment_str) > 1:
-            sentiment = int(sentiment_str)
-        else:
-            sentiment = 1
-    else:
-        sentiment = int(sentiment_str)
-    return AspectSentiment(aspect=spelling(aspect.lower()), sentiment=sentiment)
+        click.echo(f'Error with: {aspect_with_sentiment}')
+        sentiment = 0
+        aspect = aspect_with_sentiment
+    return AspectSentiment(aspect=aspect, sentiment=sentiment)
 
 
 def aspect_distribution(reviews_path: str, draw: bool = False, freq_threshold=2) -> pd.Series:
@@ -107,7 +117,7 @@ def load_all_aspects_from_datasets() -> Dict:
     return {
         basename(review_path): get_aspects(review_path)
         for review_path
-        in settings.ALL_BING_LIU_REVIEWS_PATHS
+        in settings.BING_LIU_ASPECT_DATASETS_PATHS
     }
 
 
@@ -117,6 +127,6 @@ if __name__ == '__main__':
     #     get_aspect_frequency_ranking(reviews_path)
     #     df = aspect_distribution(reviews_path)
     # example for jupyter
-    datasets_sizes_df = get_datasets_sizes(settings.ALL_BING_LIU_REVIEWS_PATHS)
-    datasets_reviews_word_average_df = get_datasets_sizes(settings.ALL_BING_LIU_REVIEWS_PATHS).plot(
+    datasets_sizes_df = get_datasets_sizes(settings.BING_LIU_ASPECT_DATASETS_PATHS)
+    datasets_reviews_word_average_df = get_datasets_sizes(settings.BING_LIU_ASPECT_DATASETS_PATHS).plot(
         kind='bar', x='dataset', y='reviews_word_average')
