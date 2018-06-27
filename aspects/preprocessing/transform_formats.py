@@ -115,7 +115,7 @@ def _split_sentence_with_tags_into_word_tags_per_line(sentence: str):
         f'{token}\n' if token.startswith('B-') or token.startswith('I-') or token == 'O' else f'{token} '
         for token
         in sentence.split()
-    ]) + '\n'.replace('\nO\nO\n', '\n')  # additional space to split documents in BIO conll format
+    ]) + '\n'  # additional space to split documents in BIO conll format
 
 
 def parse_semeval_xml(xml_path: Path):
@@ -131,18 +131,30 @@ def parse_semeval_xml(xml_path: Path):
 
 def validate_conll_format(conll_file_path: str, n_tags: int = 1):
     n_errors = 0
+    errors = {}
     n_tokens = n_tags + 1
-    with open(conll_file_path, 'r') as conll_file:
-        for line_number, line in enumerate(conll_file, start=1):
+
+    conll_file_check = open(conll_file_path, 'r').readlines()
+
+    with open(conll_file_path, 'w') as conll_file:
+        for line_number, line in enumerate(conll_file_check, start=1):
             if '-DOCSTART- -X- O O' not in line:
                 tokens = line.split()
                 if len(tokens) != n_tokens and len(tokens):
                     click.echo(f'Error in line number {line_number}: {line}')
                     n_errors += 1
+                    errors[line_number] = line
+                    # don't save this line
+                else:
+                    conll_file.write(line)
+            else:
+                conll_file.write(line)
     if not n_errors:
         click.echo(f'No errors found in {conll_file_path}.')
     else:
-        click.echo(f'#{n_errors} found in file {conll_file_path}')
+        click.echo(f'#{n_errors} found in file {conll_file_path}, errors {errors}')
+
+    return errors
 
 
 def transform_semeval_xml_to_conll(xml_path: Path):
@@ -170,12 +182,21 @@ def transform_semeval_xml_to_conll(xml_path: Path):
     click.echo(f'{conll_file_path} has been saved!')
 
 
-if __name__ == '__main__':
+def prepare_and_validate_semeval_2014_data():
     transform_semeval_xml_to_conll(settings.SEMEVAL_RESTAURANTS_TRAIN_XML)
     transform_semeval_xml_to_conll(settings.SEMEVAL_RESTAURANTS_TEST_XML)
     validate_conll_format(settings.SEMEVAL_RESTAURANTS_TRAIN_XML.with_suffix('.conll'))
     validate_conll_format(settings.SEMEVAL_RESTAURANTS_TEST_XML.with_suffix('.conll'))
 
+    transform_semeval_xml_to_conll(settings.SEMEVAL_LAPTOPS_TRAIN_XML)
+    transform_semeval_xml_to_conll(settings.SEMEVAL_LAPTOPS_TEST_XML)
+    validate_conll_format(settings.SEMEVAL_LAPTOPS_TRAIN_XML.with_suffix('.conll'))
+    validate_conll_format(settings.SEMEVAL_LAPTOPS_TEST_XML.with_suffix('.conll'))
+
+
+if __name__ == '__main__':
+    prepare_and_validate_semeval_2014_data()
+    #
     # df = pd.DataFrame(bing_liu_add_bio_tags(), columns=['text', 'dataset', 'aspect_str', 'aspects'])
     # settings.BING_LIU_BIO_DATASET.mkdir(exist_ok=True)
     # df.to_csv(settings.BING_LIU_BIO_DATASET / 'merged_review_datasets_bio_tags.csv')
