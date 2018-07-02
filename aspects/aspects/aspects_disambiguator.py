@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-
 import jellyfish
 
 
+# TODO: do word embeddings based clustering of close aspects + jaro wrinkler
 class AspectsDisambiguator(object):
     def __init__(self):
         self.__threshold = 0.75
@@ -32,8 +30,7 @@ class AspectsDisambiguator(object):
         for aspect in aspects:
             candidate, similarity = self._get_most_similar(aspects, aspect)
 
-            if similarity < self.__threshold \
-                    and candidate not in accepted_aspects:
+            if similarity < self.__threshold and candidate not in accepted_aspects:
                 accepted_aspects.append(candidate)
             else:
                 accepted_aspects.append(aspect)
