@@ -4,7 +4,6 @@ from collections import defaultdict
 from gensim.summarization import keywords
 
 from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
-from aspects.preprocessing.preprocessing import filter_words_by_zipf
 from aspects.utilities import common_nlp
 from aspects.utilities import settings
 
@@ -46,9 +45,6 @@ class AspectExtractor(object):
         else:
             self.ner_types = ner_types
 
-    def _is_interesting_main(self, token):
-        return token.pos_ == 'NOUN'
-
     def _is_interesting_addition(self, token):
         return token.pos_ == 'ADV' or token.pos_ == 'NUM' or token.pos_ == 'NOUN' or token.pos_ == 'ADJ'
 
@@ -85,8 +81,6 @@ class AspectExtractor(object):
         # lower case every aspect and only longer than 1
         aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
 
-        aspects = filter_words_by_zipf([common_nlp.spelling(aspect) for aspect in aspects], 6)
-
         if settings.SENTIC_ASPECTS:
             concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects)
 
@@ -101,8 +95,8 @@ class AspectExtractor(object):
         aspect_sequence_main_encountered = False
         aspect_sequence_enabled = False
         for token in nlp(text):
-            if self._is_interesting_main(token):
-                if not token.is_stop and len(aspect_sequence) < 3:
+            if token.pos_ == 'NOUN':
+                if len(aspect_sequence) < 3:
                     aspect_sequence.append(token.lemma_)
                 aspect_sequence_enabled = True
                 aspect_sequence_main_encountered = True
@@ -118,6 +112,10 @@ class AspectExtractor(object):
         if aspect_sequence_enabled and aspect_sequence_main_encountered:
             aspects.append(' '.join(aspect_sequence))
         return [aspect for aspect in aspects if aspect]
+
+    def _aspects_to_conll_format(self, text, aspects):
+        # TODO: i ended here
+        pass
 
     def extract_concept_from_conceptnet_io(self, aspects):
         conceptnet_io = load_conceptnet_io()
@@ -154,3 +152,7 @@ class AspectExtractor(object):
                 'rake': [(None, None)],
                 'text_rank': []
             }
+
+    def extract_aspects_bilstm_crf_model(self):
+        # TODO: implement
+        pass
