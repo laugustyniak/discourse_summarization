@@ -1,4 +1,13 @@
-class Conll:
+from collections import namedtuple
+
+from tqdm import tqdm
+
+from aspects.preprocessing.transform_formats import TextTag
+
+Sentence = namedtuple('Sentence', ['words', 'tags'])
+
+
+class Conll(object):
 
     def __init__(self, file_path: str, n_tag_fields: int = 2):
         self.file_path = file_path
@@ -24,7 +33,7 @@ class Conll:
             else:
                 tokens.append(fields[0])
             tags.append(fields[self.n_tag_fields - 1])
-        return tokens, tags
+        return Sentence(tokens, tags)
 
     @staticmethod
     def _split_into_sentences(file_lines):
@@ -39,3 +48,23 @@ class Conll:
             s.append(line)
         sents.append(s)
         return sents
+
+    def extract_words_and_tags(self, sentences):
+        for sentence in tqdm(sentences):
+            text_tag = list(filter(lambda t: t[1] != 'O', zip(sentence.words, sentence.tags)))
+
+            if len(text_tag) == 1:
+                yield TextTag(text=text_tag[0][0], tag=text_tag[0][1].replace('B-', ''))
+            elif len(text_tag) > 1:
+                text_prev, tag_prev = text_tag[0]
+                for text_next, tag_next in text_tag[1:]:
+                    if tag_next.startswith('B-'):
+                        yield TextTag(text_prev, tag_next.replace('B-', ''))
+                        text_prev = text_next
+                    else:
+                        text_prev += ' ' + text_next
+
+                if tag_next.startswith('I-'):
+                    yield TextTag(text_prev, tag_next.replace('I-', ''))
+            else:
+                pass
