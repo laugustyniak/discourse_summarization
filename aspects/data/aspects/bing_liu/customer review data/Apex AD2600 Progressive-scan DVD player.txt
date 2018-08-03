@@ -1,16 +1,16 @@
 *****************************************************************************
 * Annotated by: Minqing Hu and Bing Liu, 2004.
 *		Department of Computer Sicence
-*               University of Illinois at Chicago              
+*               University of Illinois at Chicago
 *
 * Product name: Apex AD2600 Progressive-scan DVD player
 * Review Source: amazon.com
 *
-* See Readme.txt to find the meaning of each symbol. 
+* See Readme.txt to find the meaning of each symbol.
 *****************************************************************************
 
-[t] troubleshooting ad-2500 and ad-2600 no picture scrolling b/w . 
-##repost from january 13 , 2004 with a better fit title . 
+[t] troubleshooting ad-2500 and ad-2600 no picture scrolling b/w .
+##repost from january 13 , 2004 with a better fit title .
 ##does your apex dvd player only play dvd audio without video ? 
 ##or does it play audio and video but scrolling in black and white ? 
 ##before you try to return the player or waste hours calling apex tech support , or run the player over with your car , try these simple troubleshooting ideas first . 

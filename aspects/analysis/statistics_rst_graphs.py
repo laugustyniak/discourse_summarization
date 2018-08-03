@@ -27,6 +27,7 @@ AspectPageRank = namedtuple('Aspect_PageRank', 'aspect, pagerank')
 
 
 def get_aspect_ranking_based_on_rst_and_pagerank(aspects_graph_path, top_n=10):
+    """ Get Data Frame with aspects and its ranking based on page rank of asepct-aspect graph """
     aspect_graph = nx.read_gpickle(aspects_graph_path)
 
     df = pd.DataFrame(

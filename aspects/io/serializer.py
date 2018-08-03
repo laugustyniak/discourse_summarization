@@ -1,5 +1,5 @@
-import cPickle
 import logging
+import pickle
 
 log = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ class Serializer(object):
         """Load serialized data"""
         try:
             with open(filepath, "rb") as fo:
-                pkl = cPickle.load(fo)
+                pkl = pickle.load(fo)
                 log.info('File loaded: {}'.format(filepath))
                 return pkl
         except IOError as err:
@@ -20,7 +20,7 @@ class Serializer(object):
         """Save serialized data"""
         with open(filename, "wb") as fo:
             log.info('File {} will be serialized.'.format(filename))
-            cPickle.dump(data, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(data, fo, protocol=pickle.HIGHEST_PROTOCOL)
 
     def append_serialized(self, string_data, filename):
         """Append serialized data"""
