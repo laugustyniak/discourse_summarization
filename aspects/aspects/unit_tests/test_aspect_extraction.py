@@ -62,13 +62,41 @@ class AspectExtractionTest(unittest.TestCase):
 
     def test_extract_noun_and_noun_phrases_very_long_aspects_trimming(self):
         aspects_expected = [u'word explorer netscape']
-        text = u'i wonder if you can propose word explorer netscape acrobat reader photoshop and others'
+        text = u'i wonder if you can propose word explorer netscape acrobat reader photoshop'
         aspects_extractor = AspectExtractor()
-        aspects_obtained = aspects_extractor.extract_noun_and_noun_phrases(text)
-        self.assertEqual(aspects_obtained, aspects_expected)
+        aspects_obtained, _ = aspects_extractor.extract_noun_and_noun_phrases(text)
+        self.assertEqual(aspects_expected, aspects_obtained)
+
+    def test_extract_noun(self):
+        aspects_expected = [u'iphone']
+        text = u'i wonder if you can propose blue iphone'
+        aspects_extractor = AspectExtractor()
+        aspects_obtained, _ = aspects_extractor.extract_noun_and_noun_phrases(text)
+        self.assertEqual(aspects_expected, aspects_obtained)
+
+    def test_extract_noun_phrases_with_number(self):
+        aspects_expected = [u'iphone x']
+        text = u'i wonder if you can propose iphone X'
+        aspects_extractor = AspectExtractor()
+        aspects_obtained, _ = aspects_extractor.extract_noun_and_noun_phrases(text)
+        self.assertEqual(aspects_expected, aspects_obtained)
+
+    def test_extract_noun_phrases_skip_ps(self):
+        aspects_expected = []
+        text = u'I propose p.s. <'
+        aspects_extractor = AspectExtractor()
+        aspects_obtained, _ = aspects_extractor.extract_noun_and_noun_phrases(text)
+        self.assertEqual(aspects_expected, aspects_obtained)
+
+    def test_extract_nouns(self):
+        aspects_expected = [u'phone', u'sound', u'bass']
+        text = u'this phone has excellent sound and bass'
+        aspects_extractor = AspectExtractor()
+        aspects_obtained, _ = aspects_extractor.extract_noun_and_noun_phrases(text)
+        self.assertEqual(aspects_expected, aspects_obtained)
 
     def test_sentic_concept_extraction(self):
-        concept = 'screen'
+        concept = u'screen'
         raw_text = u'i wonder if you can propose for me better screen'
         text = preprocessing.preprocess(raw_text)
         if settings.SENTIC_ASPECTS:

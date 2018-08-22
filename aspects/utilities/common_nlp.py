@@ -13,7 +13,7 @@ def load_spacy(model='en_core_web_sm'):
 
 ASPECTS_TO_SKIP = [
     u'day', u'days', u'week', u'weeks',
-    u'tonight', 'tomorrow',
+    u'tonight', u'tomorrow',
     u'total', u'laughter', u'tongue',
     u'weekend', u'month', u'months', u'year', u'years', u'time', u'today', u'data', u'date',
     u'monday', u'tuesday', u'wednesday', u'thursday', u'friday', u'saturday', u'sunday',
@@ -26,6 +26,7 @@ ASPECTS_TO_SKIP = [
     u'unk',
     u'password',
     u'don',
+    u'other', u'others'
 ]
 
 

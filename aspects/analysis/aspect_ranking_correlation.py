@@ -13,11 +13,11 @@ def get_spearman_and_kendalltau_correlations(top_n_aspects: int = 10):
 
     for reviews_path in settings.BING_LIU_ASPECT_DATASETS_PATHS:
         dataset_name = basename(reviews_path).split('.')[0]
-        print(f'Dataset to analyze: {dataset_name}')
+        print(f'\nDataset to analyze: {dataset_name}')
 
         # get freq aspects from Bing Liu manually created datasets
         aspects_freq_manual_assignment = get_aspect_frequency_ranking(reviews_path=reviews_path, top_n=top_n_aspects)
-        print(aspects_freq_manual_assignment)
+        print(f'TOP{top_n_aspects} Manually extracted aspects: {aspects_freq_manual_assignment}')
 
         # get aspects from RST + PageRank
         aspects_from_rst_based_on_pagerank = get_aspects_rankings_from_rst(
@@ -63,8 +63,8 @@ def get_spearman_and_kendalltau_correlations(top_n_aspects: int = 10):
             'Kendall Tau Correlation': kendalltau_correlation[0],
             'Kendall Tau p-value': kendalltau_correlation[1],
             'Jaccard': len(aspects_manual.intersection(aspects_rst))/len(aspects_manual.union(aspects_rst)),
-            'Precision': len(aspects_manual.intersection(aspects_rst))/len(aspects_manual),
-            # 'Recall': len(aspects_manual.intersection(aspects_rst))/len(aspects_manual.union(aspects_rst))
+            'Recall': len(aspects_manual.intersection(aspects_rst)) / len(aspects_manual),
+            'Precision': len(aspects_manual.intersection(aspects_rst)) / len(aspects_rst)
         }
     return correlations
 
