@@ -2,7 +2,11 @@ import logging
 import pickle
 
 import pandas as pd
-from repoze.lru import lru_cache
+
+try:
+    from repoze.lru import lru_cache
+except:
+    from functools import lru_cache
 
 from aspects.data.sentic.senticnet5 import senticnet
 from aspects.utilities import settings
