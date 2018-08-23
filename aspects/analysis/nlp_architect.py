@@ -22,7 +22,7 @@ def get_metrics(models_paths: Iterable[Path], filter_datasets: Callable = _filte
     models_metrics = {}
     for model_path in list(filter(filter_datasets, models_paths)):
         model_info = pickle.load(model_path.open('rb'))
-        models_metrics[_get_dataset_name(model_path)] = _get_metrics(model_info['eval'])
+        models_metrics[_get_dataset_name(model_path.as_posix())] = _get_metrics(model_info['eval'])
     return models_metrics
 
 
