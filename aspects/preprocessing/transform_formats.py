@@ -98,7 +98,7 @@ def create_bing_liu_train_test_as_conll_files(
 
 
 def save_as_conll_file(output_path: Path, sentences: Iterable[str]):
-    with open(output_path, 'w') as train_file:
+    with open(output_path.as_posix(), 'w') as train_file:
         train_file.write(
             ''.join([
                 _split_sentence_with_tags_into_word_tags_per_line(sentence.replace('\nO\n', '\n'))
@@ -116,7 +116,7 @@ def _split_sentence_with_tags_into_word_tags_per_line(sentence: str):
 
 
 def parse_semeval_xml(xml_path: Path):
-    with open(xml_path) as xml_file:
+    with open(xml_path.as_posix()) as xml_file:
         soup = BeautifulSoup(xml_file, 'lxml')
 
     for sentence in tqdm(soup.findAll('sentence')):
