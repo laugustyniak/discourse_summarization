@@ -1,5 +1,5 @@
 import re
-from collections import namedtuple
+from collections import namedtuple, Counter
 from os.path import basename
 from pathlib import Path
 from typing import List, Iterable, Tuple
@@ -7,6 +7,7 @@ from typing import List, Iterable, Tuple
 import click
 import pandas as pd
 from bs4 import BeautifulSoup
+from more_itertools import flatten
 from nltk.tokenize import word_tokenize
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
@@ -87,10 +88,23 @@ def replace_BI_conll_tags(text: str, texts_tagged: Iterable[TextTagged]) -> str:
 
 
 def create_bing_liu_train_test_as_conll_files(
-        output_path: Path, dataset_path: Path, text_col: str = 'text', test_size: float = 0.2):
+        output_path: Path,
+        dataset_path: Path,
+        text_col: str = 'text',
+        test_size: float = 0.2,
+        skip_documents_without_aspect: bool = True,
+):
     df = pd.read_csv(settings.BING_LIU_BIO_DATASET / f'{dataset_path.with_suffix(".csv").name}')
+    if skip_documents_without_aspect:
+        df = df.dropna(subset=['aspect_str'])
+    # lower case all aspects
+    df.aspects = df.aspects.apply(lambda aspects: [aspect.lower() for aspect in eval(aspects)])
+    aspects_counter = Counter(flatten(df.aspects.tolist()))
+    for aspect, n_occurences in aspects_counter.items():
+
     df = df.sample(frac=1)  # shuffle rows
     X = df[text_col].tolist()
+
     X_train, X_test, _, _ = train_test_split(X, range(len(X)), test_size=test_size, random_state=42)
 
     save_as_conll_file(output_path=output_path / f'{dataset_path.stem}-train.conll', sentences=X_train)
@@ -207,7 +221,8 @@ def prepare_and_validate_bing_liu(dataset_path: Path):
 
 
 if __name__ == '__main__':
-    prepare_and_validate_semeval_2014_data()
+    # TODO uncomment before merge
+    # prepare_and_validate_semeval_2014_data()
     for review_path in settings.BING_LIU_ASPECT_DATASETS_PATHS:
         click.echo(f'Processing of {review_path} dataset')
         prepare_and_validate_bing_liu(review_path)
