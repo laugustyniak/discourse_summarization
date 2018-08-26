@@ -14,11 +14,11 @@ def _get_metrics(metrics_eval):
     return Metrics(*metrics_eval[0])
 
 
-def _filter_datasets(dataset_path):
-    return True if 'restaurants' in dataset_path.as_posix() else False
+def filter_datasets(dataset_path: Path, subphrase: str = 'restaurants'):
+    return True if subphrase in dataset_path.as_posix() else False
 
 
-def get_metrics(models_paths: Iterable[Path], filter_datasets: Callable = _filter_datasets):
+def get_metrics(models_paths: Iterable[Path], filter_datasets: Callable = filter_datasets):
     models_metrics = {}
     for model_path in list(filter(filter_datasets, models_paths)):
         model_info = pickle.load(model_path.open('rb'))
