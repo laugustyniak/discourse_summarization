@@ -1,15 +1,15 @@
+import math
 import re
 from collections import namedtuple, Counter
 from os.path import basename
 from pathlib import Path
-from typing import List, Iterable, Tuple
+from typing import List, Iterable, Tuple, Set, Any
 
 import click
 import pandas as pd
 from bs4 import BeautifulSoup
 from more_itertools import flatten
 from nltk.tokenize import word_tokenize
-from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from aspects.analysis.statistics_bing_liu import load_reviews, get_sentiment_from_aspect_sentiment_text
@@ -93,25 +93,46 @@ def create_bing_liu_train_test_as_conll_files(
         text_col: str = 'text',
         test_size: float = 0.2,
         skip_documents_without_aspect: bool = True,
+        min_tag_occurences: int = 2
 ):
     df = pd.read_csv(settings.BING_LIU_BIO_DATASET / f'{dataset_path.with_suffix(".csv").name}')
+
     if skip_documents_without_aspect:
         df = df.dropna(subset=['aspect_str'])
+
     # lower case all aspects
     df.aspects = df.aspects.apply(lambda aspects: [aspect.lower() for aspect in eval(aspects)])
     aspects_counter = Counter(flatten(df.aspects.tolist()))
-    for aspect, n_occurences in aspects_counter.items():
 
     df = df.sample(frac=1)  # shuffle rows
-    X = df[text_col].tolist()
+    X_train_sentences = set()
 
-    X_train, X_test, _, _ = train_test_split(X, range(len(X)), test_size=test_size, random_state=42)
+    for aspect, n_occurences in filter_by_occurence(aspects_counter.items(), min_tag_occurences):
+        n_examples_train = math.floor((1 - test_size) * n_occurences)
+        X_train_sentences |= set(filter_by_tag(df, 'aspects', aspect).sample(n_examples_train)[text_col].tolist())
 
-    save_as_conll_file(output_path=output_path / f'{dataset_path.stem}-train.conll', sentences=X_train)
-    save_as_conll_file(output_path=output_path / f'{dataset_path.stem}-test.conll', sentences=X_test)
+    X_test_sentences = set(df[text_col].tolist()) - X_train_sentences
+
+    save_as_conll_file(output_path=output_path / f'{dataset_path.stem}-train.conll', sentences=X_train_sentences)
+    save_as_conll_file(output_path=output_path / f'{dataset_path.stem}-test.conll', sentences=X_test_sentences)
+
+
+def filter_by_occurence(sequence: Iterable[Tuple[Any, int]], min_occurences: int = 2) -> Iterable[Tuple[Any, int]]:
+    return [
+        (a, occurence)
+        for a, occurence
+        in sequence
+        if occurence >= min_occurences
+    ]
+
+
+def filter_by_tag(df: pd.DataFrame, tag_col_name: str, tag) -> pd.DataFrame:
+    """ tag_col_name consists of lists of tags """
+    return df[df[tag_col_name].apply(lambda tags: tag in tags)]
 
 
 def save_as_conll_file(output_path: Path, sentences: Iterable[str]):
+    print(f'Sentences {len(list(sentences))} will be saved in file {output_path.as_posix()}')
     with open(output_path.as_posix(), 'w') as train_file:
         train_file.write(
             ''.join([
