@@ -26,7 +26,20 @@ def get_metrics(models_paths: Iterable[Path], filter_datasets: Callable = filter
     return models_metrics
 
 
+def get_models_attributes(models_paths: Iterable[Path], *args):
+    models_metrics = {}
+    for model_path in models_paths:
+        model_info = pickle.load(model_path.open('rb'))
+        models_metrics[_get_dataset_name(model_path.as_posix())] = {
+            k: model_info[k]
+            for k
+            in args
+        }
+    return models_metrics
+
+
 if __name__ == '__main__':
-    metrics = get_metrics(Path(
-        '/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models-glove.840B.300d/').glob('*'))
+    atts = get_models_attributes(
+        list(Path('/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models/glove.840B.300d/').glob('*')),
+        'predictions', 'y_test')
     pass
