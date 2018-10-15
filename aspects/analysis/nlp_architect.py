@@ -1,5 +1,6 @@
 import pickle
 from collections import namedtuple
+
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -14,7 +15,7 @@ def _get_metrics(metrics_eval):
     return Metrics(*metrics_eval[0])
 
 
-def filter_datasets(dataset_path: Path, subphrase: str = 'restaurants'):
+def filter_datasets(dataset_path: Path, subphrase: str = 'Laptops'):
     return True if subphrase in dataset_path.as_posix() else False
 
 
@@ -38,8 +39,18 @@ def get_models_attributes(models_paths: Iterable[Path], *args):
     return models_metrics
 
 
+def get_models_params_from_name(model_name: str):
+    """
+    Parse names such as: model-info-char-bilstm-crf-10epochs-laptops-train.conll to model features and
+    neural network architecture only
+    """
+    return ' '.join(model_name.split('-')[2:-3])
+
+
 if __name__ == '__main__':
     atts = get_models_attributes(
-        list(Path('/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models/glove.840B.300d/').glob('*')),
+        list(
+            Path('/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models/glove.840B.300d/').glob(
+                '*')),
         'predictions', 'y_test')
     pass
