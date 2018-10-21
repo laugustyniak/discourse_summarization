@@ -5,7 +5,7 @@ from collections import OrderedDict
 import networkx as nx
 
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, RelationAspects
-from aspects.io.serializer import Serializer
+from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities import settings
 

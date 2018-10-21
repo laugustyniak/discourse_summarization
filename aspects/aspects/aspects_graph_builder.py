@@ -7,7 +7,7 @@ from operator import itemgetter
 import networkx as nx
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
-from aspects.io.serializer import Serializer
+from aspects.data_io.serializer import Serializer
 from aspects.utilities.transformations import flatten_list
 
 log = logging.getLogger(__name__)

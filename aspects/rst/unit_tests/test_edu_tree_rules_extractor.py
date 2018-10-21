@@ -1,7 +1,7 @@
 import sys
 import unittest
 
-from aspects.io.serializer import Serializer
+from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.rst.edu_tree_rules_extractor import Relation
 from aspects.utilities import settings
