@@ -15,8 +15,7 @@ nlp = common_nlp.load_spacy()
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(
-            self, ner_types={u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC'}, aspects_to_skip=None, is_ner=True):
+    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True):
         """
         Initialize extractor aspect extractor.
 
@@ -34,6 +33,8 @@ class AspectExtractor(object):
         is_ner : bool
             Do we want to extract Named Entity as aspects?
         """
+        if ner_types is None:
+            ner_types = {u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC'}
         self.is_ner = is_ner
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
