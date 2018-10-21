@@ -1,6 +1,5 @@
 import jellyfish
 
-from aspects.preprocessing.preprocessing import filter_words_by_zipf
 from aspects.utilities import common_nlp
 
 
@@ -24,7 +23,7 @@ def _get_most_similar(aspects, aspect):
 
 def process(aspects, threshold):
     # TODO: rename function, filter only noun phrases based aspects
-    aspects = filter_words_by_zipf([common_nlp.spelling(aspect) for aspect in aspects], 6)
+    aspects = [common_nlp.spelling(aspect) for aspect in aspects]
     accepted_aspects = []
 
     for aspect in aspects:

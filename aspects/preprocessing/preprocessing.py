@@ -9,11 +9,6 @@ from aspects.utilities.common_nlp import load_spacy
 
 log = logging.getLogger(__name__)
 
-try:
-    from wordfreq import zipf_frequency
-except:
-    log.error('No wordfreq lib installed')
-
 nlp = load_spacy()
 
 
@@ -51,13 +46,3 @@ def get_most_similar_text_pairs(texts, threshold=0.75):
                     text_1, text_2) > threshold and texts_pair_inverse not in similar_pairs:
                 similar_pairs[texts_pair] = jaro
     return similar_pairs
-
-
-def filter_words_by_zipf(words, max_zipf_freq=4.0):
-    """ Zipf equal to 4 is boarder between common [zipf higher than 4] and uncommon words [otherwise]. """
-    return [
-        word
-        for word
-        in words
-        if zipf_frequency(word, 'en') < max_zipf_freq
-    ]
