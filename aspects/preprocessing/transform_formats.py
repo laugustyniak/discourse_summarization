@@ -2,15 +2,15 @@ import math
 import re
 from collections import namedtuple, Counter
 from os.path import basename
-from pathlib import Path
-from typing import List, Iterable, Tuple, Set, Any
 
 import click
 import pandas as pd
 from bs4 import BeautifulSoup
 from more_itertools import flatten
 from nltk.tokenize import word_tokenize
+from pathlib import Path
 from tqdm import tqdm
+from typing import List, Iterable, Tuple, Any
 
 from aspects.analysis.statistics_bing_liu import load_reviews, get_sentiment_from_aspect_sentiment_text
 from aspects.utilities import settings

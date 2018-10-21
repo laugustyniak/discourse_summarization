@@ -1,11 +1,11 @@
 from collections import namedtuple
 from os.path import basename
-from typing import Dict, List
 
 import click
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from typing import Dict, List
 
 from aspects.utilities import settings
 

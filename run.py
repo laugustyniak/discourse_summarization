@@ -17,7 +17,7 @@ from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
-from aspects.io.serializer import Serializer
+from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
