@@ -163,9 +163,13 @@ class AspectAnalysisSystem:
             if batch_size < 1:
                 batch_size = 1
             logging.debug('Batch size for multiprocessing execution: {}'.format(batch_size))
+
         Parallel(n_jobs=self.jobs, verbose=5)(
             delayed(edu_parsing_multiprocess)(None, docs_id_range, self.paths.edu_trees, self.paths.extracted_docs)
-            for docs_id_range, l in batch_with_indexes(range(documents_count), batch_size))
+            for docs_id_range, l in tqdm(
+                list(batch_with_indexes(range(documents_count), batch_size)),
+                desc='Parsing Batches')
+        )
 
     def _perform_edu_preprocessing(self, documents_count):
         if not exists(self.paths.raw_edu_list):
