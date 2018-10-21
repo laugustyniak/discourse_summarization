@@ -6,7 +6,7 @@ from aspects.analysis.analyze import get_count_from_series
 
 
 class AnalyzeTest(unittest.TestCase):
-    def test_list_flattening(self):
+    def test_counting(self):
         df = pd.DataFrame()
         df['a'] = [[u'car', u'phone'], [u'car', u'phone']]
         counter_expected = {u'car': 2, u'phone': 2}

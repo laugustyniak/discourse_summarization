@@ -242,8 +242,7 @@ def prepare_and_validate_bing_liu(dataset_path: Path):
 
 
 if __name__ == '__main__':
-    # TODO uncomment before merge
-    # prepare_and_validate_semeval_2014_data()
+    prepare_and_validate_semeval_2014_data()
     for review_path in settings.BING_LIU_ASPECT_DATASETS_PATHS:
         click.echo(f'Processing of {review_path} dataset')
         prepare_and_validate_bing_liu(review_path)
