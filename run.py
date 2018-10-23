@@ -44,9 +44,11 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
     n_docs = docs_id_range[1] - docs_id_range[0]
 
-    for n_doc, document_id in tqdm(enumerate(range(docs_id_range[0], docs_id_range[1]), start=1),
-                                   desc='Parsing',
-                                   total=docs_id_range[1] - docs_id_range[0]):
+    for n_doc, document_id in tqdm(
+            enumerate(range(docs_id_range[0], docs_id_range[1]), start=1),
+            desc='Parsing',
+            total=docs_id_range[1] - docs_id_range[0]
+    ):
         start_time = datetime.now()
         logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
         try:

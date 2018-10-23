@@ -1,8 +1,6 @@
 import logging
 from collections import defaultdict
 
-from gensim.summarization import keywords
-
 from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
 from aspects.utilities import common_nlp
 from aspects.utilities import settings
@@ -144,7 +142,8 @@ class AspectExtractor(object):
         rake = common_nlp.load_rake()
         if text:
             try:
-                text_rank_keywords = keywords(text)
+                # text_rank_keywords = keywords(text)
+                text_rank_keywords = []
             except:
                 log.error('Cant get keywords from text: {}'.format(text))
                 text_rank_keywords = []

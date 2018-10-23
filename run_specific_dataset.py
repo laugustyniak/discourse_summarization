@@ -7,7 +7,8 @@ from run import AspectAnalysisSystem
 
 log = logging.getLogger(__name__)
 
-DATASET_PATH = settings.BING_LIU_IPOD.as_posix()
+# DATASET_PATH = settings.BING_LIU_IPOD.as_posix()
+DATASET_PATH = settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON.as_posix()
 N_JOBS = multiprocessing.cpu_count() - 1
 
 AAS = AspectAnalysisSystem(
