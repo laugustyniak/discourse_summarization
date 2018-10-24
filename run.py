@@ -11,6 +11,7 @@ import networkx as nx
 import simplejson
 from joblib import Parallel
 from joblib import delayed
+from pathlib import Path
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
@@ -26,6 +27,9 @@ from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
 from aspects.utilities.utils_multiprocess import batch_with_indexes
 from parse import DiscourseParser
+
+if not Path('logs').exists():
+    Path('logs').mkdir(parents=True)
 
 logging.basicConfig(
     level=logging.DEBUG,
