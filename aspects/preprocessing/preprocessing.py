@@ -21,7 +21,7 @@ def preprocess(text):
     text = re.sub('q . <P>$', '', text)
     text = re.sub(' . <s>$', '', text)
     text = re.sub('\r\n$', '', text)
-    return text
+    return {'text': text}
 
 
 def lemmatize(aspect_text):
