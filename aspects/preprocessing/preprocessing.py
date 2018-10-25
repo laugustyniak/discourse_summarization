@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import logging
 import re
 from datetime import datetime
@@ -21,7 +23,7 @@ def preprocess(text):
     text = re.sub('q . <P>$', '', text)
     text = re.sub(' . <s>$', '', text)
     text = re.sub('\r\n$', '', text)
-    return {'text': unicode(text)}
+    return {'text': unicode(text, 'utf-8')}
 
 
 def lemmatize(aspect_text):
