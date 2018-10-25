@@ -56,7 +56,7 @@ class AspectExtractor(object):
 
         Parameters
         ----------
-        text : str
+        text : unicode
             unicode string
 
         Returns
@@ -79,7 +79,7 @@ class AspectExtractor(object):
             aspects += [ent for ent in nlp(text).ents if ent.label_ in self.ner_types]
 
         # lower case every aspect and only longer than 1
-        aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
+        aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and len(x) > 1]
 
         if settings.SENTIC_ASPECTS:
             concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects)

@@ -290,7 +290,7 @@ class AspectAnalysisSystem:
     def _build_aspect_dependency_graph(self):
         """Build dependency graph"""
 
-        if not (exists(self.paths.aspects_graph) and exists(self.paths.aspects_importance)):
+        if not (exists(self.paths.aspects_graph) and exists(self.paths.aspects_page_ranks)):
             dependency_rules = self.serializer.load(self.paths.edu_dependency_rules)
             aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
             documents_info = self.serializer.load(self.paths.docs_info)
@@ -306,11 +306,11 @@ class AspectAnalysisSystem:
             )
 
             self.serializer.save(graph, self.paths.aspects_graph)
-            self.serializer.save(page_ranks, self.paths.aspects_importance)
+            self.serializer.save(page_ranks, self.paths.aspects_page_ranks)
 
     def _filter_aspects(self, threshold):
         """Filter out aspects according to threshold"""
-        aspects_importance = self.serializer.load(self.paths.aspects_importance)
+        aspects_importance = self.serializer.load(self.paths.aspects_page_ranks)
         documents_info = self.serializer.load(self.paths.docs_info)
 
         aspects_count = len(aspects_importance)

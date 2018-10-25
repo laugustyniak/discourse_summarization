@@ -35,7 +35,7 @@ class IOPaths(object):
         self.aspects_graph = join(output_path, 'aspects_graph')
         self.aspects_graph_gpkl = join(output_path, 'aspects_graph.gpkl')
         self.aspects_graph_gexf = join(output_path, 'aspects_graph.gexf')
-        self.aspects_importance = join(output_path, 'aspects_importance')
+        self.aspects_page_ranks = join(output_path, 'aspects_page_ranks')
 
         self.final_docs_info = join(output_path, 'final_documents_info')
 
