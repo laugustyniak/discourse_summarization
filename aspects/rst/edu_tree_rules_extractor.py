@@ -1,9 +1,6 @@
-import os
-import sys
 from collections import defaultdict, namedtuple
 
-sys.path.append(os.getcwd() + "/edu_dependency_parser/src")
-from trees.parse_tree import ParseTree
+from edu_dependency_parser.trees.parse_tree import ParseTree
 
 Relation = namedtuple('Relation', 'edu1 edu2 relation_type gerani')
 
@@ -143,7 +140,7 @@ class EDUTreeRulesExtractor(object):
             else:
                 sub_tree_height = self.right_child_parent.height()
             return round(1 - 0.5 * (
-                float(n_edus_between_analyzed_edus) / n_edus_in_tree)
+                    float(n_edus_between_analyzed_edus) / n_edus_in_tree)
                          - 0.5 * (float(sub_tree_height) / tree_height), 2)
         return 0
 
