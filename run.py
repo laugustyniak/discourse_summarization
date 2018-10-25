@@ -180,7 +180,7 @@ class AspectAnalysisSystem:
     def _perform_edu_preprocessing(self, documents_count):
         if not exists(self.paths.raw_edu_list):
             preprocesser = EDUTreePreprocesser()
-            for document_id in range(0, documents_count):
+            for document_id in tqdm(range(0, documents_count), desc='EDU preprocessing', total=documents_count):
                 try:
                     if not document_id % self.n_loger:
                         logging.debug('EDU Preprocessor documentId: {}/{}'.format(document_id, documents_count))
@@ -207,7 +207,8 @@ class AspectAnalysisSystem:
             filtered_edus = {}
             docs_info = {}
 
-            for edu_id, edu in enumerate(edu_list):
+            for edu_id, edu in tqdm(
+                    enumerate(edu_list), desc='Filtering based on Sentiment Analysis of EDUs', total=len(edu_list)):
                 edu['sentiment'] = []
                 logging.debug('edu: {}'.format(edu))
                 sentiment = analyzer.analyze(edu['text'])[0]
@@ -247,7 +248,8 @@ class AspectAnalysisSystem:
 
         logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
-        for n_doc, (edu_id, edu) in enumerate(edus.iteritems()):
+        for n_doc, (edu_id, edu) in tqdm(
+                enumerate(edus.iteritems()), desc='Aspect Extraction from EDUs', total=len(edus)):
             if edu_id not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(edu)
@@ -276,7 +278,8 @@ class AspectAnalysisSystem:
             rules_extractor = EDUTreeRulesExtractor()
             rules = {}
             docs_info = self.serializer.load(self.paths.docs_info)
-            for doc_id, doc_info in docs_info.iteritems():
+            for doc_id, doc_info in tqdm(
+                    docs_info.iteritems(), desc='Extract EDU dependency rules', total=len(docs_info)):
                 if len(doc_info['accepted_edus']) > 0:
                     link_tree = self.serializer.load(join(self.paths.link_trees, str(doc_id)))
                 extracted_rules = rules_extractor.extract(link_tree, doc_info['accepted_edus'], doc_id)
@@ -313,7 +316,8 @@ class AspectAnalysisSystem:
         aspects_count = len(aspects_importance)
         aspects_list = list(aspects_importance)
 
-        for documentId, document_info in documents_info.iteritems():
+        for documentId, document_info in tqdm(
+                documents_info.iteritems(), desc='Filter aspects', total=len(documents_info)):
             aspects = []
             if 'aspects' in document_info:
                 for aspect in document_info['aspects']:
@@ -331,7 +335,8 @@ class AspectAnalysisSystem:
         if gold_standard is None:
             raise ValueError('GoldStandard data is None')
         analyzer = ResultsAnalyzer()
-        for document_id, document_info in documents_info.iteritems():
+        for document_id, document_info in tqdm(
+                documents_info.iteritems(), desc='Analyze results', total=len(documents_info)):
             analyzer.analyze(document_info['aspects'], gold_standard[document_id])
         measures = analyzer.get_analysis_results()
         self.serializer.append_serialized(
