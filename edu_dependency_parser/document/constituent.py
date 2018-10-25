@@ -5,8 +5,8 @@ Created on Aug 8, 2013
 """
 import sys
 
-import utils.utils
-from trees.parse_tree import ParseTree
+from edu_dependency_parser import utils
+from edu_dependency_parser.trees.parse_tree import ParseTree
 
 
 class Constituent:
