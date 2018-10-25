@@ -1,14 +1,10 @@
-import sys
 import unittest
 
 from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.rst.edu_tree_rules_extractor import Relation
 from aspects.utilities import settings
-
-sys.path.append("../../../edu_dependency_parser")
-
-from trees.parse_tree import ParseTree
+from edu_dependency_parser.trees.parse_tree import ParseTree
 
 
 class AspectExtractionTest(unittest.TestCase):
