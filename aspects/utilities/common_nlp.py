@@ -7,7 +7,7 @@ import spacy
 
 
 @lru_cache(None)
-def load_spacy(model='en_core_web_sm'):
+def load_spacy(model='en'):
     return spacy.load(model)
 
 
