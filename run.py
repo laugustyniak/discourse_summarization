@@ -210,7 +210,7 @@ class AspectAnalysisSystem:
             for edu_id, edu in enumerate(edu_list):
                 edu['sentiment'] = []
                 logging.debug('edu: {}'.format(edu))
-                sentiment = analyzer.analyze(edu['raw_text'])[0]
+                sentiment = analyzer.analyze(edu['text'])[0]
 
                 # todo add to readme strucutre of docuemnt info and other dicts
                 if not edu['source_document_id'] in docs_info:

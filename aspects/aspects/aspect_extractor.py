@@ -73,8 +73,6 @@ class AspectExtractor(object):
 
         """
         concept_aspects = {}
-        text = unicode(text)
-
         aspects, self.aspects_word_ids = self.extract_noun_and_noun_phrases(text)
 
         if self.is_ner:
