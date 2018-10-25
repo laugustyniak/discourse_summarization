@@ -13,7 +13,7 @@ nlp = common_nlp.load_spacy()
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True):
+    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True, sentic=None, conceptnet=None):
         """
         Initialize extractor aspect extractor.
 
@@ -46,6 +46,16 @@ class AspectExtractor(object):
 
         self.aspects_word_ids = []
 
+        if sentic is None:
+            self.sentic = settings.SENTIC_ASPECTS
+        else:
+            self.sentic = sentic
+
+        if conceptnet is None:
+            self.conceptnet = settings.CONCEPTNET_IO_ASPECTS
+        else:
+            self.conceptnet = conceptnet
+
     def _is_interesting_addition(self, token):
         return token.pos_ == 'ADV' or token.pos_ == 'NUM' or token.pos_ == 'NOUN' or token.pos_ == 'ADJ'
 
@@ -76,15 +86,15 @@ class AspectExtractor(object):
         aspects, self.aspects_word_ids = self.extract_noun_and_noun_phrases(text)
 
         if self.is_ner:
-            aspects += [ent for ent in nlp(text).ents if ent.label_ in self.ner_types]
+            aspects += [ent.text for ent in nlp(text).ents if ent.label_ in self.ner_types]
 
         # lower case every aspect and only longer than 1
         aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and len(x) > 1]
 
-        if settings.SENTIC_ASPECTS:
+        if self.sentic:
             concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects)
 
-        if settings.CONCEPTNET_IO_ASPECTS:
+        if self.conceptnet:
             concept_aspects['conceptnet_io'] = self.extract_concept_from_conceptnet_io(aspects)
 
         return aspects, concept_aspects, self.extract_keywords(text)
