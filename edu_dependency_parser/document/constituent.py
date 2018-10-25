@@ -5,8 +5,8 @@ Created on Aug 8, 2013
 """
 import sys
 
-from edu_dependency_parser.trees.parse_tree import ParseTree
-from edu_dependency_parser.utils import utils
+import utils.utils
+from trees.parse_tree import ParseTree
 
 
 class Constituent:
@@ -246,7 +246,7 @@ class Constituent:
 
     ''' merge this constituent with another constituent c, to make a new constituent'''
 
-    def make_new_constituent(self, label, c, deepcopy=False):
+    def make_new_constituent(self, label, c):
         assert c.doc == self.doc
         assert self.r_end == c.l_start
 
