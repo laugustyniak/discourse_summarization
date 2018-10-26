@@ -84,10 +84,22 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
 
 class AspectAnalysisSystem:
-    def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
-                 n_logger=1000, batch_size=None, max_docs=None, cycle_in_relations=True, filter_gerani=False,
-                 aht_gerani=False, neutral_sent=False):
-
+    def __init__(
+            self,
+            input_path,
+            output_path,
+            gold_standard_path,
+            analysis_results_path,
+            jobs=1,
+            sent_model_path=None,
+            n_logger=1000,
+            batch_size=None,
+            max_docs=None,
+            cycle_in_relations=True,
+            filter_gerani=False,
+            aht_gerani=False,
+            neutral_sent=False
+    ):
         self.neutral_sent = neutral_sent
         self.aht_gerani = aht_gerani
         self.filter_gerani = filter_gerani
@@ -96,7 +108,10 @@ class AspectAnalysisSystem:
         self.gold_standard_path = gold_standard_path
         self.analysis_results_path = analysis_results_path
         self.input_file_path = input_path
-        self.paths = IOPaths(input_path, output_path)
+        if filter_gerani:
+            self.paths = IOPaths(input_path, output_path, suffix='gerani_one_rule_per_document')
+        else:
+            self.paths = IOPaths(input_path, output_path)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
         self.cycle_in_relations = cycle_in_relations
