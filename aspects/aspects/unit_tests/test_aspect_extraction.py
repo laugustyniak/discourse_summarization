@@ -39,6 +39,10 @@ from aspects.utilities import settings
             u'i wonder if you can propose for me better plan and encourage me to not leave for sprint i could get '
             u'a better plan there'
     ),
+    (
+            [u'boxwave bodysuit premium', u'tpu rubber gel'],
+            u'this is boxwave bodysuit premium textured tpu rubber gel'
+    )
 ])
 def test_get_aspects_nouns(aspects_expected, text):
     aspects_extractor = AspectExtractor(sentic=False, conceptnet=False)
@@ -50,6 +54,7 @@ def test_get_aspects_nouns(aspects_expected, text):
 @pytest.mark.parametrize('text', [
     u'I don\'t like it, it is not, do not',
     u'thank you',
+    u'this is t |',
 ])
 def test_not_aspect_extracted(text):
     aspects_extractor = AspectExtractor(sentic=False, conceptnet=False)
