@@ -26,7 +26,11 @@ ASPECTS_TO_SKIP = [
     u'unk',
     u'password',
     u'don',
-    u'other', u'others'
+    u'other', u'others',
+
+    u'problem', u'product', u'something', u'thing', u'product',
+    u'what',  # and similar
+    u'one',  # and other numbers
 ]
 
 
