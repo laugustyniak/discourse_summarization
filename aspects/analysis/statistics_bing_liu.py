@@ -45,6 +45,7 @@ def get_aspects_for_each_line(aspects_str: str) -> pd.DataFrame:
 
 def get_sentiment_from_aspect_sentiment_text(aspect_with_sentiment: str) -> AspectSentiment:
     aspect_with_sentiment = aspect_with_sentiment.strip()
+    # TODO: skip implicit aspects
     aspect_with_sentiment = aspect_with_sentiment.replace('[u]', '').replace('[s]', '').replace('[p]', '')
     aspect_with_sentiment = aspect_with_sentiment.replace('[cs]', '').replace('(cs)', '').replace('[cc]', '')
     aspect_with_sentiment = aspect_with_sentiment.replace('{', '[').replace('}', ']')
