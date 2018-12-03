@@ -1,16 +1,20 @@
 import logging
 import pickle
 from collections import namedtuple
-
-import pandas as pd
 from pathlib import Path
 from typing import Iterable, List, Tuple
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 Metrics = namedtuple('Metrics', 'precision, recall, f1')
 
 MODELS_TO_SKIP = ['char-bilstm', 'char-lstm']
+
+REINDEX_RESULTS_ORDER = (
+    'word lstm', 'char word lstm', 'word lstm crf', 'char word lstm crf', 'word bilstm',
+    'char word bilstm', 'word bilstm crf', 'char word bilstm crf')
 
 
 def _get_dataset_name(dataset_path: str) -> str:
@@ -79,8 +83,7 @@ def skip_char_models(model_name: Path):
 
 def get_models_f1_metric(all_models_path: Path, filter_datasets: str, reindex_results_order: Tuple[str] = None):
     if reindex_results_order is None:
-        reindex_results_order = ('word lstm', 'char word lstm', 'word lstm crf', 'char word lstm crf', 'word bilstm',
-                                 'char word bilstm', 'word bilstm crf', 'char word bilstm crf')
+        reindex_results_order = REINDEX_RESULTS_ORDER
     model_f1_by_word_embedding = {}
 
     for word_embedding_models_path in all_models_path.glob('*'):
@@ -94,7 +97,7 @@ def get_models_f1_metric(all_models_path: Path, filter_datasets: str, reindex_re
             models_f1[model_name] = model_metrics.f1
 
         if models_f1:
-            model_f1_by_word_embedding[word_embedding_models_path.stem] = models_f1
+            model_f1_by_word_embedding[word_embedding_models_path.name] = models_f1
 
     return pd.DataFrame.from_dict(model_f1_by_word_embedding).round(2).reindex(reindex_results_order)
 

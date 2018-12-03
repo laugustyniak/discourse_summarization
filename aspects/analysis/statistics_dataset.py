@@ -2,6 +2,12 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+dataset_restaurants_test = 'Restaurants_poria-test'
+dataset_restaurants_train = 'Restaurants_poria-train'
+
+dataset_laptops_test = 'Laptops_poria-test'
+dataset_laptops_train = 'Laptops_poria-train'
+
 
 def get_unique_words_from_corpus(
         corpus_paths=Path(
