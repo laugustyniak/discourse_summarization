@@ -1,10 +1,10 @@
 import logging
 import pickle
 from collections import namedtuple
-from pathlib import Path
-from typing import Iterable, List, Tuple
 
 import pandas as pd
+from pathlib import Path
+from typing import Iterable, List, Tuple, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +13,40 @@ Metrics = namedtuple('Metrics', 'precision, recall, f1')
 MODELS_TO_SKIP = ['char-bilstm', 'char-lstm']
 
 REINDEX_RESULTS_ORDER = (
-    'word lstm', 'char word lstm', 'word lstm crf', 'char word lstm crf', 'word bilstm',
-    'char word bilstm', 'word bilstm crf', 'char word bilstm crf')
+    'Wo-LSTM',
+    'WoCh-LSTM',
+    'Wo-LSTM-CRF',
+    'WoCh-LSTM-CRF',
+    'Wo-BiLSTM',
+    'WoCh-BiLSTM',
+    'Wo-BiLSTM-CRF',
+    'WoCh-BiLSTM-CRF'
+)
+
+EMBEDDING_NAMES = {
+    'wiki-news-300d-1M': 'fatText-2',
+    'glove.42B.300d': 'Glove 42B',
+    'crawl-300d-2M': 'fastText',
+    'sentic2vec': 'Amazon Reviews',
+    'glove.6B.100d': 'Glove 6B 100',
+    'numberbatch-en': 'numberbatch',
+    'glove.6B.50d': 'Glove 6B 50',
+    'glove.840B.300d': 'Glove 840B',
+    'glove.6B.200d': 'Glove 6B 200',
+    'glove.6B.300d': 'Glove 6B 300',
+    'GoogleNews-vectors-negative300': 'word2vec'
+}
+
+METHOD_NAMES = {
+    'word lstm': 'Wo-LSTM',
+    'word lstm crf': 'Wo-LSTM-CRF',
+    'char word lstm': 'WoCh-LSTM',
+    'char word lstm crf': 'WoCh-LSTM-CRF',
+    'word bilstm': 'Wo-BiLSTM',
+    'word bilstm crf': 'Wo-BiLSTM-CRF',
+    'char word bilstm': 'WoCh-BiLSTM',
+    'char word bilstm crf': 'WoCh-BiLSTM-CRF',
+}
 
 
 def _get_dataset_name(dataset_path: str) -> str:
@@ -81,7 +113,12 @@ def skip_char_models(model_name: Path):
     return not any(m in model_name.as_posix() for m in MODELS_TO_SKIP)
 
 
-def get_models_f1_metric(all_models_path: Path, filter_datasets: str, reindex_results_order: Tuple[str] = None):
+def get_models_f1_metric(
+        all_models_path: Path,
+        filter_datasets: str,
+        embedding_names: Dict,
+        reindex_results_order: Tuple[str] = None
+):
     if reindex_results_order is None:
         reindex_results_order = REINDEX_RESULTS_ORDER
     model_f1_by_word_embedding = {}
@@ -97,9 +134,11 @@ def get_models_f1_metric(all_models_path: Path, filter_datasets: str, reindex_re
             models_f1[model_name] = model_metrics.f1
 
         if models_f1:
-            model_f1_by_word_embedding[word_embedding_models_path.name] = models_f1
+            model_f1_by_word_embedding[embedding_names[word_embedding_models_path.name]] = models_f1
 
-    return pd.DataFrame.from_dict(model_f1_by_word_embedding).round(2).reindex(reindex_results_order)
+    df = pd.DataFrame.from_dict(model_f1_by_word_embedding).round(2)
+    df = df.transpose().rename(index=str, columns=METHOD_NAMES).transpose()
+    return df.reindex(reindex_results_order)
 
 
 if __name__ == '__main__':
@@ -109,7 +148,9 @@ if __name__ == '__main__':
     #             '*')),
     #     'predictions', 'y_test')
     df_oxygen_1 = get_models_f1_metric(
-        Path('/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models-oxygen-1/models/'),
-        'laptops'
+        all_models_path=Path(
+            '/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models-oxygen-1/models/'),
+        filter_datasets='laptops',
+        embedding_names=EMBEDDING_NAMES
     )
     pass
