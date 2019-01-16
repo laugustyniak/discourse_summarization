@@ -1,17 +1,13 @@
-import sys
 import unittest
 from collections import OrderedDict
 
 import networkx as nx
 
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, RelationAspects
-from aspects.io.serializer import Serializer
+from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities import settings
-
-sys.path.append("../edu_dependency_parser/src")
-
-from trees.parse_tree import ParseTree
+from edu_dependency_parser.trees.parse_tree import ParseTree
 
 
 class AspectGraphBuilderTest(unittest.TestCase):

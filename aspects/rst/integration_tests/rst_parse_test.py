@@ -1,6 +1,6 @@
 import unittest
 
-from parse import DiscourseParser
+from edu_dependency_parser.parse import DiscourseParser
 from trees.parse_tree import ParseTree
 
 

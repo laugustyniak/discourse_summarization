@@ -7,7 +7,7 @@ import spacy
 
 
 @lru_cache(None)
-def load_spacy(model='en_core_web_sm'):
+def load_spacy(model='en'):
     return spacy.load(model)
 
 
@@ -26,7 +26,11 @@ ASPECTS_TO_SKIP = [
     u'unk',
     u'password',
     u'don',
-    u'other', u'others'
+    u'other', u'others',
+
+    u'problem', u'product', u'something', u'thing', u'product',
+    u'what',  # and similar
+    u'one',  # and other numbers
 ]
 
 

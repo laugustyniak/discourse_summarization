@@ -1,8 +1,6 @@
 import logging
 from collections import defaultdict
 
-from gensim.summarization import keywords
-
 from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
 from aspects.utilities import common_nlp
 from aspects.utilities import settings
@@ -15,8 +13,7 @@ nlp = common_nlp.load_spacy()
 class AspectExtractor(object):
     """ Extract aspects from EDU. """
 
-    def __init__(
-            self, ner_types={u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC'}, aspects_to_skip=None, is_ner=True):
+    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True, sentic=None, conceptnet=None):
         """
         Initialize extractor aspect extractor.
 
@@ -34,6 +31,8 @@ class AspectExtractor(object):
         is_ner : bool
             Do we want to extract Named Entity as aspects?
         """
+        if ner_types is None:
+            ner_types = {u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC'}
         self.is_ner = is_ner
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
@@ -47,6 +46,16 @@ class AspectExtractor(object):
 
         self.aspects_word_ids = []
 
+        if sentic is None:
+            self.sentic = settings.SENTIC_ASPECTS
+        else:
+            self.sentic = sentic
+
+        if conceptnet is None:
+            self.conceptnet = settings.CONCEPTNET_IO_ASPECTS
+        else:
+            self.conceptnet = conceptnet
+
     def _is_interesting_addition(self, token):
         return token.pos_ == 'ADV' or token.pos_ == 'NUM' or token.pos_ == 'NOUN' or token.pos_ == 'ADJ'
 
@@ -57,9 +66,8 @@ class AspectExtractor(object):
 
         Parameters
         ----------
-        text : dictionary
-            Dictionary with raw text and spacy object with each
-            token information.
+        text : unicode
+            unicode string
 
         Returns
         ----------
@@ -78,15 +86,15 @@ class AspectExtractor(object):
         aspects, self.aspects_word_ids = self.extract_noun_and_noun_phrases(text)
 
         if self.is_ner:
-            aspects += [ent for ent in nlp(text).ents if ent.label_ in self.ner_types]
+            aspects += [ent.text for ent in nlp(text).ents if ent.label_ in self.ner_types]
 
         # lower case every aspect and only longer than 1
-        aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and x != '']
+        aspects = [x.strip().lower() for x in aspects if x not in self.aspects_to_skip and len(x) > 1]
 
-        if settings.SENTIC_ASPECTS:
+        if self.sentic:
             concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects)
 
-        if settings.CONCEPTNET_IO_ASPECTS:
+        if self.conceptnet:
             concept_aspects['conceptnet_io'] = self.extract_concept_from_conceptnet_io(aspects)
 
         return aspects, concept_aspects, self.extract_keywords(text)
@@ -143,7 +151,8 @@ class AspectExtractor(object):
         rake = common_nlp.load_rake()
         if text:
             try:
-                text_rank_keywords = keywords(text)
+                # text_rank_keywords = keywords(text)
+                text_rank_keywords = []
             except:
                 log.error('Cant get keywords from text: {}'.format(text))
                 text_rank_keywords = []

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-
 from aspects.aspects.aspect_extractor import AspectExtractor
 
 
@@ -27,4 +24,4 @@ class EDUAspectExtractor(object):
         keyword_aspects : dict
 
         """
-        return self.extractor.extract(edu)
+        return self.extractor.extract(edu['text'])

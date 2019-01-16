@@ -5,10 +5,10 @@ from itertools import groupby
 from operator import itemgetter
 
 import networkx as nx
+from more_itertools import flatten
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
-from aspects.io.serializer import Serializer
-from aspects.utilities.transformations import flatten_list
+from aspects.data_io.serializer import Serializer
 
 log = logging.getLogger(__name__)
 
@@ -250,7 +250,7 @@ class AspectsGraphBuilder(object):
         relations_list = [
             (group + (sum([rel.gerani_weight for rel in relations]),))
             for group, relations in
-            groupby(sorted(flatten_list(rule_per_doc.values())),
+            groupby(sorted(flatten(rule_per_doc.values())),
                     key=lambda rel: rel[:3])]
         # map relations into namedtuples
         relations_list = [RelationAspects(a1, a2, r, w) for
