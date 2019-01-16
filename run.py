@@ -11,13 +11,14 @@ import networkx as nx
 import simplejson
 from joblib import Parallel
 from joblib import delayed
+from pathlib import Path
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
-from aspects.io.serializer import Serializer
+from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
@@ -26,6 +27,9 @@ from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
 from aspects.utilities.utils_multiprocess import batch_with_indexes
 from parse import DiscourseParser
+
+if not Path('logs').exists():
+    Path('logs').mkdir(parents=True)
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -44,9 +48,7 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
     n_docs = docs_id_range[1] - docs_id_range[0]
 
-    for n_doc, document_id in tqdm(enumerate(range(docs_id_range[0], docs_id_range[1]), start=1),
-                                   desc='Parsing',
-                                   total=docs_id_range[1] - docs_id_range[0]):
+    for n_doc, document_id in enumerate(range(docs_id_range[0], docs_id_range[1]), start=1):
         start_time = datetime.now()
         logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
         try:
@@ -78,10 +80,22 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
 
 
 class AspectAnalysisSystem:
-    def __init__(self, input_path, output_path, gold_standard_path, analysis_results_path, jobs=1, sent_model_path=None,
-                 n_logger=1000, batch_size=None, max_docs=None, cycle_in_relations=True, filter_gerani=False,
-                 aht_gerani=False, neutral_sent=False):
-
+    def __init__(
+            self,
+            input_path,
+            output_path,
+            gold_standard_path,
+            analysis_results_path,
+            jobs=1,
+            sent_model_path=None,
+            n_logger=1000,
+            batch_size=None,
+            max_docs=None,
+            cycle_in_relations=True,
+            filter_gerani=False,
+            aht_gerani=False,
+            neutral_sent=False
+    ):
         self.neutral_sent = neutral_sent
         self.aht_gerani = aht_gerani
         self.filter_gerani = filter_gerani
@@ -90,7 +104,10 @@ class AspectAnalysisSystem:
         self.gold_standard_path = gold_standard_path
         self.analysis_results_path = analysis_results_path
         self.input_file_path = input_path
-        self.paths = IOPaths(input_path, output_path)
+        if filter_gerani:
+            self.paths = IOPaths(input_path, output_path, suffix='gerani_one_rule_per_document')
+        else:
+            self.paths = IOPaths(input_path, output_path)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
         self.cycle_in_relations = cycle_in_relations
@@ -163,14 +180,18 @@ class AspectAnalysisSystem:
             if batch_size < 1:
                 batch_size = 1
             logging.debug('Batch size for multiprocessing execution: {}'.format(batch_size))
+
         Parallel(n_jobs=self.jobs, verbose=5)(
             delayed(edu_parsing_multiprocess)(None, docs_id_range, self.paths.edu_trees, self.paths.extracted_docs)
-            for docs_id_range, l in batch_with_indexes(range(documents_count), batch_size))
+            for docs_id_range, l in tqdm(
+                list(batch_with_indexes(range(documents_count), batch_size)),
+                desc='Parsing Batches')
+        )
 
     def _perform_edu_preprocessing(self, documents_count):
         if not exists(self.paths.raw_edu_list):
             preprocesser = EDUTreePreprocesser()
-            for document_id in range(0, documents_count):
+            for document_id in tqdm(range(0, documents_count), desc='EDU preprocessing', total=documents_count):
                 try:
                     if not document_id % self.n_loger:
                         logging.debug('EDU Preprocessor documentId: {}/{}'.format(document_id, documents_count))
@@ -197,10 +218,11 @@ class AspectAnalysisSystem:
             filtered_edus = {}
             docs_info = {}
 
-            for edu_id, edu in enumerate(edu_list):
+            for edu_id, edu in tqdm(
+                    enumerate(edu_list), desc='Filtering based on Sentiment Analysis of EDUs', total=len(edu_list)):
                 edu['sentiment'] = []
                 logging.debug('edu: {}'.format(edu))
-                sentiment = analyzer.analyze(edu['raw_text'])[0]
+                sentiment = analyzer.analyze(edu['text'])[0]
 
                 # todo add to readme strucutre of docuemnt info and other dicts
                 if not edu['source_document_id'] in docs_info:
@@ -237,7 +259,8 @@ class AspectAnalysisSystem:
 
         logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
-        for n_doc, (edu_id, edu) in enumerate(edus.iteritems()):
+        for n_doc, (edu_id, edu) in tqdm(
+                enumerate(edus.iteritems()), desc='Aspect Extraction from EDUs', total=len(edus)):
             if edu_id not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(edu)
@@ -266,7 +289,8 @@ class AspectAnalysisSystem:
             rules_extractor = EDUTreeRulesExtractor()
             rules = {}
             docs_info = self.serializer.load(self.paths.docs_info)
-            for doc_id, doc_info in docs_info.iteritems():
+            for doc_id, doc_info in tqdm(
+                    docs_info.iteritems(), desc='Extract EDU dependency rules', total=len(docs_info)):
                 if len(doc_info['accepted_edus']) > 0:
                     link_tree = self.serializer.load(join(self.paths.link_trees, str(doc_id)))
                 extracted_rules = rules_extractor.extract(link_tree, doc_info['accepted_edus'], doc_id)
@@ -277,7 +301,7 @@ class AspectAnalysisSystem:
     def _build_aspect_dependency_graph(self):
         """Build dependency graph"""
 
-        if not (exists(self.paths.aspects_graph) and exists(self.paths.aspects_importance)):
+        if not (exists(self.paths.aspects_graph) and exists(self.paths.aspects_page_ranks)):
             dependency_rules = self.serializer.load(self.paths.edu_dependency_rules)
             aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
             documents_info = self.serializer.load(self.paths.docs_info)
@@ -293,17 +317,18 @@ class AspectAnalysisSystem:
             )
 
             self.serializer.save(graph, self.paths.aspects_graph)
-            self.serializer.save(page_ranks, self.paths.aspects_importance)
+            self.serializer.save(page_ranks, self.paths.aspects_page_ranks)
 
     def _filter_aspects(self, threshold):
         """Filter out aspects according to threshold"""
-        aspects_importance = self.serializer.load(self.paths.aspects_importance)
+        aspects_importance = self.serializer.load(self.paths.aspects_page_ranks)
         documents_info = self.serializer.load(self.paths.docs_info)
 
         aspects_count = len(aspects_importance)
         aspects_list = list(aspects_importance)
 
-        for documentId, document_info in documents_info.iteritems():
+        for documentId, document_info in tqdm(
+                documents_info.iteritems(), desc='Filter aspects', total=len(documents_info)):
             aspects = []
             if 'aspects' in document_info:
                 for aspect in document_info['aspects']:
@@ -321,7 +346,8 @@ class AspectAnalysisSystem:
         if gold_standard is None:
             raise ValueError('GoldStandard data is None')
         analyzer = ResultsAnalyzer()
-        for document_id, document_info in documents_info.iteritems():
+        for document_id, document_info in tqdm(
+                documents_info.iteritems(), desc='Analyze results', total=len(documents_info)):
             analyzer.analyze(document_info['aspects'], gold_standard[document_id])
         measures = analyzer.get_analysis_results()
         self.serializer.append_serialized(

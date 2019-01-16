@@ -1,10 +1,12 @@
 from os import makedirs
 from os.path import exists, join
 
+from pathlib import Path
+
 
 # TODO: remove class + variables by upper case
 class IOPaths(object):
-    def __init__(self, input_path, output_path):
+    def __init__(self, input_path, output_path, suffix=''):
         self.ensure_path_exist(output_path)
 
         self.paths = {}
@@ -32,13 +34,17 @@ class IOPaths(object):
         self.aspects_per_edu = join(output_path, 'aspects_per_edu')
         self.edu_dependency_rules = join(output_path, 'edu_dependency_rules')
 
-        self.aspects_graph = join(output_path, 'aspects_graph')
-        self.aspects_graph_gpkl = join(output_path, 'aspects_graph.gpkl')
-        self.aspects_graph_gexf = join(output_path, 'aspects_graph.gexf')
-        self.aspects_importance = join(output_path, 'aspects_importance')
+        self.aspects_graph = join(output_path, self._add_suffix('aspects_graph', suffix))
+        self.aspects_graph_gpkl = join(output_path, self._add_suffix('aspects_graph.gpkl', suffix))
+        self.aspects_graph_gexf = join(output_path, self._add_suffix('aspects_graph.gexf', suffix))
+        self.aspects_page_ranks = join(output_path, self._add_suffix('aspects_page_ranks', suffix))
 
-        self.final_docs_info = join(output_path, 'final_documents_info')
+        self.final_docs_info = join(output_path, self._add_suffix('final_documents_info', suffix))
 
     def ensure_path_exist(self, path):
         if not exists(path):
             makedirs(path)
+
+    def _add_suffix(self, name, suffix):
+        name = Path(name)
+        return '{}_{}{}'.format(name.stem, suffix, name.suffix) if suffix else name.name

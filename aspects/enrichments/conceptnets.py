@@ -2,7 +2,11 @@ import logging
 import pickle
 
 import pandas as pd
-from repoze.lru import lru_cache
+
+try:
+    from repoze.lru import lru_cache
+except:
+    from functools import lru_cache
 
 from aspects.data.sentic.senticnet5 import senticnet
 from aspects.utilities import settings
@@ -70,3 +74,46 @@ def load_conceptnet_io():
     with open(settings.CONCEPTNET_IO_PKL.as_posix(), 'rb') as f:
         conceptnet_io = pickle.load(f)
     return conceptnet_io
+
+
+def get_concept_neighbours_by_relation_type(
+        conceptnet,
+        concept,
+        relation_types_get_child,
+        relation_types_get_parent,
+        neighbour_relations,
+        level=1
+):
+    neighbours = get_neighbours_child_and_parents(
+        conceptnet, concept, relation_types_get_child, relation_types_get_parent)
+    # print('First level neighbours for {}: {}'.format(concept, len(neighbours)))
+
+    neighbours_level = []
+    for l in range(1, level):
+        for neighbour in neighbours:
+            neighbours_level += get_neighbours_child_and_parents(
+                conceptnet,
+                neighbour,
+                relation_types_get_child + neighbour_relations,
+                relation_types_get_parent + neighbour_relations
+            )
+        neighbours = set(neighbours_level)
+        # print('{} level neighbours: {}'.format(level, len(neighbours)))
+    return set(neighbours)
+
+
+def get_neighbours_child_and_parents(conceptnet, concept, relation_types_get_child, relation_types_get_parent):
+    neighbours_childs = set(
+        concept_info['end']
+        for concept_info
+        in conceptnet[concept]
+        if concept_info['relation'] in relation_types_get_child
+    )
+    neighbours_parents = set(
+        concept_info['start']
+        for concept_info
+        in conceptnet[concept]
+        if concept_info['relation'] in relation_types_get_parent
+    )
+
+    return list(neighbours_childs.union(neighbours_parents))

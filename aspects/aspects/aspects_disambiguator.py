@@ -1,41 +1,37 @@
-# -*- coding: utf-8 -*-
-# author: Krzysztof xaru Rajda
-
 import jellyfish
 
+from aspects.utilities import common_nlp
 
-class AspectsDisambiguator(object):
-    def __init__(self):
-        self.__threshold = 0.75
 
-    def _get_jaro(self, word1, word2):
-        """
-        Calculate Jaro-Winkler distance between two words
-        """
-        return jellyfish.jaro_winkler(unicode(word1), unicode(word2))
+# TODO: do word embeddings based clustering of close aspects + jaro wrinkler
+# TODO: add spelling correction here
 
-    def _get_most_similar(self, aspects, aspect):
-        """
-        Returns aspect most similar to given one
-        """
-        aspects.remove(aspect)
-        similarities = [self._get_jaro(aspect, x) for x in aspects]
+def _get_jaro(word1, word2):
+    """ Calculate Jaro-Winkler distance between two words """
+    return jellyfish.jaro_winkler(unicode(word1), unicode(word2))
 
-        max_index = similarities.index(max(similarities))
 
-        return aspects[max_index], similarities[max_index]
+def _get_most_similar(aspects, aspect):
+    """ Returns aspect most similar to given one """
+    aspects.remove(aspect)
+    similarities = [_get_jaro(aspect, x) for x in aspects]
 
-    def process(self, aspects):
+    max_index = similarities.index(max(similarities))
 
-        accepted_aspects = []
+    return aspects[max_index], similarities[max_index]
 
-        for aspect in aspects:
-            candidate, similarity = self._get_most_similar(aspects, aspect)
 
-            if similarity < self.__threshold \
-                    and candidate not in accepted_aspects:
-                accepted_aspects.append(candidate)
-            else:
-                accepted_aspects.append(aspect)
+def process(aspects, threshold):
+    # TODO: rename function, filter only noun phrases based aspects
+    aspects = [common_nlp.spelling(aspect) for aspect in aspects]
+    accepted_aspects = []
 
-        return accepted_aspects
+    for aspect in aspects:
+        candidate, similarity = _get_most_similar(aspects, aspect)
+
+        if similarity < threshold and candidate not in accepted_aspects:
+            accepted_aspects.append(candidate)
+        else:
+            accepted_aspects.append(aspect)
+
+    return accepted_aspects
