@@ -73,7 +73,9 @@ def get_aspects(
     aspects = {}
     for corpus_path in [Path(c) for c in corpus_paths]:
         with open(corpus_path) as corpus_file:
-            aspects = [
+            aspects[corpus_path.stem] = []
+
+            aspects_lines = [
                 line.strip().split(sep)
                 for line
                 in tqdm(corpus_file, desc='Corpus iterator')
@@ -81,25 +83,24 @@ def get_aspects(
             ]
 
             previous_i = False
-            n_all_aspects = 0
-            n_multi_aspects = 0
-            for aspect in aspects:
-                if 'B' in aspect[col_number_of_aspects]:
-                    n_all_aspects += 1
+            aspect = ''
+            for aspect_line in aspects_lines:
+                if 'B' in aspect_line[col_number_of_aspects]:
+                    aspect = aspect_line[0]
                     previous_i = False
-                elif 'I' in aspect[col_number_of_aspects]:
+                elif 'I' in aspect_line[col_number_of_aspects]:
+                    aspect = f'{aspect} {aspect_line[0]}'
                     if not previous_i:
-                        n_multi_aspects += 1
                         previous_i = True
                     else:
                         pass
                 else:
+                    if aspect:
+                        aspects[corpus_path.stem].append(aspect.lower())
+                        aspect = ''
                     previous_i = False
-
-            aspects[corpus_path.stem] = round(n_multi_aspects / n_all_aspects, 4) * 100
-
     return aspects
 
 
 if __name__ == '__main__':
-    get_uni_and_multigram_aspects_stats()
+    get_aspects()
