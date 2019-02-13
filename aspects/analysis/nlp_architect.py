@@ -113,30 +113,31 @@ def skip_char_models(model_name: Path):
     return not any(m in model_name.as_posix() for m in MODELS_TO_SKIP)
 
 
-def get_models_f1_metric(
+def get_models_metric(
         all_models_path: Path,
         filter_datasets: str,
         embedding_names: Dict,
+        metric_name: str = 'f1',
         reindex_results_order: Tuple[str] = None
 ):
     if reindex_results_order is None:
         reindex_results_order = REINDEX_RESULTS_ORDER
-    model_f1_by_word_embedding = {}
+    model_metric_by_word_embedding = {}
 
     for word_embedding_models_path in all_models_path.glob('*'):
-        models_f1 = {}
+        models_metric = {}
         models_paths = list(filter(skip_char_models, word_embedding_models_path.glob('*')))
         models_paths = [m for m in models_paths if 'tensorboard' not in m.as_posix()]
         models_metrics = get_metrics(models_paths, filter_datasets)
 
         for model_name, model_metrics in models_metrics.items():
             model_name = get_models_params_from_name(model_name)
-            models_f1[model_name] = model_metrics.f1
+            models_metric[model_name] = model_metrics._asdict()[metric_name]
 
-        if models_f1:
-            model_f1_by_word_embedding[embedding_names[word_embedding_models_path.name]] = models_f1
+        if models_metric:
+            model_metric_by_word_embedding[embedding_names[word_embedding_models_path.name]] = models_metric
 
-    df = pd.DataFrame.from_dict(model_f1_by_word_embedding).round(2)
+    df = pd.DataFrame.from_dict(model_metric_by_word_embedding).round(2)
     df = df.transpose().rename(index=str, columns=METHOD_NAMES).transpose()
     return df.reindex(reindex_results_order)
 
@@ -147,10 +148,11 @@ if __name__ == '__main__':
     #         Path('/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models/glove.840B.300d/').glob(
     #             '*')),
     #     'predictions', 'y_test')
-    df_oxygen_1 = get_models_f1_metric(
+    df_oxygen_1 = get_models_metric(
         all_models_path=Path(
             '/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models-oxygen-1/models/'),
         filter_datasets='laptops',
-        embedding_names=EMBEDDING_NAMES
+        embedding_names=EMBEDDING_NAMES,
+        metric_name='precision'
     )
     pass
