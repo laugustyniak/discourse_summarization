@@ -23,10 +23,24 @@ REINDEX_RESULTS_ORDER = (
     'WoCh-BiLSTM-CRF'
 )
 
+REINDEX_EMBEDDING_NAMES = [
+    'Glove 840B',
+    'Glove 42B',
+    'fastText-wiki',
+    'fastText-crawl',
+    'word2vec',
+    'Amazon Reviews',
+    'numberbatch',
+    'Glove 6B 50',
+    'Glove 6B 100',
+    'Glove 6B 200',
+    'Glove 6B 300',
+]
+
 EMBEDDING_NAMES = {
-    'wiki-news-300d-1M': 'fatText-2',
+    'wiki-news-300d-1M': 'fastText-wiki',
     'glove.42B.300d': 'Glove 42B',
-    'crawl-300d-2M': 'fastText',
+    'crawl-300d-2M': 'fastText-crawl',
     'sentic2vec': 'Amazon Reviews',
     'glove.6B.100d': 'Glove 6B 100',
     'numberbatch-en': 'numberbatch',
@@ -53,7 +67,7 @@ def _get_dataset_name(dataset_path: str) -> str:
     return Path(dataset_path).stem
 
 
-def _get_metrics(metrics_eval):
+def get_precision_recall_f1(metrics_eval):
     return Metrics(*metrics_eval[0])
 
 
@@ -63,7 +77,7 @@ def get_metrics(models_paths: Iterable[Path], filter_datasets: str):
     logger.info(f'#{len(models_paths)} models paths have been found')
     for model_path in models_paths:
         model_info = pickle.load(model_path.open('rb'))
-        models_metrics[_get_dataset_name(model_path.as_posix())] = _get_metrics(model_info['eval'])
+        models_metrics[_get_dataset_name(model_path.as_posix())] = get_precision_recall_f1(model_info['eval'])
     return models_metrics
 
 
@@ -142,17 +156,52 @@ def get_models_metric(
     return df.reindex(reindex_results_order)
 
 
+def get_multigram_aspect_models_metric(
+        word_embedding_path: Path,
+        metric_name: str = 'f1',
+        reindex_results_order: Tuple[str] = None
+):
+    if reindex_results_order is None:
+        reindex_results_order = REINDEX_RESULTS_ORDER
+    models_metrics = []
+
+    models_paths = [
+        m
+        for m
+        in word_embedding_path.glob('*conll.info')
+        if 'tensorboard' not in m.as_posix() and 'multingram' in m.as_posix() and '25epochs' in m.as_posix()]
+
+    for model_path in models_paths:
+        model_info = pickle.load(model_path.open('rb'))
+        models_metrics.append(
+            tuple([
+                _get_dataset_name(model_path.as_posix()),
+                round(get_precision_recall_f1(model_info['eval'])._asdict()[metric_name], 2)
+            ])
+        )
+
+    df = pd.DataFrame(models_metrics, columns=['method', metric_name]).sort_index()
+    df = df.transpose().rename(index=str, columns=METHOD_NAMES).transpose()
+    return df.reindex(reindex_results_order)
+
+
 if __name__ == '__main__':
     # atts = get_models_attributes(
     #     list(
     #         Path('/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models/glove.840B.300d/').glob(
     #             '*')),
     #     'predictions', 'y_test')
-    df_oxygen_1 = get_models_metric(
-        all_models_path=Path(
-            '/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models-oxygen-1/models/'),
-        filter_datasets='laptops',
-        embedding_names=EMBEDDING_NAMES,
-        metric_name='precision'
+
+    # df_oxygen_1 = get_models_metric(
+    #     all_models_path=Path(
+    #         '/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models-oxygen-14-all/models/'),
+    #     filter_datasets='laptops',
+    #     embedding_names=EMBEDDING_NAMES,
+    #     metric_name='precision'
+    # )
+
+    get_multigram_aspect_models_metric(
+        word_embedding_path=Path(
+            '/home/laugustyniak/github/phd/nlp-architect/examples/aspect_extraction/models-oxygen-14-all/models/glove.42B.300d/'),
+        metric_name='f1'
     )
-    pass
