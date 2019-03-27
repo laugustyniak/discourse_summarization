@@ -5,7 +5,7 @@ from os.path import join
 
 def load_serialized(f_path):
     """ loads pickled files from specified path """
-    with open(join(f_path)) as f:
+    with open(join(f_path), 'rb') as f:
         return pickle.load(f)
 
 
