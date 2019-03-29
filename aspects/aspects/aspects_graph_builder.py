@@ -72,7 +72,7 @@ class AspectsGraphBuilder(object):
 
         Returns
         -------
-        graph: networkx.MultiDiGraph
+        graph: networkx.DiGraph
             Graph with aspect-aspect relations
 
         page_rank: networkx.PageRank
@@ -124,10 +124,10 @@ class AspectsGraphBuilder(object):
 
         Returns
         -------
-        graph : networkx.MultiDiGraph
+        graph : networkx.DiGraph
             Graph with aspect-aspect relation.
         """
-        graph = nx.MultiDiGraph()
+        graph = nx.DiGraph()
         for doc_id, rules_list in rules.iteritems():
             for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
@@ -154,7 +154,7 @@ class AspectsGraphBuilder(object):
 
         Parameters
         ----------
-        graph : networkx.MultiDiGraph
+        graph : networkx.DiGraph
             Graph of aspect-aspect relation ARRG.
 
         weight : str, optional
@@ -267,7 +267,7 @@ class AspectsGraphBuilder(object):
 
         Parameters
         ----------
-        graph : networkx.MultiDiGraph
+        graph : networkx.DiGraph
             Aspect-aspect relation graph.
 
         node_attrib_name : str
