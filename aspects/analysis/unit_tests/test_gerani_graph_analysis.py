@@ -20,7 +20,7 @@ class GeraniGraphAnalysisTest(unittest.TestCase):
                                 # the rest of document info is skipped
                                 }
                           }
-        graph = nx.MultiDiGraph()
+        graph = nx.DiGraph()
         graph.add_edge('screen', 'phone')
         graph.add_edge('speaker', 'apple')
 
@@ -31,7 +31,7 @@ class GeraniGraphAnalysisTest(unittest.TestCase):
         self.assertEqual(attribs['apple'], 3)
 
     def test_calculate_moi_by_gerani(self):
-        graph = nx.MultiDiGraph()
+        graph = nx.DiGraph()
         graph.add_edge('screen', 'phone', dir_moi=2)
         graph.add_edge('speaker', 'apple', dir_moi=1)
 

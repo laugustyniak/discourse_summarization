@@ -220,7 +220,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         graph, pagerank = aspects_graph_builder.build(rules, docs_info={}, conceptnet_io=False, filter_gerani=True)
         gerani_weight_attrib = nx.get_edge_attributes(graph, 'gerani_weight')
         relation_type_weight_attrib = nx.get_edge_attributes(graph, 'relation_type')
-        self.assertTrue(isinstance(graph, nx.MultiDiGraph))
+        self.assertTrue(isinstance(graph, nx.DiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
         gerani_weight_attrib_expected = {(u'screen', u'phone', 0): 1.38,
                                          (u'speaker', u'sound', 0): 0.29}
@@ -252,7 +252,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            ]
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu, with_cycles_between_aspects=True)
         graph, pagerank = aspects_graph_builder.build(rules, docs_info={}, conceptnet_io=False, filter_gerani=False)
-        self.assertTrue(isinstance(graph, nx.MultiDiGraph))
+        self.assertTrue(isinstance(graph, nx.DiGraph))
         self.assertEqual(graph.number_of_nodes(), 5)
         self.assertEqual(graph.number_of_edges(), 16)
         self.assertEqual(graph['screen']['phone'],
@@ -279,7 +279,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(self.aspects_per_edu, alpha_gerani=0.5)
         graph, pagerank = aspects_graph_builder.build(self.rules, docs_info=self.docs_info, conceptnet_io=False,
                                                       filter_gerani=True, aht_gerani=False)
-        self.assertTrue(isinstance(graph, nx.MultiDiGraph))
+        self.assertTrue(isinstance(graph, nx.DiGraph))
         self.assertEqual(graph.number_of_nodes(), 4)
         self.assertEqual(graph.number_of_edges(), 2)
         self.assertEqual(graph['screen']['phone'],
@@ -298,7 +298,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(pagerank, pagerank_expected)
 
     def _set_multigraph_arrg(self):
-        self.arrg_sample_graph = nx.MultiDiGraph()
+        self.arrg_sample_graph = nx.DiGraph()
         self.arrg_sample_graph.add_edge('screen', 'phone', gerani_weight=10.38)
         self.arrg_sample_graph.add_edge('voicemail', 'phone', gerani_weight=100.38)
         self.arrg_sample_graph.add_edge('voicemail', 'cellphone', gerani_weight=4.38)
@@ -314,7 +314,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def test_merge_multiedges_in_arrg(self):
         aspects_graph_builder = AspectsGraphBuilder()
-        graph = nx.MultiDiGraph()
+        graph = nx.DiGraph()
         graph.add_edge('screen', 'phone', gerani_weight=10, relation='Elaboration')
         graph.add_edge('screen', 'phone', gerani_weight=10, relation='same-unit')
         graph.add_edge('voicemail', 'phone', gerani_weight=10, relation='Elaboration')
