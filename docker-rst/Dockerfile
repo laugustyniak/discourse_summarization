@@ -1,22 +1,20 @@
-FROM java:7
+FROM alpine:3.8 as builder
 
 MAINTAINER Łukasz Augustyniak "luk.augustyniak@gmail.com"
 
-# Install Python.
-RUN \
-  apt-get update && \
-  apt-get install -y python python-dev python-pip python-virtualenv && \
-  rm -rf /var/lib/apt/lists/*
+RUN apk update && \
+    apk add git py2-setuptools py2-pip build-base openjdk8-jre perl && \
+    pip install nltk==3.4 pytest
 
 RUN wget http://pyyaml.org/download/pyyaml/PyYAML-3.09.tar.gz \
 	&& tar -zxf PyYAML-3.09.tar.gz \
 	&& cd PyYAML-3.09 \
 	&& python setup.py install
 
-RUN wget https://pypi.python.org/packages/source/n/nltk/nltk-2.0b9.tar.gz \
-	&& tar -zxf nltk-2.0b9.tar.gz \
-	&& cd nltk-2.0b9 \
-	&& python setup.py install
+#RUN wget https://pypi.python.org/packages/source/n/nltk/nltk-2.0b9.tar.gz \
+#	&& tar -zxf nltk-2.0b9.tar.gz \
+#	&& cd nltk-2.0b9 \
+#	&& python setup.py install
 
 RUN wget http://www.cs.toronto.edu/~weifeng/software/discourse_parse-2.01.tar.gz \
 	&& tar -zxf discourse_parse-2.01.tar.gz \
