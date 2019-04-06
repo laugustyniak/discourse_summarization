@@ -2,7 +2,7 @@ from collections import defaultdict, namedtuple
 
 from edu_dependency_parser.trees.parse_tree import ParseTree
 
-Relation = namedtuple('Relation', 'edu1 edu2 relation_type gerani')
+EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
 
 
 class EDUTreeRulesExtractor(object):
@@ -86,11 +86,11 @@ class EDUTreeRulesExtractor(object):
                     if nuc_sat_1 == 'N':
                         # [N][S] or [N][N]
                         self.rules[self.doc_id].append(
-                            Relation(self.right_leaf, self.left_leaf, rel_name, self.calculate_gerani_weight()))
+                            EDURelation(self.right_leaf, self.left_leaf, rel_name, self.calculate_gerani_weight()))
                     else:
                         # [S][N]
                         self.rules[self.doc_id].append(
-                            Relation(self.left_leaf, self.right_leaf, rel_name, self.calculate_gerani_weight()))
+                            EDURelation(self.left_leaf, self.right_leaf, rel_name, self.calculate_gerani_weight()))
         # do deeper into tree
         else:
             for index, child in enumerate(tree):

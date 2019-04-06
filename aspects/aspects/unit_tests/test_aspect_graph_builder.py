@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import networkx as nx
 
-from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, RelationAspects
+from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, AspectsRelation
 from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities import settings
@@ -164,8 +164,8 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         rules_obtained = aspects_graph_builder.filter_gerani(rules)
         rules_expected = {
-            -1: [RelationAspects(aspect1=u'screen', aspect2=u'phone', relation_type='Elaboration', gerani_weight=1.38),
-                 RelationAspects(aspect1=u'speaker', aspect2=u'sound', relation_type='Elaboration',
+            -1: [AspectsRelation(aspect1=u'screen', aspect2=u'phone', relation_type='Elaboration', gerani_weight=1.38),
+                 AspectsRelation(aspect1=u'speaker', aspect2=u'sound', relation_type='Elaboration',
                                  gerani_weight=0.29)]}
         self.assertEqual(rules_obtained, rules_expected)
 
@@ -189,7 +189,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
         rules_obtained = aspects_graph_builder.filter_gerani(rules)
         rules_expected = {
-            -1: [RelationAspects(aspect1=u'screen', aspect2=u'phone',
+            -1: [AspectsRelation(aspect1=u'screen', aspect2=u'phone',
                                  relation_type='Elaboration',
                                  gerani_weight=12.18),
                  ]}

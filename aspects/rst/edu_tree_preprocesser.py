@@ -7,7 +7,8 @@ sys.path.append(str(settings.EDU_DEPENDENCY_PARSER_PATH))
 from trees.parse_tree import ParseTree
 
 
-class EDUTreePreprocesser(object):
+class EDUTreePreprocesser:
+
     def __init__(self):
         self.edus = []
 
@@ -22,5 +23,13 @@ class EDUTreePreprocesser(object):
                 extraction_result['source_document_id'] = document_id
                 self.edus.append(extraction_result)
 
-    def get_preprocessed_edus_list(self):
-        return {idx: edu for idx, edu in enumerate(self.edus)}
+    def get_preprocessed_edus(self):
+        """
+
+        :return: dict [edu_id, edu]
+        """
+        return {
+            idx: edu
+            for idx, edu
+            in enumerate(self.edus)
+        }

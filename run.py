@@ -104,10 +104,14 @@ class AspectAnalysisSystem:
         self.gold_standard_path = gold_standard_path
         self.analysis_results_path = analysis_results_path
         self.input_file_path = input_path
-        if filter_gerani:
-            self.paths = IOPaths(input_path, output_path, suffix='gerani_one_rule_per_document')
+        if self.max_docs is not None:
+            self.output_path = '{}-{}-docs'.format(output_path, self.max_docs)
         else:
-            self.paths = IOPaths(input_path, output_path)
+            self.output_path = output_path
+        if filter_gerani:
+            self.paths = IOPaths(input_path, self.output_path, suffix='gerani_one_rule_per_document')
+        else:
+            self.paths = IOPaths(input_path, self.output_path)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
         self.cycle_in_relations = cycle_in_relations
@@ -145,7 +149,7 @@ class AspectAnalysisSystem:
                         self.serializer.save(document, join(self.paths.extracted_docs, str(ref_id)))
                         self.serializer.save(str(doc_id), join(self.paths.extracted_docs_ids, str(ref_id)))
                         documents_count += 1
-                        if self.max_docs < documents_count and self.max_docs is not None:
+                        if self.max_docs is not None and self.max_docs < documents_count:
                             break
             # this is {'doc_id': {'text', text, 'metadata1': xxx}}
             # text with additional metadata
@@ -156,7 +160,7 @@ class AspectAnalysisSystem:
                     self.serializer.save(document['text'], join(self.paths.extracted_docs, str(ref_id)))
                     self.serializer.save({doc_id: document}, join(self.paths.extracted_docs_metadata, str(ref_id)))
                     documents_count += 1
-                    if self.max_docs < documents_count and self.max_docs is not None:
+                    if self.max_docs is not None and self.max_docs < documents_count:
                         break
             elif f_extension in ['csv', 'txt']:
                 raw_documents = {}
@@ -166,7 +170,7 @@ class AspectAnalysisSystem:
                         self.serializer.save(line, self.paths.extracted_docs + str(idx))
                         self.serializer.save({idx: line}, self.paths.extracted_docs_metadata + str(idx))
                         documents_count += 1
-                        if self.max_docs < documents_count and self.max_docs is not None:
+                        if self.max_docs is not None and self.max_docs < documents_count:
                             break
             else:
                 raise WrongTypeException()
@@ -189,7 +193,7 @@ class AspectAnalysisSystem:
         )
 
     def _perform_edu_preprocessing(self, documents_count):
-        if not exists(self.paths.raw_edu_list):
+        if not exists(self.paths.raw_edus):
             preprocesser = EDUTreePreprocesser()
             for document_id in tqdm(range(0, documents_count), desc='EDU preprocessing', total=documents_count):
                 try:
@@ -201,8 +205,8 @@ class AspectAnalysisSystem:
                 except TypeError as err:
                     logging.error('Document id: {} and error: {}'.format(document_id, str(err)))
                     self.parsing_errors += 1
-            edu_list = preprocesser.get_preprocessed_edus_list()
-            self.serializer.save(edu_list, self.paths.raw_edu_list)
+            edus = preprocesser.get_preprocessed_edus()
+            self.serializer.save(edus, self.paths.raw_edus)
 
     def _filter_edu_by_sentiment(self):
         """Filter out EDUs without sentiment, with neutral sentiment too"""
@@ -214,17 +218,16 @@ class AspectAnalysisSystem:
                 analyzer = SentimentAnalyzer()
             else:
                 analyzer = SentimentAnalyzer(model_path=self.sent_model_path)
-            edu_list = list(self.serializer.load(self.paths.raw_edu_list).values())
+            edus = self.serializer.load(self.paths.raw_edus)
             filtered_edus = {}
             docs_info = {}
 
-            for edu_id, edu in tqdm(
-                    enumerate(edu_list), desc='Filtering based on Sentiment Analysis of EDUs', total=len(edu_list)):
+            for edu_id, edu in tqdm(edus.items(), desc='Filtering based on Sentiment Analysis of EDUs'):
                 edu['sentiment'] = []
                 logging.debug('edu: {}'.format(edu))
                 sentiment = analyzer.analyze(edu['text'])[0]
 
-                # todo add to readme strucutre of docuemnt info and other dicts
+                # todo add to readme structure of document info and other dicts
                 if not edu['source_document_id'] in docs_info:
                     docs_info[edu['source_document_id']] = {
                         'EDUs': [],
@@ -237,6 +240,7 @@ class AspectAnalysisSystem:
                 docs_info[edu['source_document_id']]['sentiment'].update({edu_id: sentiment})
                 docs_info[edu['source_document_id']]['EDUs'].append(edu_id)
                 if sentiment or self.neutral_sent:
+                    # FIXME: why list not float/int as sentiment?
                     edu['sentiment'].append(sentiment)
                     docs_info[edu['source_document_id']]['accepted_edus'].append(edu_id)
                     filtered_edus[edu_id] = edu
@@ -259,8 +263,7 @@ class AspectAnalysisSystem:
 
         logging.info('# of document with sentiment edus: {}'.format(n_edus))
 
-        for n_doc, (edu_id, edu) in tqdm(
-                enumerate(edus.iteritems()), desc='Aspect Extraction from EDUs', total=len(edus)):
+        for edu_id, edu in tqdm(edus.items(), desc='Aspect Extraction from EDUs'):
             if edu_id not in aspects_per_edu:
                 doc_info = documents_info[edu['source_document_id']]
                 aspects, aspect_concepts, aspect_keywords = extractor.extract(edu)
@@ -364,6 +367,9 @@ class AspectAnalysisSystem:
     def run(self):
 
         total_timer_start = time()
+
+        logging.info('Dataset to process: {} and will be saved into: {}'.format(
+            self.input_file_path, self.paths.docs_info))
 
         # load documents
         logging.info('--------------------------------------')

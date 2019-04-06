@@ -6,13 +6,14 @@ from operator import itemgetter
 
 import networkx as nx
 from more_itertools import flatten
+from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
 from aspects.data_io.serializer import Serializer
 
 log = logging.getLogger(__name__)
 
-RelationAspects = namedtuple('Relation', 'aspect1 aspect2 relation_type gerani_weight')
+AspectsRelation = namedtuple('AspectsRelation', 'aspect1 aspect2 relation_type gerani_weight')
 
 
 class AspectsGraphBuilder(object):
@@ -118,7 +119,7 @@ class AspectsGraphBuilder(object):
 
         Parameters
         ----------
-        rules : list
+        rules : dict
             List of tuples (aspect_id_1, aspect_id_2, relation, gerani_weight)
             or namedtuple as RelationAspects()
 
@@ -128,16 +129,15 @@ class AspectsGraphBuilder(object):
             Graph with aspect-aspect relation.
         """
         graph = nx.DiGraph()
-        for doc_id, rules_list in rules.iteritems():
-            for rule in rules_list:
+        for _, document_rules in tqdm(rules.items(), desc='Generating aspect-aspect graph based on rules'):
+            for rule in document_rules:
                 log.debug('Rule: {}'.format(rule))
-                if isinstance(rule, RelationAspects):
+                if isinstance(rule, AspectsRelation):
                     aspect_left, aspect_right, relation, gerani_weight = rule
                     graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
                 else:
                     left_node, right_node, relation, gerani_weight = rule
-                    for aspect_left, aspect_right in self.aspects_iterator(
-                            left_node, right_node):
+                    for aspect_left, aspect_right in self.aspects_iterator(left_node, right_node):
                         graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
 
         return graph
@@ -230,7 +230,7 @@ class AspectsGraphBuilder(object):
                 left_node, right_node, relation, gerani_weight = rule
                 for aspect_left, aspect_right in self.aspects_iterator(
                         left_node, right_node):
-                    rules_filtered.append(RelationAspects(aspect_left,
+                    rules_filtered.append(AspectsRelation(aspect_left,
                                                           aspect_right,
                                                           relation,
                                                           gerani_weight))
@@ -253,7 +253,7 @@ class AspectsGraphBuilder(object):
             groupby(sorted(flatten(rule_per_doc.values())),
                     key=lambda rel: rel[:3])]
         # map relations into namedtuples
-        relations_list = [RelationAspects(a1, a2, r, w) for
+        relations_list = [AspectsRelation(a1, a2, r, w) for
                           a1, a2, r, w in relations_list]
         rules = {-1: relations_list}
         return rules

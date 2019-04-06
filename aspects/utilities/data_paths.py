@@ -29,7 +29,7 @@ class IOPaths(object):
         self.link_trees = join(output_path, 'link_trees_dir')
         self.ensure_path_exist(self.link_trees)
 
-        self.raw_edu_list = join(output_path, 'raw_edu_list')
+        self.raw_edus = join(output_path, 'raw_edu_list')
         self.sentiment_filtered_edus = join(output_path, 'sentiment_filtered_edus')
         self.aspects_per_edu = join(output_path, 'aspects_per_edu')
         self.edu_dependency_rules = join(output_path, 'edu_dependency_rules')
