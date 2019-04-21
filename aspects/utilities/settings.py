@@ -49,11 +49,31 @@ SEMEVAL_LAPTOPS_TEST_XML = SEMEVAL_DATASETS_2014 / 'Laptops_Test_Data_phaseB.xml
 
 # --------------------------------------------- SENITMENT MODELS ----------------------------------------------------- #
 SENTIMENT_MODELS_PATH = DATA_PATH / 'models'
-SENTIMENT_MODEL_PROD = SENTIMENT_MODELS_PATH / \
-                       'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-10-domains.pkl'
+SENTIMENT_MODEL_PROD = (
+        SENTIMENT_MODELS_PATH /
+        'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-10-domains.pkl'
+)
+
 # smaller model as default - useful for testing
-SENTIMENT_MODEL_TESTS = SENTIMENT_MODELS_PATH / 'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5' \
-                                                '-reviews_Apps_for_Android-500000-balanced.pkl'
+SENTIMENT_MODEL_TESTS = (
+        SENTIMENT_MODELS_PATH /
+        'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-reviews_Apps_for_Android-500000-balanced.pkl'
+)
+
+# --------------------------------------------- ASPECT MODELS -------------------------------------------------------- #
+
+
+ASPECT_EXTRACTION_NEURAL_MODEL_PATH = DATA_PATH / 'aspects' / 'models'
+ASPECT_EXTRACTION_NEURAL_MODEL = (
+        ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'word-bilstm-crf-25-epochs-merged-electronic-aspects.h5')
+ASPECT_EXTRACTION_NEURAL_MODEL_INFO = (
+        ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'word-bilstm-crf-25-epochs-merged-electronic-aspects.info')
+
+# --------------------------------------------- EMBEDDINGS ----------------------------------------------------------- #
+
+
+WORD_EMBEDDING_GLOVE_42B = DATA_PATH / 'embedding' / 'glove.42B.300d.txt'
+WORD_EMBEDDING_GLOVE_42B_VOCAB = DATA_PATH / 'embedding' / 'glove.42B.300d.vocab.pkl'
 
 # --------------------------------------------- CONCEPTNETS ---------------------------------------------------------- #
 CONCEPTNET_IO_PATH_GZ = DATA_PATH / 'conceptnet' / 'conceptnet-assertions-5.5.5.csv.gz'
