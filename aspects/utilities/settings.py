@@ -48,7 +48,7 @@ SEMEVAL_LAPTOPS_TRAIN_XML = SEMEVAL_DATASETS_2014 / 'Laptops_Train.xml'
 SEMEVAL_LAPTOPS_TEST_XML = SEMEVAL_DATASETS_2014 / 'Laptops_Test_Data_phaseB.xml'
 
 # --------------------------------------------- SENITMENT MODELS ----------------------------------------------------- #
-SENTIMENT_MODELS_PATH = DATA_PATH / 'models'
+SENTIMENT_MODELS_PATH = DATA_PATH / 'models' / 'sentiment'
 SENTIMENT_MODEL_PROD = (
         SENTIMENT_MODELS_PATH /
         'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-10-domains.pkl'
@@ -63,11 +63,9 @@ SENTIMENT_MODEL_TESTS = (
 # --------------------------------------------- ASPECT MODELS -------------------------------------------------------- #
 
 
-ASPECT_EXTRACTION_NEURAL_MODEL_PATH = DATA_PATH / 'aspects' / 'models'
-ASPECT_EXTRACTION_NEURAL_MODEL = (
-        ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'word-bilstm-crf-25-epochs-merged-electronic-aspects.h5')
-ASPECT_EXTRACTION_NEURAL_MODEL_INFO = (
-        ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'word-bilstm-crf-25-epochs-merged-electronic-aspects.info')
+ASPECT_EXTRACTION_NEURAL_MODEL_PATH = DATA_PATH / 'models' / 'aspects'
+ASPECT_EXTRACTION_NEURAL_MODEL = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model.h5'
+ASPECT_EXTRACTION_NEURAL_MODEL_INFO = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model.info'
 
 # --------------------------------------------- EMBEDDINGS ----------------------------------------------------------- #
 
