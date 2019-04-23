@@ -23,6 +23,7 @@ from tqdm import tqdm
 
 from aspects.aspects.neural_aspect_extractor import get_padding_for_tokens, NeuralAspectExtractor
 from embeddings.utils import get_word_embedding_vocab
+from utilities.git_utils import get_git_revision_short_hash
 
 
 @click.command()
@@ -55,7 +56,7 @@ def train_aspect_extractor(
     logs_path = dataset_path.parent / 'logs'
     logs_path.mkdir(exist_ok=True, parents=True)
 
-    model_name = 'model' + f'-{model_name_suffix}' if model_name_suffix else ''
+    model_name = 'model' + f'-{model_name_suffix}' if model_name_suffix else '' + f'-{get_git_revision_short_hash()}'
     model_path = dataset_path.parent / model_name
 
     dataset_path = dataset_path.as_posix()
