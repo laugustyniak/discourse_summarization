@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 import numpy as np
 from keras import Input, Model
-from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
+from keras.callbacks import TensorBoard, ModelCheckpoint
 from keras.layers import (
     Embedding,
     Dropout,
@@ -121,14 +121,15 @@ def train_aspect_extractor(
         mode='max'
     )
 
-    early_stopping_callback = EarlyStopping(monitor='crf_accuracy', mode='min', verbose=1, patience=3)
+    # early_stopping_callback = EarlyStopping(
+    #     monitor='crf_accuracy', mode='min', verbose=1, patience=10, min_delta=0.001)
 
     aspect_model.fit(
         x=x_train,
         y=y_train,
         batch_size=batch_size,
         epochs=epochs,
-        callbacks=[checkpoint_callback, tensorboard_callback, early_stopping_callback]
+        callbacks=[checkpoint_callback, tensorboard_callback]
     )
 
     aspect_model.save(model_path.with_suffix('.h5').as_posix())
