@@ -53,6 +53,8 @@ class NeuralAspectExtractor:
                 if aspects:
                     all_aspects.append(' '.join(aspects))
                 aspects = []
+        if aspects:
+            all_aspects.append(' '.join(aspects))
         return all_aspects
 
     def _get_padding(self, text, vocab, max_padding):
