@@ -4,7 +4,7 @@ from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras_contrib.layers import CRF
 from keras_contrib.losses import crf_loss
-from keras_contrib.metrics import crf_viterbi_accuracy
+from keras_contrib.metrics import crf_accuracy
 
 from utilities import settings
 from utilities.common_nlp import load_spacy
@@ -21,7 +21,7 @@ class NeuralAspectExtractor:
     def __init__(self):
         self.model, self.model_info = self._load_model()
         self.word_embedding_vocab = self.model_info['word_vocab']
-        self.char_embedding_vocab = self.model_info['char_vocab']
+        # self.char_embedding_vocab = self.model_info['char_vocab']
 
     def _load_model(self):
         with open(settings.ASPECT_EXTRACTION_NEURAL_MODEL_INFO.as_posix(), 'rb') as f:
@@ -31,7 +31,7 @@ class NeuralAspectExtractor:
             custom_objects={
                 'CRF': CRF,
                 'crf_loss': crf_loss,
-                'crf_viterbi_accuracy': crf_viterbi_accuracy
+                'crf_accuracy': crf_accuracy
             }
         )
         return model, model_info
@@ -44,7 +44,7 @@ class NeuralAspectExtractor:
     def _get_padding(self, text, vocab, max_padding):
         return pad_sequences(
             [[
-                vocab[token.text]
+                vocab[token.text] if token.text in vocab else 1
                 for token
                 in nlp.make_doc(text)
             ]],

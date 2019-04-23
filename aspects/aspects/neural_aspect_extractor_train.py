@@ -1,11 +1,11 @@
 import pickle
 from functools import lru_cache
-from os.path import basename
 from pathlib import Path
 
 import click
 import numpy as np
 from keras import Input, Model
+from keras.callbacks import TensorBoard
 from keras.layers import (
     Embedding,
     Dropout,
@@ -55,7 +55,7 @@ def train_aspect_extractor(
     logs_path = dataset_path.parent / 'logs'
     logs_path.mkdir(exist_ok=True, parents=True)
 
-    model_name = basename(dataset_path.stem) + f'-{model_name_suffix}' if model_name_suffix else ''
+    model_name = 'model' + f'-{model_name_suffix}' if model_name_suffix else ''
     model_path = dataset_path.parent / model_name
 
     dataset_path = dataset_path.as_posix()
@@ -100,12 +100,14 @@ def train_aspect_extractor(
     # Set callback functions to early stop training and save the best model so far
     tensorboard_path = (logs_path / ('tensorboard-' + model_name)).as_posix()
     print('Tensorboard: ' + tensorboard_path)
+    tensorboard_callback = TensorBoard(log_dir=tensorboard_path)
 
     aspect_model.fit(
         x=x_train,
         y=y_train,
         batch_size=batch_size,
         epochs=epochs,
+        callbacks=[tensorboard_callback]
     )
 
     aspect_model.save(model_path.with_suffix('.h5').as_posix())
