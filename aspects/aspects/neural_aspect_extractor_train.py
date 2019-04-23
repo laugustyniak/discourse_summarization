@@ -21,7 +21,7 @@ from keras_contrib.metrics import crf_accuracy
 from keras_preprocessing.sequence import pad_sequences
 from tqdm import tqdm
 
-from aspects.aspects.neural_aspect_extractor import get_padding_tokens, NeuralAspectExtractor
+from aspects.aspects.neural_aspect_extractor import get_padding_for_tokens, NeuralAspectExtractor
 from embeddings.utils import get_word_embedding_vocab
 
 
@@ -67,7 +67,7 @@ def train_aspect_extractor(
     texts, tags = list(zip(*dataset.read()))
     word_embedding_vocab = get_word_embedding_vocab()
 
-    x_train = np.vstack([get_padding_tokens(tokens, word_embedding_vocab, sentence_length) for tokens in texts])
+    x_train = np.vstack([get_padding_for_tokens(tokens, word_embedding_vocab, sentence_length) for tokens in texts])
 
     num_y_labels = 3
     vocabulary_size = len(word_embedding_vocab) + 2

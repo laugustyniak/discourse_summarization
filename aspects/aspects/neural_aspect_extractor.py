@@ -17,10 +17,12 @@ class NeuralAspectExtractor:
         'O': 1,
         'I-aspect': 2
     }
+    OOV_WORD_ID = 1
 
     def __init__(self):
         self.model, self.model_info = self._load_model()
         self.word_embedding_vocab = self.model_info['word_vocab']
+        # uncomment after adding char embeddings
         # self.char_embedding_vocab = self.model_info['char_vocab']
 
     def _load_model(self):
@@ -44,7 +46,7 @@ class NeuralAspectExtractor:
     def _get_padding(self, text, vocab, max_padding):
         return pad_sequences(
             [[
-                vocab[token.text] if token.text in vocab else 1
+                vocab[token.text] if token.text in vocab else self.OOV_WORD_ID
                 for token
                 in nlp.make_doc(text)
             ]],
@@ -53,10 +55,10 @@ class NeuralAspectExtractor:
         )
 
 
-def get_padding_tokens(tokens, vocab, max_padding):
+def get_padding_for_tokens(tokens, vocab, max_padding):
     return pad_sequences(
         [[
-            vocab[token] if token in vocab else 1
+            vocab[token] if token in vocab else NeuralAspectExtractor.OOV_WORD_ID
             for token
             in tokens
         ]],
