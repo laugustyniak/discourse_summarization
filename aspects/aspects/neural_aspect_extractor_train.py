@@ -114,14 +114,14 @@ def train_aspect_extractor(
     tensorboard_callback = TensorBoard(log_dir=tensorboard_path)
 
     checkpoint_callback = ModelCheckpoint(
-        (checkpoints_path / model_name).with_suffix('.hdf5'),
-        monitor='val_acc',
+        (checkpoints_path / model_name).with_suffix('.hdf5').as_posix(),
+        monitor='crf_accuracy',
         verbose=1,
         save_best_only=True,
         mode='max'
     )
 
-    early_stopping_callback = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=3)
+    early_stopping_callback = EarlyStopping(monitor='crf_accuracy', mode='min', verbose=1, patience=3)
 
     aspect_model.fit(
         x=x_train,

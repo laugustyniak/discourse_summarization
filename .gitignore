@@ -39,3 +39,7 @@ edu_dependency_parser/rhetorical-installation/\._nltk-2\.0b9
 notebooks/vis/node_modules/
 
 notebooks/vis/
+
+*.cache
+
+aspects/data/embedding/glove\.42B\.300d\.vocab\.pkl
