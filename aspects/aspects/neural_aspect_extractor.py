@@ -41,7 +41,19 @@ class NeuralAspectExtractor:
     def predict(self, text):
         text_padded = self._get_padding(text, self.word_embedding_vocab, self.model_info['sentence_len'])
         prediction = self.model.predict(text_padded)
-        return prediction[0]
+
+        prediction = prediction[0][:, 2]
+
+        all_aspects = []
+        aspects = []
+        for idx, token in enumerate(nlp.make_doc(text)):
+            if prediction[idx]:
+                aspects.append(token.text)
+            else:
+                if aspects:
+                    all_aspects.append(' '.join(aspects))
+                aspects = []
+        return all_aspects
 
     def _get_padding(self, text, vocab, max_padding):
         return pad_sequences(
