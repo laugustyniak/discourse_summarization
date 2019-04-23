@@ -5,20 +5,20 @@ import shutil
 from datetime import datetime
 from os import listdir
 from os.path import basename, exists, join, split, splitext, dirname
-from pathlib import Path
 from time import time
 
 import networkx as nx
 import simplejson
 from joblib import Parallel
 from joblib import delayed
+from pathlib import Path
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
+from aspects.aspects.neural_aspect_extractor_client import NeuralAspectExtractorClient
 from aspects.data_io.serializer import Serializer
-from aspects.neural_aspect_extractor_client import NeuralAspectExtractorClient
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
