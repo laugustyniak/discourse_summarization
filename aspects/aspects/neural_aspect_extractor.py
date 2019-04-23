@@ -83,5 +83,6 @@ def get_padding_for_tokens(tokens, vocab, max_padding):
 
 if __name__ == '__main__':
     nae = NeuralAspectExtractor()
-    nae.extract('has a really good screen quality')
+    print(nae.extract('has a really good screen quality'))
+    print(nae.extract('i would like to see this screen'))
     pass

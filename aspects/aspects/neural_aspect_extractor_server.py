@@ -1,18 +1,22 @@
-from flask import Flask, request, jsonify, abort
+import tensorflow as tf
+from flask import Flask, request, jsonify
 
 from aspects.aspects.neural_aspect_extractor import NeuralAspectExtractor
 
+GRAPH = tf.get_default_graph()
 app = Flask(__name__)
 
 
 @app.route('/api/aspects/extract', methods=['POST'])
 def extract_aspects():
-    if not request.json or 'message' not in request.json:
-        abort(400)
     message = request.json['message']
-    response = {
-        'aspects': model.extract(message)
-    }
+    print(type(message))
+    print(message)
+    # get graph to load tf session properly
+    with GRAPH.as_default():
+        response = {
+            'aspects': model.extract(message)
+        }
     return jsonify(response)
 
 
