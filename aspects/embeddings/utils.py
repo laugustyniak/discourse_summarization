@@ -1,4 +1,5 @@
 import pickle
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -7,7 +8,7 @@ from tqdm import tqdm
 from utilities import settings
 
 
-def get_embedding_vocab(word_embedding_path=None, word_embedding_vocab_path=None):
+def get_word_embedding_vocab(word_embedding_path=None, word_embedding_vocab_path=None):
     if word_embedding_path is None:
         word_embedding_path = settings.WORD_EMBEDDING_GLOVE_42B
     if word_embedding_vocab_path is None:
@@ -23,7 +24,7 @@ def get_embedding_vocab(word_embedding_path=None, word_embedding_vocab_path=None
     vocab = {
         word.lower(): i
         for i, word
-        in enumerate(word_embedding)
+        in enumerate(word_embedding, start=2)
     }
     with open(word_embedding_vocab_path.as_posix(), 'wb') as f:
         pickle.dump(vocab, f)
@@ -31,6 +32,7 @@ def get_embedding_vocab(word_embedding_path=None, word_embedding_vocab_path=None
     return vocab
 
 
+@lru_cache(1)
 def load_word_embeddings(file_path):
     """
     Loads a word embedding model text file into a word(str) to numpy vector dictionary
