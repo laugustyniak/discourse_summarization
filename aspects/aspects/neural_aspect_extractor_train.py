@@ -37,7 +37,6 @@ from utilities.git_utils import get_git_revision_short_hash
 @click.option('--word-length', required=False, type=int, default=20)
 @click.option('--batch-size', required=False, type=int, default=32)
 @click.option('--dropout', required=False, type=float, default=0.5)
-@click.option('--model-name-suffix', required=False, type=str, default='')
 def train_aspect_extractor(
         dataset_path: Path,
         word_embedding_path: Path,
@@ -49,7 +48,6 @@ def train_aspect_extractor(
         word_length: int,
         batch_size: int,
         dropout: float,
-        model_name_suffix: str
 ):
     click.echo('Word embedding: ' + word_embedding_path.as_posix())
 
@@ -59,7 +57,7 @@ def train_aspect_extractor(
     checkpoints_path = dataset_path.parent / 'checkpoints'
     checkpoints_path.mkdir(exist_ok=True, parents=True)
 
-    model_name = 'model' + f'-{model_name_suffix}' if model_name_suffix else '' + f'-{get_git_revision_short_hash()}'
+    model_name = f'model-{get_git_revision_short_hash()}'
     model_path = dataset_path.parent / model_name
 
     dataset_path = dataset_path.as_posix()
@@ -143,7 +141,7 @@ def train_aspect_extractor(
             'dropout': dropout,
             'external_embedding_model': word_embedding_path,
             'train_file': dataset_path,
-            # 'y_labels': dataset.y_labels
+            'y_train': y_train
         }
         pickle.dump(info, fp)
 
