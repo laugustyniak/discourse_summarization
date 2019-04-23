@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 import numpy as np
 from keras import Input, Model
-from keras.callbacks import TensorBoard
+from keras.callbacks import TensorBoard, ModelCheckpoint
 from keras.layers import (
     Embedding,
     Dropout,
@@ -35,7 +35,7 @@ from utilities.git_utils import get_git_revision_short_hash
 @click.option('--tag-number', required=False, default=3, help='Number of column with tag to classify')
 @click.option('--sentence-length', required=False, type=int, default=30)
 @click.option('--word-length', required=False, type=int, default=20)
-@click.option('--batch-size', required=False, type=int, default=3)
+@click.option('--batch-size', required=False, type=int, default=32)
 @click.option('--dropout', required=False, type=float, default=0.5)
 @click.option('--model-name-suffix', required=False, type=str, default='')
 def train_aspect_extractor(
@@ -55,6 +55,9 @@ def train_aspect_extractor(
 
     logs_path = dataset_path.parent / 'logs'
     logs_path.mkdir(exist_ok=True, parents=True)
+
+    checkpoints_path = dataset_path.parent / 'checkpoints'
+    checkpoints_path.mkdir(exist_ok=True, parents=True)
 
     model_name = 'model' + f'-{model_name_suffix}' if model_name_suffix else '' + f'-{get_git_revision_short_hash()}'
     model_path = dataset_path.parent / model_name
@@ -103,12 +106,20 @@ def train_aspect_extractor(
     print('Tensorboard: ' + tensorboard_path)
     tensorboard_callback = TensorBoard(log_dir=tensorboard_path)
 
+    checkpoint_callback = ModelCheckpoint(
+        (checkpoints_path / model_name).with_suffix('.hdf5'),
+        monitor='val_acc',
+        verbose=1,
+        save_best_only=True,
+        mode='max'
+    )
+
     aspect_model.fit(
         x=x_train,
         y=y_train,
         batch_size=batch_size,
         epochs=epochs,
-        callbacks=[tensorboard_callback]
+        callbacks=[checkpoint_callback, tensorboard_callback]
     )
 
     aspect_model.save(model_path.with_suffix('.h5').as_posix())
