@@ -14,6 +14,7 @@ from keras.layers import (
     LSTM,
     Dense,
 )
+from keras.utils import to_categorical
 from keras_contrib.layers import CRF
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_accuracy
@@ -85,7 +86,7 @@ def train_aspect_extractor(
         maxlen=sentence_length,
         padding='post'
     )
-    # y_train = to_categorical(tags, num_y_labels)
+    y_train = to_categorical(y_train, num_y_labels)
 
     aspect_model = get_aspect_model(
         sentence_length=sentence_length,

@@ -44,12 +44,18 @@ def load_word_embeddings(file_path):
         list: a dictionary of numpy.ndarray vectors
         int: detected word embedding vector size
     """
-    file_path = str(file_path)
-    with open(file_path, encoding='utf-8') as fp:
+    file_path = Path(file_path)
+
+    if file_path.with_suffix('.cache').exists():
+        with open(file_path.with_suffix('.cache').as_posix(), 'rb') as f:
+            word_vectors = pickle.load(f)
+        return word_vectors, len(next(iter(word_vectors.values())))
+
+    with open(file_path.as_posix(), encoding='utf-8') as fp:
         word_vectors = {}
         size = None
         try:
-            for line in tqdm(fp, desc=file_path + ': embedding loading'):
+            for line in tqdm(fp, desc=file_path.as_posix() + ': embedding loading'):
                 line_fields = line.split()
                 if len(line_fields) < 5:
                     continue
@@ -67,4 +73,8 @@ def load_word_embeddings(file_path):
                             size = len(line_fields[1:])
         except UnicodeDecodeError:
             pass
+
+    with open(file_path.with_suffix('.cache').as_posix(), 'wb') as f:
+        pickle.dump(file_path.with_suffix('.cache').as_posix(), f)
+
     return word_vectors, size
