@@ -9,13 +9,11 @@ app = Flask(__name__)
 
 @app.route('/api/aspects/extract', methods=['POST'])
 def extract_aspects():
-    message = request.json['message']
-    print(type(message))
-    print(message)
+    text = request.json['text']
     # get graph to load tf session properly
     with GRAPH.as_default():
         response = {
-            'aspects': model.extract(message)
+            'aspects': model.extract(text)
         }
     return jsonify(response)
 
@@ -23,4 +21,4 @@ def extract_aspects():
 if __name__ == '__main__':
     # Model is loaded when the API is launched
     model = NeuralAspectExtractor()
-    app.run(debug=True)
+    app.run()
