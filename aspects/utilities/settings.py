@@ -67,6 +67,8 @@ ASPECT_EXTRACTION_NEURAL_MODEL_PATH = DATA_PATH / 'models' / 'aspects'
 ASPECT_EXTRACTION_NEURAL_MODEL = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model.h5'
 ASPECT_EXTRACTION_NEURAL_MODEL_INFO = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model.info'
 
+ASPECT_EXTRACTION_TRAIN_DATASET = DATA_PATH / 'aspects' / 'merged-electronic-aspects-uni-tag.conll'
+
 # --------------------------------------------- EMBEDDINGS ----------------------------------------------------------- #
 
 

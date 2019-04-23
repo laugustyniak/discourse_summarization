@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 import numpy as np
 from keras import Input, Model
-from keras.callbacks import TensorBoard, ModelCheckpoint
+from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from keras.layers import (
     Embedding,
     Dropout,
@@ -23,16 +23,17 @@ from tqdm import tqdm
 
 from aspects.aspects.neural_aspect_extractor import get_padding_for_tokens, NeuralAspectExtractor
 from embeddings.utils import get_word_embedding_vocab
+from utilities import settings
 from utilities.git_utils import get_git_revision_short_hash
 
 
 @click.command()
-@click.option('--dataset-path', required=True, type=Path, help='Path to the training dataset')
-@click.option('--word-embedding-path', required=True, type=Path, help='Path to the embeddings')
+@click.option('--dataset-path', required=False, type=Path, default=None, help='Path to the training dataset')
+@click.option('--word-embedding-path', required=False, type=Path, default=None, help='Path to the embeddings')
 @click.option('--word-embedding-dim', required=False, type=int, default=300, help='Len of word embedding vectors')
-@click.option('--char-embedding-dim', required=False, type=int, default=25, help='Len of character embedding vectors')
-@click.option('--epochs', required=False, default=25, help='Number of epochs to calculate')
-@click.option('--tag-number', required=False, default=3, help='Number of column with tag to classify')
+# @click.option('--char-embedding-dim', required=False, type=int, default=25, help='Len of character embedding vectors')
+@click.option('--epochs', required=False, default=15, help='Number of epochs to calculate')
+@click.option('--tag-number', required=False, default=2, help='Number of column with tag to classify')
 @click.option('--sentence-length', required=False, type=int, default=30)
 @click.option('--word-length', required=False, type=int, default=20)
 @click.option('--batch-size', required=False, type=int, default=32)
@@ -41,7 +42,7 @@ def train_aspect_extractor(
         dataset_path: Path,
         word_embedding_path: Path,
         word_embedding_dim: int,
-        char_embedding_dim: int,
+        # char_embedding_dim: int,
         epochs: int,
         tag_number: int,
         sentence_length: int,
@@ -49,16 +50,22 @@ def train_aspect_extractor(
         batch_size: int,
         dropout: float,
 ):
+    if dataset_path is None:
+        dataset_path = settings.ASPECT_EXTRACTION_TRAIN_DATASET
+
+    if word_embedding_path is None:
+        word_embedding_path = settings.WORD_EMBEDDING_GLOVE_42B
+
     click.echo('Word embedding: ' + word_embedding_path.as_posix())
 
-    logs_path = dataset_path.parent / 'logs'
+    logs_path = settings.ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'logs'
     logs_path.mkdir(exist_ok=True, parents=True)
 
-    checkpoints_path = dataset_path.parent / 'checkpoints'
+    checkpoints_path = settings.ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'checkpoints'
     checkpoints_path.mkdir(exist_ok=True, parents=True)
 
     model_name = f'model-{get_git_revision_short_hash()}'
-    model_path = dataset_path.parent / model_name
+    model_path = settings.ASPECT_EXTRACTION_NEURAL_MODEL_PATH / model_name
 
     dataset_path = dataset_path.as_posix()
 
@@ -93,8 +100,10 @@ def train_aspect_extractor(
     aspect_model = get_aspect_model(
         sentence_length=sentence_length,
         target_label_dims=num_y_labels,
-        tagger_lstm_dims=word_embedding_dim + char_embedding_dim,
-        tagger_fc_dims=word_embedding_dim + char_embedding_dim,
+        tagger_lstm_dims=word_embedding_dim,
+        # tagger_lstm_dims=word_embedding_dim + char_embedding_dim,
+        tagger_fc_dims=word_embedding_dim,
+        # tagger_fc_dims=word_embedding_dim + char_embedding_dim,
         dropout=dropout,
         word_embedding_model_path=word_embedding_path.as_posix(),
     )
@@ -112,12 +121,14 @@ def train_aspect_extractor(
         mode='max'
     )
 
+    early_stopping_callback = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=3)
+
     aspect_model.fit(
         x=x_train,
         y=y_train,
         batch_size=batch_size,
         epochs=epochs,
-        callbacks=[checkpoint_callback, tensorboard_callback]
+        callbacks=[checkpoint_callback, tensorboard_callback, early_stopping_callback]
     )
 
     aspect_model.save(model_path.with_suffix('.h5').as_posix())
@@ -135,9 +146,10 @@ def train_aspect_extractor(
             # 'char_vocab_size': char_vocabulary_size,
             # 'char_vocab': word_embedding_vocab,
             'word_embedding_dims': word_embedding_dim,
-            'char_embedding_dims': char_embedding_dim,
-            'word_lstm_dims': char_embedding_dim,
-            'tagger_lstm_dims': word_embedding_dim + char_embedding_dim,
+            # 'char_embedding_dims': char_embedding_dim,
+            # 'word_lstm_dims': char_embedding_dim,
+            # 'tagger_lstm_dims': word_embedding_dim + char_embedding_dim,
+            'tagger_lstm_dims': word_embedding_dim,
             'dropout': dropout,
             'external_embedding_model': word_embedding_path,
             'train_file': dataset_path,
