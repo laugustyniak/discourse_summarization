@@ -6,8 +6,8 @@ from keras_contrib.layers import CRF
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_accuracy
 
-from utilities import settings
-from utilities.common_nlp import load_spacy
+from aspects.utilities import settings
+from aspects.utilities.common_nlp import load_spacy
 
 nlp = load_spacy()
 
@@ -38,7 +38,7 @@ class NeuralAspectExtractor:
         )
         return model, model_info
 
-    def predict(self, text):
+    def extract(self, text):
         text_padded = self._get_padding(text, self.word_embedding_vocab, self.model_info['sentence_len'])
         prediction = self.model.predict(text_padded)
 
@@ -83,5 +83,5 @@ def get_padding_for_tokens(tokens, vocab, max_padding):
 
 if __name__ == '__main__':
     nae = NeuralAspectExtractor()
-    nae.predict('has a really good screen quality')
+    nae.extract('has a really good screen quality')
     pass
