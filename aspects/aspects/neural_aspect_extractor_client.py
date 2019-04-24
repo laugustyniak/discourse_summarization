@@ -1,5 +1,4 @@
 import requests
-from flask.json import jsonify
 
 
 class NeuralAspectExtractorClient:
@@ -10,4 +9,9 @@ class NeuralAspectExtractorClient:
         self.json_response_key = json_response_key or 'aspects'
 
     def extract(self, text):
-        return jsonify(requests.post(self.url, data={self.json_request_key: text}))[self.json_response_key]
+        return requests.post(
+            self.url,
+            json={
+                self.json_request_key: text
+            }
+        ).json()[self.json_response_key]

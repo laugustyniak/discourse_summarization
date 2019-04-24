@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 
+from aspects.aspects.neural_aspect_extractor_client import NeuralAspectExtractorClient
 from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
 from aspects.utilities import common_nlp
 from aspects.utilities import settings
@@ -56,6 +57,8 @@ class AspectExtractor(object):
         else:
             self.conceptnet = conceptnet
 
+        self.neural_aspect_extractor_client = NeuralAspectExtractorClient()
+
     def _is_interesting_addition(self, token):
         return token.pos_ == 'ADV' or token.pos_ == 'NUM' or token.pos_ == 'NOUN' or token.pos_ == 'ADJ'
 
@@ -83,7 +86,7 @@ class AspectExtractor(object):
 
         """
         concept_aspects = {}
-        aspects, self.aspects_word_ids = self.extract_noun_and_noun_phrases(text)
+        aspects = self.neural_aspect_extractor_client.extract(text)
 
         if self.is_ner:
             aspects += [ent.text for ent in nlp(text).ents if ent.label_ in self.ner_types]
