@@ -47,7 +47,7 @@ class NeuralAspectExtractor:
         all_aspects = []
         aspects = []
         for idx, token in enumerate(nlp.make_doc(text)):
-            if prediction[idx]:
+            if idx < self.model_info['sentence_len'] and prediction[idx]:
                 aspects.append(token.text)
             else:
                 if aspects:
@@ -83,6 +83,18 @@ def get_padding_for_tokens(tokens, vocab, max_padding):
 
 if __name__ == '__main__':
     nae = NeuralAspectExtractor()
+    print(nae.extract(''))
     print(nae.extract('has a really good screen quality'))
-    print(nae.extract('i would like to see this screen'))
+    print(
+        nae.extract(
+            'i would like to see this screen '
+            'i would like to see this screen '
+            'i would like to see this screen '
+            'i would like to see this screen '
+            'i would like to see this screen '
+            'i would like to see this screen '
+            'i would like to see this screen '
+            'i would like to see this screen'
+        )
+    )
     pass
