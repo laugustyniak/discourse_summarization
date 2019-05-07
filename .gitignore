@@ -43,3 +43,7 @@ notebooks/vis/
 *.cache
 
 aspects/data/embedding/glove\.42B\.300d\.vocab\.pkl
+
+docker/resources/nltk-2\.0b9/
+
+docker/resources/\._nltk-2\.0b9
