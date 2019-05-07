@@ -5,17 +5,16 @@ import shutil
 from datetime import datetime
 from os import listdir
 from os.path import basename, exists, join, split, splitext, dirname
-from pathlib import Path
 from time import time
 
 import networkx as nx
 import simplejson
 from joblib import Parallel
 from joblib import delayed
+from pathlib import Path
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
-from aspects.analysis.results_analyzer import ResultsAnalyzer
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.data_io.serializer import Serializer
@@ -41,12 +40,13 @@ logging.basicConfig(
 )
 
 
-def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_documents_dir):
+def edu_parsing_multiprocess(docs_id_range, edu_trees_dir, extracted_documents_dir):
     processed = 0
     skipped = 0
     errors = 0
 
     n_docs = docs_id_range[1] - docs_id_range[0]
+    parser = DiscourseParser(output_dir=edu_trees_dir)
 
     for n_doc, document_id in enumerate(range(docs_id_range[0], docs_id_range[1]), start=1):
         start_time = datetime.now()
@@ -57,8 +57,6 @@ def edu_parsing_multiprocess(parser, docs_id_range, edu_trees_dir, extracted_doc
                 logging.info('EDU Tree Already exists: {}'.format(edu_tree_path))
                 skipped += 1
             else:
-                if parser is None:
-                    parser = DiscourseParser(output_dir=edu_trees_dir)
                 document_path = join(extracted_documents_dir, str(document_id))
                 if exists(document_path):
                     parser.parse(document_path)
@@ -186,7 +184,7 @@ class AspectAnalysisSystem:
             logging.debug('Batch size for multiprocessing execution: {}'.format(batch_size))
 
         Parallel(n_jobs=self.jobs, verbose=5)(
-            delayed(edu_parsing_multiprocess)(None, docs_id_range, self.paths.edu_trees, self.paths.extracted_docs)
+            delayed(edu_parsing_multiprocess)(docs_id_range, self.paths.edu_trees, self.paths.extracted_docs)
             for docs_id_range, l in tqdm(
                 list(batch_with_indexes(range(documents_count), batch_size)),
                 desc='Parsing Batches')
@@ -342,20 +340,20 @@ class AspectAnalysisSystem:
             documents_info[documentId]['aspects'] = aspects
         self.serializer.save(documents_info, self.paths.final_docs_info)
 
-    def _analyze_results(self, threshold):
-        """ remove noninformative aspects  """
-        documents_info = self.serializer.load(self.paths.final_docs_info)
-        gold_standard = self.serializer.load(self.gold_standard_path)
-        if gold_standard is None:
-            raise ValueError('GoldStandard data is None')
-        analyzer = ResultsAnalyzer()
-        for document_id, document_info in tqdm(
-                documents_info.iteritems(), desc='Analyze results', total=len(documents_info)):
-            analyzer.analyze(document_info['aspects'], gold_standard[document_id])
-        measures = analyzer.get_analysis_results()
-        self.serializer.append_serialized(
-            ';'.join(str(x) for x in [threshold] + measures) + '\n',
-            self.analysis_results_path)
+    # def _analyze_results(self, threshold):
+    #     """ remove noninformative aspects  """
+    #     documents_info = self.serializer.load(self.paths.final_docs_info)
+    #     gold_standard = self.serializer.load(self.gold_standard_path)
+    #     if gold_standard is None:
+    #         raise ValueError('GoldStandard data is None')
+    #     analyzer = ResultsAnalyzer()
+    #     for document_id, document_info in tqdm(
+    #             documents_info.iteritems(), desc='Analyze results', total=len(documents_info)):
+    #         analyzer.analyze(document_info['aspects'], gold_standard[document_id])
+    #     measures = analyzer.get_analysis_results()
+    #     self.serializer.append_serialized(
+    #         ';'.join(str(x) for x in [threshold] + measures) + '\n',
+    #         self.analysis_results_path)
 
     def _add_sentiment_and_dir_moi_to_graph(self):
         aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
@@ -422,7 +420,7 @@ class AspectAnalysisSystem:
         logging.info("Performing EDU aspects extraction...")
 
         timer_start = time()
-        self._extract_aspects_from_edu()
+        # self._extract_aspects_from_edu()
         timer_end = time()
 
         logging.info("EDU aspects extraction in {:.2f} seconds".format(timer_end - timer_start))
