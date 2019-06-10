@@ -190,12 +190,12 @@ class AspectsGraphBuilder(object):
             (aspect, aspect)
         """
         try:
-            for aspect_left in self.aspects_per_edu[edu_id_1]:
-                for aspect_right in self.aspects_per_edu[edu_id_2]:
+            for aspect_left in self.aspects_per_edu[str(edu_id_1)]:
+                for aspect_right in self.aspects_per_edu[str(edu_id_2)]:
                     yield (aspect_left, aspect_right)
         except KeyError as err:
             log.info('Lack of aspect: {}'.format(str(err)))
-            raise KeyError(str(err))
+            # raise KeyError(str(err))
 
     def filter_gerani(self, rules):
         """
