@@ -26,16 +26,17 @@ SYMBOL_COLOR = [
 ]
 
 
-def get_tsne(df: pd.DataFrame, intent_col: str = 'aspect', tooltip_col: str = 'aspect', tsne=None) -> pd.DataFrame:
+def get_tsne(df: pd.DataFrame, text: str = 'aspect', tooltip_col: str = 'aspect', tsne=None) -> pd.DataFrame:
     if tsne is None:
         tsne = TSNE(n_components=2, init='random', random_state=0, perplexity=30)
     tsne_coords = tsne.fit_transform(df.embedding.tolist())
     return pd.DataFrame(dict(
         x=tsne_coords[:, 0],
         y=tsne_coords[:, 1],
-        intent=df[intent_col],
+        text=df[text],
         tooltip=df[tooltip_col],
-        cluster=df.cluster
+        cluster=df.cluster,
+        embedding=df.embedding
     ))
 
 
