@@ -23,6 +23,7 @@ for semeval_file in list(semeval_files):
 
     opinions = root.findall("**/**/Opinion")
     categories = [opinion.attrib["category"] for opinion in opinions]
+    targets = [opinion.attrib["target"] for opinion in opinions]
     entities_and_aspects = [cat.split('#') for cat in categories]
     polarities = [opinion.attrib["polarity"] for opinion in opinions]
     print("# Opinions  : ", len(opinions))
@@ -30,6 +31,7 @@ for semeval_file in list(semeval_files):
         "category": categories,
         "entity": list(pluck(0, entities_and_aspects)),
         'aspect': list(pluck(1, entities_and_aspects)),
+        'target': targets,
         "polarity": polarities
     }).sort_values("entity")
     dfs.append(df)
