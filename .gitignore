@@ -55,3 +55,5 @@ notebooks/aspect_rules_vectors
 notebooks/aspect_rules_model
 
 notebooks/restaurant-aspect-categories-and-targets\.xlsx
+
+aspects/data/semeval/2016/all-entities-and-aspects-with-bert-embeddings\.pkl
