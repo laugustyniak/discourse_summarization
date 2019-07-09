@@ -5,6 +5,7 @@ from collections import defaultdict
 
 import pandas as pd
 import simplejson
+import srsly
 from more_itertools import flatten
 from tqdm import tqdm
 
@@ -27,6 +28,16 @@ def amazon_dataset_parse(dataset_path, column='reviewText', n_reviews=100000):
             break
     with open(dataset_path.replace('.gz', ''), 'wb') as j:
         json.dump(reviews, j)
+
+
+def amazon_dataset_to_spacy_pretrain(dataset_path):
+    reviews = []
+    with open(dataset_path, 'r') as f:
+        reviews = [
+            {'text': text}
+            for text in tqdm(json.load(f).values())
+        ]
+    srsly.write_jsonl(dataset_path.replace('.json', '.jsonl'), reviews)
 
 
 def conceptnet_io_parse(langs={u'en'}):
@@ -66,8 +77,8 @@ def conceptnet_dump_to_df():
 
 
 if __name__ == '__main__':
-    df = conceptnet_dump_to_df()
-    conceptnet_io_parse()
+    # df = conceptnet_dump_to_df()
+    # conceptnet_io_parse()
     # amazon_dataset_parse(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ.as_posix())
-    # amazon_dataset_parse(settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_GZ.as_posix())
+    amazon_dataset_to_spacy_pretrain(settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON.as_posix())
     # amazon_dataset_parse(settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_GZ.as_posix())
