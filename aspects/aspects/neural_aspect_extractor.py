@@ -1,13 +1,12 @@
 import pickle
 
+from aspects.utilities import settings
+from aspects.utilities.common_nlp import load_spacy
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras_contrib.layers import CRF
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_accuracy
-
-from aspects.utilities import settings
-from aspects.utilities.common_nlp import load_spacy
 
 nlp = load_spacy()
 
@@ -79,22 +78,3 @@ def get_padding_for_tokens(tokens, vocab, max_padding):
         maxlen=max_padding,
         padding='post'
     )
-
-
-if __name__ == '__main__':
-    nae = NeuralAspectExtractor()
-    print(nae.extract(''))
-    print(nae.extract('has a really good screen quality'))
-    print(
-        nae.extract(
-            'i would like to see this screen '
-            'i would like to see this screen '
-            'i would like to see this screen '
-            'i would like to see this screen '
-            'i would like to see this screen '
-            'i would like to see this screen '
-            'i would like to see this screen '
-            'i would like to see this screen'
-        )
-    )
-    pass
