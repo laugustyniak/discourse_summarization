@@ -78,32 +78,32 @@ RUN apt-get install -y build-essential \
  libxml2-dev \
  libxslt-dev \
  zlib1g-dev
-RUN pip install numpy
-RUN pip install scipy
+RUN pip install numpy==1.13.3
+RUN pip install scipy==1.2.1
 
 # Python libs
-RUN pip install networkx \
- setuptools \
+RUN pip install networkx==2.2 \
+ setuptools==41.0.1 \
  IPython==4.0 \
- pandas \
- statsmodels \
- BeautifulSoup4 \
- unidecode \
- justext \
- plotly \
- line_profiler \
- memory_profiler \
- tqdm \
- joblib \
- seaborn \
- matplotlib \
- scikit-learn
+ pandas==0.24.2 \
+ plotly==1.12.2 \
+ tqdm==4.11.2 \
+ joblib==0.13.2 \
+ seaborn==0.7.1 \
+ matplotlib==2.2.4 \
+ scikit-learn==0.20.3
 RUN pip install spacy
 #RUN python -m spacy download en
 
+#ADD id_rsa_pub /root/.ssh/authorized_keys
+#RUN chmod 600  /root/.ssh/authorized_keys
+#
 # install Morfeusz - Polish Lang Lemmatizer
 #RUN cd /tmp &&  wget -O - http://sgjp.pl/apt/sgjp.gpg.key|sudo apt-key add - && sudo add-apt-repository 'deb http://sgjp.pl/apt/ubuntu trusty main'
 #RUN sudo apt-get update
 #RUN sudo apt-get install python-morfeusz2 -y
 
-CMD ["/bin/sh"]
+#COPY /home/laugustyniak/github/phd/sentiment-backend/docker/start-notebook.sh /usr/local/bin/
+#RUN chmod 600  /usr/local/bin/start_notebooks.sh
+#
+#CMD "/usr/local/bin/start_notebooks.sh"

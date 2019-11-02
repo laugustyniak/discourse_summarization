@@ -1,13 +1,19 @@
-jupyter_lab:
-  user: root
-  build: .
-  ports:
-    - 8877:8888
-    - 8822:22
-  volumes:
-#    - "/datasets:/dataset"
-#    - "/nfs:/nfs"
-    - "/home/lukasz:/notebooks"
-  environment:
-#    - GRANT_SUDO=yes
-#    - PASSWORD=sentimentLukasza2016
+version: '3'
+
+services:
+  sa:
+    user: root
+    build: .
+    container_name: sa
+    ports:
+      - "8877:8888"
+      - "8822:22"
+    volumes:
+      - "/datasets:/dataset"
+      - "/data:/data"
+      - "/models:/models"
+      - "/nfs:/nfs"
+      - "/home/laugustyniak:/notebooks"
+    environment:
+      - GRANT_SUDO=yes
+      - PASSWORD=sentimentLukasza2016
