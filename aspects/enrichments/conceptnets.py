@@ -8,7 +8,7 @@ try:
 except:
     from functools import lru_cache
 
-from aspects.data.sentic.senticnet5 import senticnet
+from aspects.data.sentic import senticnet5
 from aspects.utilities import settings
 
 log = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ SEMANTIC_COL_NAME = ['semantics1', 'semantics2', 'semantics3', 'semantics4', 'se
 
 @lru_cache(None)
 def load_sentic():
-    sentic_df = pd.DataFrame.from_dict(senticnet, orient='index')
+    sentic_df = pd.DataFrame.from_dict(senticnet5.senticnet, orient='index')
     sentic_df.columns = ['pleasantness', 'attention', 'sensivity', 'aptitude', 'modtag1', 'modtag2',
                          'polarity_value', 'polarity_intensity',
                          'semantics1', 'semantics2', 'semantics3', 'semantics4', 'semantics5']
