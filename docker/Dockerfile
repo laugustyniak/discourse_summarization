@@ -91,8 +91,15 @@ RUN pip install networkx==2.2 \
  joblib==0.13.2 \
  seaborn==0.7.1 \
  matplotlib==2.2.4 \
- scikit-learn==0.20.3
-RUN pip install spacy
+ scikit-learn==0.20.3 \
+ simplejson==3.16.0 \
+ pathlib==1.0.1 \
+ more_itertools==7.2.0 \
+ repoze.lru==0.7 \
+ python-rake==1.4.5 \
+ jellyfish==0.6.0
+
+RUN pip install spacy==1.9
 #RUN python -m spacy download en
 
 #ADD id_rsa_pub /root/.ssh/authorized_keys
