@@ -1,19 +1,8 @@
 version: '3'
 
 services:
-  sa:
-    user: root
+  rst_api:
     build: .
-    container_name: sa
+    container_name: rst_api
     ports:
-      - "8877:8888"
-      - "8822:22"
-    volumes:
-      - "/datasets:/dataset"
-      - "/data:/data"
-      - "/models:/models"
-      - "/nfs:/nfs"
-      - "/home/laugustyniak:/notebooks"
-    environment:
-      - GRANT_SUDO=yes
-      - PASSWORD=sentimentLukasza2016
+      - "5000:5000"
