@@ -94,7 +94,7 @@ RUN pip install networkx==2.2 \
  scikit-learn==0.20.3 \
  simplejson==3.16.0 \
  pathlib==1.0.1 \
- more_itertools==7.2.0 \
+ more_itertools==5.0.0 \
  repoze.lru==0.7 \
  python-rake==1.4.5 \
  jellyfish==0.6.0
