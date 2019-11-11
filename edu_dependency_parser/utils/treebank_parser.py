@@ -5,9 +5,8 @@ Created on Feb 19, 2013
 '''
 from nltk.tree import *
 
-from string import *
-import re
 from yappsrt import *
+
 
 class TreebankScanner(Scanner):
     patterns = [
@@ -44,7 +43,7 @@ class Treebank(Parser):
                 expr = self.expr()
                 e.append(expr)
             self._scan('r"\\)"')
-            return ParentedTree(ID, e)
+            return Tree(ID, e)
 
 
 def parse(rule, text):

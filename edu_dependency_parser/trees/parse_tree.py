@@ -1,7 +1,7 @@
-from nltk.tree import ParentedTree
+from nltk.tree import Tree
 
 
-class ParseTree(ParentedTree):
+class ParseTree(Tree):
     def get_hash(self, T=None):
         if T is None:
             T = self
