@@ -6,3 +6,4 @@ services:
     container_name: rst_api
     ports:
       - "5000:5000"
+#    tty: true
