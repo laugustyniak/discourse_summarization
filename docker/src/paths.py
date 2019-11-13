@@ -1,14 +1,13 @@
 import os.path
 
+# jump one directory up
 ROOT_PATH = '/'.join(os.path.split(os.getcwd())[: -1])
-# ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-RHETORICAL_INSTLALATION_PATH = os.path.join(ROOT_PATH, 'rhetorical-installation')
 
 PARSED_TEXTS_PATH = os.path.join(ROOT_PATH, 'texts/parsed_texts/')
 STANFORD_PATH = os.path.join(ROOT_PATH, 'tools/stanford_parser/')
 PENN2MALT_PATH = os.path.join(ROOT_PATH, 'tools/Penn2Malt/')
 SVM_TOOLS = os.path.join(ROOT_PATH, 'tools/svm_tools/')
-CRFSUITE_PATH = os.path.join(RHETORICAL_INSTLALATION_PATH, 'tools/crfsuite/')
+CRFSUITE_PATH = os.path.join(ROOT_PATH, 'tools/crfsuite/')
 MALLET_PATH = os.path.join(ROOT_PATH, 'tools/mallet-2.07/')
 STANFORD_CORENLP_PATH = os.path.join(ROOT_PATH, 'tools/stanford-corenlp-full-2013-11-12/')
 SSPLITTER_PATH = os.path.join(ROOT_PATH, 'tools/CCGSsplitter/')
