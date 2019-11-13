@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install build-essential -y \
 
 RUN tar -zxf PyYAML-3.09.tar.gz \
     && cd PyYAML-3.09 \
-	&& python setup.py install
+    && python setup.py install
 
 # gCRF and other resources
 RUN tar -zxf rhetorical_parser.tar.gz \
@@ -26,17 +26,17 @@ RUN mv src rhetorical_parser
 RUN ls -l rhetorical_parser/src
 
 RUN cd rhetorical_parser/tools/crfsuite/crfsuite-0.12 \
-	&& chmod +x configure \
+    && chmod +x configure \
     && ./configure --prefix=$HOME/local --with-liblbfgs=$HOME/local \
-	&& make \
-	&& make install
+    && make \
+    && make install
 
 RUN cd rhetorical_parser/tools/crfsuite \
-	&& cp $HOME/local/bin/crfsuite crfsuite-stdin \
-	&& chmod +x crfsuite-stdin
+    && cp $HOME/local/bin/crfsuite crfsuite-stdin \
+    && chmod +x crfsuite-stdin
 
 RUN cd rhetorical_parser/tools/crfsuite \
-	&& ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
+    && ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
 
 # Python libs
 RUN pip install flask==1.1.1 \
