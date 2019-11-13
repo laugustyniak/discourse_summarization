@@ -1,8 +1,9 @@
 import string
 
 from nltk.tree import Tree
+
 from trees.parse_tree import ParseTree
-from utils.utils import unescape_penn_special_word
+from utils_local.utils import unescape_penn_special_word
 
 
 class LexicalizedTree(ParseTree):

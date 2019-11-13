@@ -11,14 +11,15 @@ Created on 2013-02-17
 
 import subprocess
 
-import paths
-
 
 class SyntaxParser:
 
     def __init__(self):
         # -mx150m
-        cmd = 'java -Xmx1000m -cp "%s/*" ParserDemo' % paths.STANFORD_PARSER_PATH
+        # cmd = 'java -Xmx1000m -cp "%s/*" ParserDemo' % paths.STANFORD_PARSER_PATH
+        # FIXME temporary fix
+        # cmd = 'java -Xmx1000m -cp "/app/rhetorical_parser/tools/stanford-parser-full-2014-01-04/*" ParserDemo'
+        cmd = 'java -Xmx1000m -cp "/app/rhetorical_parser/tools/stanford-parser-full-2014-01-04/*" ParserDemo'
 
         self.syntax_parser = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                               stderr=subprocess.PIPE)

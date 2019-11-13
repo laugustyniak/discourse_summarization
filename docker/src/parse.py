@@ -8,7 +8,7 @@ Created on 2014-01-17
 import os.path
 import traceback
 
-import utils.serialize
+import utils_local.serialize
 from document.doc import Document
 from prep.preprocesser import Preprocesser
 from segmenters.crf_segmenter import CRFSegmenter
@@ -72,9 +72,10 @@ class DiscourseParser(object):
 
     def parse(self, filename, parse_text=''):
         if parse_text:
-            utils.serialize.saveData(filename, parse_text, self.output_dir, '')
+            utils_local.serialize.saveData(filename, parse_text, self.output_dir, '')
 
         if not os.path.exists(filename):
+            print filename, ' does not exist'
             return
 
         try:
@@ -84,7 +85,7 @@ class DiscourseParser(object):
             serialized_doc_filename = os.path.join(self.output_dir, core_filename + '.doc.ser')
             doc = None
             if os.path.exists(serialized_doc_filename):
-                doc = utils.serialize.loadData(core_filename, self.output_dir, '.doc.ser')
+                doc = utils_local.serialize.loadData(core_filename, self.output_dir, '.doc.ser')
 
             if doc is None or not doc.preprocessed:
                 doc = Document()

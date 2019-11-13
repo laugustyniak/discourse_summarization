@@ -1,8 +1,10 @@
+import sys
 import uuid
-from shutil import rmtree
 
 from flask import Flask, request, jsonify
 from flask_restful import Api
+
+sys.path.append('/app/rhetorical_parser/src')
 
 from parse import DiscourseParser
 
@@ -19,7 +21,7 @@ def extract_aspects():
     response = {
         'tree': parser.parse(tree_temp_name, parse_text=text)
     }
-    rmtree(TREE_TEMP_DIR + tree_temp_name)
+    # rmtree(TREE_TEMP_DIR + tree_temp_name)
     return jsonify(response)
 
 

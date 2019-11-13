@@ -3,8 +3,8 @@ Created on 2013-12-22
 
 @author: Wei
 '''
-import utils.serialize
-from utils.rst_lib import *
+import utils_local.serialize
+from utils_local.rst_lib import *
 
 
 class CRFTreeFeatureWriter:
@@ -13,7 +13,7 @@ class CRFTreeFeatureWriter:
 
         self.verbose = verbose
 
-        self.cue_phrases = utils.serialize.loadData('cue_phrases')
+        self.cue_phrases = utils_local.serialize.loadData('cue_phrases')
         if self.verbose:
             print 'Loaded %d cue phrases for CRF labeling' % len(self.cue_phrases)
 
@@ -102,7 +102,7 @@ class CRFTreeFeatureWriter:
             if len(l_ancestor_subtree.leaves()) == l_end_word - l_start_word:
                 self.features.add('Valid_syntax_subtree_Unit1@%d' % position)
 
-            l_subtrees = utils.utils.get_syntactic_subtrees(t, l_start_word, l_end_word)
+            l_subtrees = utils_local.utils.get_syntactic_subtrees(t, l_start_word, l_end_word)
             self.features.add('Num_Syntax_subtrees_Unit1=%d@%d' % (len(l_subtrees), position))
 
             if len(l_subtrees) == 1:
@@ -131,7 +131,7 @@ class CRFTreeFeatureWriter:
             if len(r_ancestor_subtree.leaves()) == r_end_word - r_start_word:
                 self.features.add('Valid_syntax_subtree_Unit2@%d' % position)
 
-            r_subtrees = utils.utils.get_syntactic_subtrees(t, r_start_word, r_end_word)
+            r_subtrees = utils_local.utils.get_syntactic_subtrees(t, r_start_word, r_end_word)
             self.features.add('Num_Syntax_subtrees_Unit2=%d@%d' % (len(r_subtrees), position))
 
             if len(r_subtrees) == 1:
@@ -148,7 +148,7 @@ class CRFTreeFeatureWriter:
         min_top_tags_edit_distance = 1.0
         for l_top_tags in l_subtrees_top_tags:
             for r_top_tags in r_subtrees_top_tags:
-                distance = utils.utils.compute_edit_distance(l_top_tags, r_top_tags)
+                distance = utils_local.utils.compute_edit_distance(l_top_tags, r_top_tags)
                 distance_norm = distance * 1.0 / max(len(l_top_tags), len(r_top_tags))
                 min_top_tags_edit_distance = min(min_top_tags_edit_distance, distance_norm)
 

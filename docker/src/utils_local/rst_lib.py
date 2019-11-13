@@ -8,11 +8,11 @@ import fnmatch
 import os
 import re
 
-from edu_dependency_parser.trees.parse_tree import ParseTree
-from edu_dependency_parser.utils.RST_Classes import *
 from nltk.tree import Tree
 
 import treebank_parser
+from trees.parse_tree import ParseTree
+from utils_local.RST_Classes import *
 
 
 def locate(pattern, root=os.getcwd()):

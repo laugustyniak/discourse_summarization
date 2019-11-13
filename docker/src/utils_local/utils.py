@@ -3,9 +3,9 @@ import string
 from itertools import izip
 
 from nltk.tree import Tree
-from trees.parse_tree import ParseTree
 
 import rst_lib
+from trees.parse_tree import ParseTree
 
 
 def replace_words(text, word_dic):

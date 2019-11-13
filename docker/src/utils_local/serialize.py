@@ -2,7 +2,7 @@ import cPickle
 import os.path
 import sys
 
-from edu_dependency_parser import paths
+import paths
 
 save_suffix = ".dat"
 

@@ -5,8 +5,9 @@ Created on 2014-01-11
 '''
 
 import nltk
-import utils.rst_lib
 from nltk.tree import Tree
+
+import utils_local.rst_lib
 
 
 class SegmenterFeatureWriter:
@@ -79,8 +80,8 @@ class SegmenterFeatureWriter:
         l_treepos = token1.get_treepos()
         r_treepos = token2.get_treepos()
 
-        common_ancestor_pos = utils.rst_lib.common_ancestor(l_treepos,
-                                                            r_treepos)
+        common_ancestor_pos = utils_local.rst_lib.common_ancestor(l_treepos,
+                                                                  r_treepos)
         #        print 'common_ancestor_pos', common_ancestor_pos
 
         dist_ancestor_l = len(l_treepos) - len(common_ancestor_pos)
@@ -174,7 +175,7 @@ class SegmenterFeatureWriter:
         if (start, end) in self.cached_subtrees:
             subtrees = self.cached_subtrees[(start, end)]
         else:
-            subtrees = utils.utils.get_syntactic_subtrees(tree, start, end)
+            subtrees = utils_local.utils.get_syntactic_subtrees(tree, start, end)
             self.cached_subtrees[(start, end)] = subtrees
 
         # if token.word == 'to':
