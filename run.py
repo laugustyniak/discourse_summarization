@@ -5,13 +5,13 @@ import shutil
 from datetime import datetime
 from os import listdir
 from os.path import basename, exists, join, split, splitext, dirname
+from pathlib import Path
 from time import time
 
 import networkx as nx
 import simplejson
 from joblib import Parallel
 from joblib import delayed
-from pathlib import Path
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
@@ -420,7 +420,7 @@ class AspectAnalysisSystem:
         logging.info("Performing EDU aspects extraction...")
 
         timer_start = time()
-        # self._extract_aspects_from_edu()
+        self._extract_aspects_from_edu()
         timer_end = time()
 
         logging.info("EDU aspects extraction in {:.2f} seconds".format(timer_end - timer_start))

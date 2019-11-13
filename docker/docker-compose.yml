@@ -6,4 +6,6 @@ services:
     container_name: rst_api
     ports:
       - "5000:5000"
-#    tty: true
+    volumes:
+      - "/datasets/sentiment/aspects/sentiment-backend/docker/src:/app/rhetorical_parser/src"
+    tty: true
