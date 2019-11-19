@@ -3,9 +3,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-# noinspection PyUnresolvedReferences
-from edu_dependency_parser.trees import parse_tree
-
 
 class Serializer(object):
 
