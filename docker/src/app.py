@@ -21,5 +21,5 @@ def extract_aspects():
 
 
 if __name__ == '__main__':
-    parser = DiscourseParser(output_dir='')
+    parser = DiscourseParser()
     app.run(debug=True, host='0.0.0.0')
