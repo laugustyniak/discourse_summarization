@@ -21,4 +21,4 @@ def extract_aspects():
 if __name__ == '__main__':
     # Model is loaded when the API is launched
     model = NeuralAspectExtractor()
-    app.run()
+    app.run(port=5001)
