@@ -245,11 +245,6 @@ class CRFSegmenter:
                 token.lemma = te.lemma
                 sentence.add_token(token)
 
-            # print i
-            #            print sentence.raw_text
-            #            print canonical_doc.sentences[index].raw_text
-            #            print
-
             (canonical_start_edu, canonical_end_edu) = canonical_doc.cuts[index]
 
             edus = canonical_doc.edus[canonical_start_edu: canonical_end_edu]
@@ -272,7 +267,6 @@ class CRFSegmenter:
 
         if self.global_features:
             init_edu_word_segmentation = doc.edu_word_segmentation
-            #            print init_edu_word_segmentation
 
             doc.edu_word_segmentation = []
             doc.cuts = []
@@ -280,12 +274,6 @@ class CRFSegmenter:
 
             for sentence in doc.sentences:
                 self.segment_sentence(sentence, input_edu_segmentation=init_edu_word_segmentation[sentence.sent_id])
-
-                #                if init_edu_word_segmentation[sentence.sent_id] != doc.edu_word_segmentation[sentence.sent_id]:
-                #                    print sentence.sent_id
-                #                    print 'initial segmentation', init_edu_word_segmentation[sentence.sent_id]
-                #                    print 'new segmentation', doc.edu_word_segmentation[sentence.sent_id]
-                #                    print
 
         doc.start_edu = 0
         doc.end_edu = len(doc.edus)
