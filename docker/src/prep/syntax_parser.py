@@ -1,28 +1,15 @@
-'''
-Created on 2014-02-16
-
-@author: Wei
-'''
-'''
-Created on 2013-02-17
-
-@author: Vanessa Wei Feng
-'''
-
 import subprocess
+
+from paths import STANFORD_PARSER_PATH
 
 
 class SyntaxParser:
 
     def __init__(self):
-        # -mx150m
-        # cmd = 'java -Xmx1000m -cp "%s/*" ParserDemo' % paths.STANFORD_PARSER_PATH
-        # FIXME temporary fix
-        # cmd = 'java -Xmx1000m -cp "/app/rhetorical_parser/tools/stanford-parser-full-2014-01-04/*" ParserDemo'
-        cmd = 'java -Xmx1000m -cp "/app/rhetorical_parser/tools/stanford-parser-full-2014-01-04/*" ParserDemo'
+        cmd = 'java -Xmx1000m -cp "%s/*" ParserDemo' % STANFORD_PARSER_PATH.as_posix()
 
-        self.syntax_parser = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                              stderr=subprocess.PIPE)
+        self.syntax_parser = subprocess.Popen(
+            cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         init = self.syntax_parser.stderr.readline()
         if not init.startswith('Loading parser from serialized file'):
