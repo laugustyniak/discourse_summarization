@@ -7,8 +7,10 @@ COPY . /app
 
 RUN python --version
 
-RUN apt-get update && apt-get install build-essential -y \
-    python-pip
+RUN apt-get update && apt-get install build-essential python python-dev -y
+
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+RUN python get-pip.py
 
 RUN tar -zxf PyYAML-3.09.tar.gz \
     && cd PyYAML-3.09 \
@@ -42,11 +44,14 @@ RUN cd rhetorical_parser/tools/crfsuite \
 RUN cd rhetorical_parser/tools/crfsuite \
     && ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
 
-# Python libs
-RUN pip install flask==1.1.1 \
+RUN pip install numpy==1.13.3 \
+    flask==1.1.1 \
     flask_restful==0.3.7 \
-#    nltk==3.0.0 \
-    pathlib==1.0.1
+    pathlib==1.0.1 \
+    scipy==1.2.1 \
+    spacy==1.9
+
+RUN python -m spacy download en
 
 #ENTRYPOINT ["python"]
 #
