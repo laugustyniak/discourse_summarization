@@ -1,5 +1,4 @@
 import os.path
-import traceback
 
 from document.doc import Document
 from prep.preprocesser import Preprocesser
@@ -23,45 +22,27 @@ class DiscourseParser(object):
         if preprocesser is not None:
             self.preprocesser = preprocesser
 
-        try:
-            self.preprocesser = Preprocesser()
-        except Exception, e:
-            print "*** Loading Preprocessing module failed..."
-            print traceback.print_exc()
+        self.preprocesser = Preprocesser()
 
-            raise e
-        try:
-            self.segmenter = CRFSegmenter(_name=self.feature_sets,
-                                          verbose=self.verbose,
-                                          global_features=self.global_features)
-        except Exception, e:
-            print "*** Loading Segmentation module failed..."
-            print traceback.print_exc()
+        self.segmenter = CRFSegmenter(
+            _name=self.feature_sets, verbose=self.verbose, global_features=self.global_features)
+        if not self.skip_parsing:
+            self.treebuilder = CRFTreeBuilder(_name=self.feature_sets, verbose=self.verbose)
+        else:
+            self.treebuilder = None
 
-            raise e
-
-        try:
-            if not self.skip_parsing:
-                self.treebuilder = CRFTreeBuilder(_name=self.feature_sets,
-                                                  verbose=self.verbose)
-            else:
-                self.treebuilder = None
-        except Exception, e:
-            print "*** Loading Tree-building module failed..."
-            print traceback.print_exc()
-            raise e
-
+    # TODO: remove in future
     def unload(self):
         if self.preprocesser is not None:
             self.preprocesser.unload()
 
-        if not self.segmenter is None:
+        if self.segmenter is not None:
             self.segmenter.unload()
 
-        if not self.treebuilder is None:
+        if self.treebuilder is not None:
             self.treebuilder.unload()
 
-    def parse(self, text=''):
+    def parse(self, text):
         doc = Document()
         doc.preprocess(text, self.preprocesser)
 
