@@ -1,6 +1,6 @@
 from collections import defaultdict, namedtuple
 
-from edu_dependency_parser.trees.parse_tree import ParseTree
+from trees.parse_tree import ParseTree
 
 EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
 
