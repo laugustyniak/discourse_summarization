@@ -45,7 +45,8 @@ RUN cd rhetorical_parser/tools/crfsuite \
 # Python libs
 RUN pip install flask==1.1.1 \
     flask_restful==0.3.7 \
-    nltk==3.0.0
+#    nltk==3.0.0 \
+    pathlib==1.0.1
 
 #ENTRYPOINT ["python"]
 #
