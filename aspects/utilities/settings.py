@@ -104,3 +104,5 @@ SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177'
 SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189'
 
 ML_GUSE_MODEL_2_LITE_PATH = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
+
+DISCOURSE_TREE_LEAF_PATTERN = '(?<=\_\!).*(?= \!\_)'
