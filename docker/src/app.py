@@ -22,4 +22,4 @@ def extract_aspects():
 
 if __name__ == '__main__':
     parser = DiscourseParser()
-    app.run()
+    app.run(host='0.0.0.0')
