@@ -9,6 +9,8 @@ logs/*
 results/
 .ipynb_checkpoints/
 notebooks/trees/
+backups/*
+.vscode/
 
 # ignore discourse parsing libs
 rhetorical-installation/discourse_parse-2.01.tar.gz
