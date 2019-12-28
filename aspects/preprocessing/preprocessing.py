@@ -14,14 +14,7 @@ nlp = load_spacy()
 
 def preprocess(text):
     text = text.strip()
-
-    # FIXME: temporary cleaning of char that are specific to RQT trees
-    # FIXME: this was the problem with word with q in the end!!
-    text = re.sub(u'^U.', '', text)
-    text = re.sub(u'q . <P>$', '', text)
-    text = re.sub(u' . <s>$', '', text)
-    text = re.sub(u'\r\n$', '', text)
-    return {'text': unicode(text.decode('utf-8', 'replace'))}
+    return {'text': text}
 
 
 def lemmatize(aspect_text):

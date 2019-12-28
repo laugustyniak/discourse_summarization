@@ -1,3 +1,4 @@
+# FIXME: python3
 try:
     from repoze.lru import lru_cache
 except:

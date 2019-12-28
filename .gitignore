@@ -15,13 +15,15 @@ backups/*
 *.cache
 
 
-/aspects/data/embedding/glove\.42B\.300d\.vocab\.pkl
-/aspects/data/embedding/glove.42B.300d.txt
-/aspects/data/models/aspects/checkpoints/
+aspects/data/embedding/glove\.42B\.300d\.vocab\.pkl
+aspects/data/embedding/glove.42B.300d.txt
+aspects/data/models/aspects/checkpoints/
 aspects/data/semeval/2016/all-entities-and-aspects-with-bert-embeddings\.pkl
 aspects/data/models/aspects/model-72eb2ef.h5
+aspects/data/models/aspects/logs/*
 
 notebooks/vis/
 notebooks/trees/
 notebooks/aspect_rules_vectors
 notebooks/aspect_rules_model
+notebooks/*.xlsx
