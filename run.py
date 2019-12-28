@@ -1,17 +1,13 @@
 import argparse
 import logging
-import pickle
-import shutil
-from datetime import datetime
-from os import listdir
+from copy import deepcopy
 from os.path import basename, exists, join, split, splitext, dirname
 from pathlib import Path
-from time import time
 
 import networkx as nx
+import nltk
+import pandas as pd
 import simplejson
-from joblib import Parallel
-from joblib import delayed
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
@@ -22,10 +18,9 @@ from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
 from aspects.utilities import settings
-from aspects.utilities.custom_exceptions import WrongTypeException
 from aspects.utilities.data_paths import IOPaths
-from aspects.utilities.utils_multiprocess import batch_with_indexes
-from parse import DiscourseParser
+from rst.rst_parser_client import RSTParserClient
+from utilities.settings import DISCOURSE_TREE_LEAF_PATTERN
 
 if not Path('logs').exists():
     Path('logs').mkdir(parents=True)
@@ -38,43 +33,6 @@ logging.basicConfig(
     filename='logs/run.log',
     filemode='w',
 )
-
-
-def edu_parsing_multiprocess(docs_id_range, edu_trees_dir, extracted_documents_dir):
-    processed = 0
-    skipped = 0
-    errors = 0
-
-    n_docs = docs_id_range[1] - docs_id_range[0]
-    parser = DiscourseParser(output_dir=edu_trees_dir)
-
-    for n_doc, document_id in enumerate(range(docs_id_range[0], docs_id_range[1]), start=1):
-        start_time = datetime.now()
-        logging.info('EDU Parsing document id: {} -> {}/{}'.format(document_id, n_doc, n_docs))
-        try:
-            edu_tree_path = join(edu_trees_dir, str(document_id) + '.tree')
-            if exists(edu_tree_path):
-                logging.info('EDU Tree Already exists: {}'.format(edu_tree_path))
-                skipped += 1
-            else:
-                document_path = join(extracted_documents_dir, str(document_id))
-                if exists(document_path):
-                    parser.parse(document_path)
-                else:
-                    logging.warning('Document #{} does not exist! Skipping to next one.'.format(document_id))
-                    errors += 1
-                processed += 1
-        # skip documents that parsing returns errors
-        except (ValueError, IndexError, ZeroDivisionError, OSError) as err:
-            logging.error('Error for doc #{}: {}. It has been skipped'.format(document_id, str(err)))
-            if exists(edu_tree_path):
-                shutil.rmtree(edu_tree_path)
-            errors += 1
-        logging.info(
-            'EDU document id: {} -> parsed in {} seconds'.format(document_id, (datetime.now() - start_time).seconds))
-    if parser is not None:
-        parser.unload()
-    logging.info('Docs processed: {}, docs skipped: {}'.format(processed, skipped))
 
 
 class AspectAnalysisSystem:
@@ -123,88 +81,48 @@ class AspectAnalysisSystem:
         # count number of error within parsing RDT
         self.parsing_errors = 0
 
-    def _parse_input_documents(self):
-        """
-        Load and parse documents. All document should be stored in
-        JSON/dictionary format, only values will be processed.
+    def get_discourse_trees(self):
+        discourse_tree_df_path = Path(self.paths.discourse_trees_df)
 
-        @return:
-            documents_count : int
-                Number of documents processed
-        """
-        existing_documents_list = listdir(self.paths.extracted_docs)
-        documents_count = len(existing_documents_list)
-
-        # FIXME: disambiguate file loading and metadata information storing
-        # todo why metadata is not stored?
-        if documents_count == 0:
+        if discourse_tree_df_path.exists():
+            return pd.read_pickle(discourse_tree_df_path)
+        else:
+            parser = RSTParserClient()
+            discourse_trees = []
+            edus = []
+            discourse_trees_with_ids_only = []
+            documents_count = 0
             f_extension = basename(self.input_file_path).split('.')[-1]
-            logging.debug('Input file extension: {}'.format(f_extension))
+
             if f_extension in ['json']:
-                with open(self.input_file_path, 'r') as f:
-                    raw_documents = simplejson.load(f)
-                    for ref_id, (doc_id, document) in tqdm(enumerate(raw_documents.iteritems()), desc='Extract docs'):
-                        self.serializer.save(document, join(self.paths.extracted_docs, str(ref_id)))
-                        self.serializer.save(str(doc_id), join(self.paths.extracted_docs_ids, str(ref_id)))
-                        documents_count += 1
-                        if self.max_docs is not None and self.max_docs < documents_count:
-                            break
-            # this is {'doc_id': {'text', text, 'metadata1': xxx}}
-            # text with additional metadata
-            elif f_extension in ['pkl', 'p', 'pickle']:
-                with open(self.input_file_path, 'r') as f:
-                    raw_documents = pickle.load(f)
-                for ref_id, (doc_id, document) in enumerate(raw_documents.iteritems()):
-                    self.serializer.save(document['text'], join(self.paths.extracted_docs, str(ref_id)))
-                    self.serializer.save({doc_id: document}, join(self.paths.extracted_docs_metadata, str(ref_id)))
-                    documents_count += 1
-                    if self.max_docs is not None and self.max_docs < documents_count:
-                        break
+                df = pd.DataFrame(simplejson.load(open(self.input_file_path, 'r')).values(), columns=['text'])
             elif f_extension in ['csv', 'txt']:
-                raw_documents = {}
-                with open(self.input_file_path, 'r') as f:
-                    for idx, line in enumerate(f):
-                        raw_documents[str(idx)] = line
-                        self.serializer.save(line, self.paths.extracted_docs + str(idx))
-                        self.serializer.save({idx: line}, self.paths.extracted_docs_metadata + str(idx))
-                        documents_count += 1
-                        if self.max_docs is not None and self.max_docs < documents_count:
-                            break
+                df = pd.read_csv(self.input_file_path, header=None)
+                df.columns = ['text']
             else:
-                raise WrongTypeException()
-            logging.info('Number of all documents to analyse: {}'.format(len(raw_documents)))
-        return documents_count
+                raise Exception('Wrong file type! It must be [json, txt or csv]')
 
-    def _perform_edu_parsing(self, documents_count, batch_size=None):
-        logging.info('Documents: #{} will be processed'.format(documents_count))
-        if batch_size is None:
-            batch_size = documents_count / self.jobs
-            if batch_size < 1:
-                batch_size = 1
-            logging.debug('Batch size for multiprocessing execution: {}'.format(batch_size))
+            # TODO: parallelize
+            for document in tqdm(df.text.values, desc='Extract docs and create Discourse Trees'):
+                documents_count += 1
+                discourse_tree = nltk.Tree.fromstring(parser.parse(document), leaf_pattern=DISCOURSE_TREE_LEAF_PATTERN)
+                discourse_trees.append(discourse_tree)
+                # TODO: here sprawdzić czemu drzewo nie wymienia stringów na id
+                edu_tree_preprocesser = EDUTreePreprocesser()
+                discourse_tree_with_ids_only = deepcopy(discourse_tree)
+                edu_tree_preprocesser.process_tree(discourse_tree_with_ids_only)
+                discourse_trees_with_ids_only.append(discourse_tree_with_ids_only)
+                discourse_tree_edus = edu_tree_preprocesser.get_preprocessed_edus()
+                edus.append(discourse_tree_edus)
+                if self.max_docs is not None and self.max_docs < documents_count:
+                    break
 
-        Parallel(n_jobs=self.jobs, verbose=5)(
-            delayed(edu_parsing_multiprocess)(docs_id_range, self.paths.edu_trees, self.paths.extracted_docs)
-            for docs_id_range, l in tqdm(
-                list(batch_with_indexes(range(documents_count), batch_size)),
-                desc='Parsing Batches')
-        )
-
-    def _perform_edu_preprocessing(self, documents_count):
-        if not exists(self.paths.raw_edus):
-            preprocesser = EDUTreePreprocesser()
-            for document_id in tqdm(range(0, documents_count), desc='EDU preprocessing', total=documents_count):
-                try:
-                    if not document_id % self.n_loger:
-                        logging.debug('EDU Preprocessor documentId: {}/{}'.format(document_id, documents_count))
-                    tree = self.serializer.load(join(self.paths.edu_trees, str(document_id) + '.tree.ser'))
-                    preprocesser.process_tree(tree, document_id)
-                    self.serializer.save(tree, join(self.paths.link_trees, str(document_id)))
-                except TypeError as err:
-                    logging.error('Document id: {} and error: {}'.format(document_id, str(err)))
-                    self.parsing_errors += 1
-            edus = preprocesser.get_preprocessed_edus()
-            self.serializer.save(edus, self.paths.raw_edus)
+            df['dt'] = discourse_trees
+            df['dt_with_ids_only'] = discourse_trees_with_ids_only
+            df['edus'] = edus
+            discourse_tree_df_path.mkdir(parents=True)
+            df.to_pickle(discourse_tree_df_path)
+            return df
 
     def _filter_edu_by_sentiment(self):
         """Filter out EDUs without sentiment, with neutral sentiment too"""
@@ -293,7 +211,7 @@ class AspectAnalysisSystem:
             for doc_id, doc_info in tqdm(
                     docs_info.iteritems(), desc='Extract EDU dependency rules', total=len(docs_info)):
                 if len(doc_info['accepted_edus']) > 0:
-                    link_tree = self.serializer.load(join(self.paths.link_trees, str(doc_id)))
+                    link_tree = self.serializer.load(join(self.paths.discourse_trees_df, str(doc_id)))
                 extracted_rules = rules_extractor.extract(link_tree, doc_info['accepted_edus'], doc_id)
                 rules.update(extracted_rules)
             logging.info('Rules extracted.')
@@ -340,21 +258,6 @@ class AspectAnalysisSystem:
             documents_info[documentId]['aspects'] = aspects
         self.serializer.save(documents_info, self.paths.final_docs_info)
 
-    # def _analyze_results(self, threshold):
-    #     """ remove noninformative aspects  """
-    #     documents_info = self.serializer.load(self.paths.final_docs_info)
-    #     gold_standard = self.serializer.load(self.gold_standard_path)
-    #     if gold_standard is None:
-    #         raise ValueError('GoldStandard data is None')
-    #     analyzer = ResultsAnalyzer()
-    #     for document_id, document_info in tqdm(
-    #             documents_info.iteritems(), desc='Analyze results', total=len(documents_info)):
-    #         analyzer.analyze(document_info['aspects'], gold_standard[document_id])
-    #     measures = analyzer.get_analysis_results()
-    #     self.serializer.append_serialized(
-    #         ';'.join(str(x) for x in [threshold] + measures) + '\n',
-    #         self.analysis_results_path)
-
     def _add_sentiment_and_dir_moi_to_graph(self):
         aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
         documents_info = self.serializer.load(self.paths.docs_info)
@@ -364,108 +267,13 @@ class AspectAnalysisSystem:
 
     def run(self):
 
-        total_timer_start = time()
+        discourse_trees_df = self.get_discourse_trees()
 
-        logging.info('Dataset to process: {} and will be saved into: {}'.format(
-            self.input_file_path, self.paths.docs_info))
-
-        # load documents
-        logging.info('--------------------------------------')
-        logging.info("Extracting documents from input file...")
-
-        timer_start = time()
-        documents_count = self._parse_input_documents()
-        timer_end = time()
-
-        logging.info("Extracted", documents_count,
-                     "documents from input file in {:.2f} seconds.".format(timer_end - timer_start))
-
-        # preprocessing and rhetorical parsing
-        logging.info('--------------------------------------')
-        logging.info("Performing EDU segmentation and dependency parsing...")
-
-        timer_start = time()
-        self._perform_edu_parsing(documents_count, batch_size=self.batch_size)
-        timer_end = time()
-
-        logging.info("EDU segmentation and dependency parsing documents "
-                     "from input file in {:.2f} seconds.".format(
-            timer_end - timer_start))
-
-        # process EDU based on rhetorical trees
-        logging.info('--------------------------------------')
-        logging.info("Performing EDU trees preprocessing in {:.2f} seconds.".
-                     format(timer_end - timer_start))
-
-        timer_start = time()
-        self._perform_edu_preprocessing(documents_count)
-        logging.warning('{} trees were not parse!'.format(self.parsing_errors))
-        timer_end = time()
-
-        logging.info(
-            "EDU trees preprocessing succeeded in {:.2f} seconds".format(timer_end - timer_start))
-
-        # filter EDU with sentiment orientation only
-        logging.info('--------------------------------------')
-        logging.info("Performing EDU sentiment filtering...")
-
-        timer_start = time()
         self._filter_edu_by_sentiment()
-        timer_end = time()
-
-        logging.info("EDU filtering succeeded in {:.2f} seconds".format(timer_end - timer_start))
-
-        # extract aspects
-        logging.info('--------------------------------------')
-        logging.info("Performing EDU aspects extraction...")
-
-        timer_start = time()
         self._extract_aspects_from_edu()
-        timer_end = time()
-
-        logging.info("EDU aspects extraction in {:.2f} seconds".format(timer_end - timer_start))
-
-        # rule extraction
-        logging.info('--------------------------------------')
-        logging.info("Performing EDU dependency rules extraction...")
-
-        timer_start = time()
         self._extract_edu_dependency_rules()
-        timer_end = time()
-
-        logging.info("EDU dependency rules extraction succeeded "
-                     "in {:.2f} seconds".format(timer_end - timer_start))
-
-        # build aspect-aspect graph
-        logging.info('--------------------------------------')
-        logging.info("Performing aspects graph building...")
-
-        timer_start = time()
         self._build_aspect_dependency_graph()
-        timer_end = time()
-
-        logging.info(
-            "Aspects graph building succeeded in {:.2f} seconds".format(timer_end - timer_start))
-
-        # add sentiments to nodes/aspects and count Gerani dir-moi weight
-        logging.info('--------------------------------------')
-        logging.info("Sentiments to nodes/aspects and Gerani dir-moi weight...")
-
-        timer_start = time()
         self._add_sentiment_and_dir_moi_to_graph()
-        timer_end = time()
-
-        logging.info(
-            "Graph extended with sentiments for nodes and dir-moi in "
-            "{:.2f} seconds".format(timer_end - timer_start))
-
-        logging.info('--------------------------------------')
-        total_timer_end = time()
-
-        logging.info("Whole system run in {:.2f} seconds".format(total_timer_end - total_timer_start))
-
-        logging.info('--------------------------------------')
-        logging.info('Save graph with Gephi suitable extension')
         aspects_graph = self.serializer.load(self.paths.aspects_graph)
         nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
         # for gehpi
