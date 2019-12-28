@@ -1,7 +1,5 @@
 FROM java:7
 
-MAINTAINER Łukasz Augustyniak "luk.augustyniak@gmail.com"
-
 WORKDIR /app
 COPY . /app
 

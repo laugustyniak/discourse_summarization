@@ -52,5 +52,6 @@ class DiscourseParser(object):
         pt = self.treebuilder.build_tree(doc)
         doc.discourse_tree = pt
         for i in range(len(doc.edus)):
-            pt.__setitem__(pt.leaf_treeposition(i), ' '.join(doc.edus[i]))
+            pt.__setitem__(pt.leaf_treeposition(i), '_!%s!_' % ' '.join(doc.edus[i]))
+            # pt.__setitem__(pt.leaf_treeposition(i), ' '.join(doc.edus[i]))
         return str(pt)

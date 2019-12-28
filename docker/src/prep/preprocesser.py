@@ -1,8 +1,3 @@
-'''
-Created on 2014-01-18
-
-@author: Wei
-'''
 import re
 
 import spacy
