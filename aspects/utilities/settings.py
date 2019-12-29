@@ -48,7 +48,7 @@ SEMEVAL_RESTAURANTS_TEST_XML = SEMEVAL_DATASETS_2014 / 'Restaurants_Test_Data_ph
 SEMEVAL_LAPTOPS_TRAIN_XML = SEMEVAL_DATASETS_2014 / 'Laptops_Train.xml'
 SEMEVAL_LAPTOPS_TEST_XML = SEMEVAL_DATASETS_2014 / 'Laptops_Test_Data_phaseB.xml'
 
-# --------------------------------------------- SENITMENT MODELS ----------------------------------------------------- #
+# --------------------------------------------- SENTIMENT MODELS ----------------------------------------------------- #
 SENTIMENT_MODELS_PATH = DATA_PATH / 'models' / 'sentiment'
 SENTIMENT_MODEL_PROD = (
         SENTIMENT_MODELS_PATH /
@@ -105,4 +105,4 @@ SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189'
 
 ML_GUSE_MODEL_2_LITE_PATH = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 
-DISCOURSE_TREE_LEAF_PATTERN = '(?<=\_\!).*(?= \!\_)'
+DISCOURSE_TREE_LEAF_PATTERN = '(?<=_!).*(?=!_)'

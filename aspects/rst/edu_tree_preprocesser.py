@@ -3,7 +3,7 @@ from nltk import Tree
 from aspects.preprocessing import preprocessing
 
 
-class EDUTreePreprocesser:
+class EDUTreePreprocessor:
 
     def __init__(self):
         self.edus = []

@@ -7,14 +7,14 @@ from pathlib import Path
 import networkx as nx
 import nltk
 import pandas as pd
-import simplejson
+import json
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.data_io.serializer import Serializer
-from aspects.rst.edu_tree_preprocesser import EDUTreePreprocesser
+from aspects.rst.edu_tree_preprocesser import EDUTreePreprocessor
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
 from aspects.utilities import settings
@@ -95,7 +95,7 @@ class AspectAnalysisSystem:
             f_extension = basename(self.input_file_path).split('.')[-1]
 
             if f_extension in ['json']:
-                df = pd.DataFrame(simplejson.load(open(self.input_file_path, 'r')).values(), columns=['text'])
+                df = pd.DataFrame(json.load(open(self.input_file_path, 'r')).values(), columns=['text'])
             elif f_extension in ['csv', 'txt']:
                 df = pd.read_csv(self.input_file_path, header=None)
                 df.columns = ['text']
@@ -107,12 +107,11 @@ class AspectAnalysisSystem:
                 documents_count += 1
                 discourse_tree = nltk.Tree.fromstring(parser.parse(document), leaf_pattern=DISCOURSE_TREE_LEAF_PATTERN)
                 discourse_trees.append(discourse_tree)
-                # TODO: here sprawdzić czemu drzewo nie wymienia stringów na id
-                edu_tree_preprocesser = EDUTreePreprocesser()
+                edu_tree_preprocessor = EDUTreePreprocessor()
                 discourse_tree_with_ids_only = deepcopy(discourse_tree)
-                edu_tree_preprocesser.process_tree(discourse_tree_with_ids_only)
+                edu_tree_preprocessor.process_tree(discourse_tree_with_ids_only)
                 discourse_trees_with_ids_only.append(discourse_tree_with_ids_only)
-                discourse_tree_edus = edu_tree_preprocesser.get_preprocessed_edus()
+                discourse_tree_edus = edu_tree_preprocessor.get_preprocessed_edus()
                 edus.append(discourse_tree_edus)
                 if self.max_docs is not None and self.max_docs < documents_count:
                     break
