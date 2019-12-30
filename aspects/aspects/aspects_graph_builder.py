@@ -66,10 +66,10 @@ class AspectsGraphBuilder(object):
             Dictionary with information about each edu.
 
         conceptnet_io: bool
-            Do we use ConcetNet.io relation in graph?
+            Do we use ConceptNet.io relation in graph?
 
         aspect_graph_path : str
-            Path to save temporar arrg.
+            Path to save temporal ARRG.
 
         Returns
         -------
@@ -158,7 +158,7 @@ class AspectsGraphBuilder(object):
             Graph of aspect-aspect relation ARRG.
 
         weight : str, optional
-            Name of edge attribute that consists of weight for an endge. it is
+            Name of edge attribute that consists of weight for an edge. it is
             used to calculate Weighted version of Page Rank.
 
         Returns
@@ -210,7 +210,7 @@ class AspectsGraphBuilder(object):
         Returns
         -------
         rules_filtered : defaultdict
-            Dictionary of document id (-1 as indicatior for all documents)
+            Dictionary of document id (-1 as indicator for all documents)
             and list of rules/relations between aspects with their maximum
             gerani weights.
 
@@ -271,7 +271,7 @@ class AspectsGraphBuilder(object):
             Aspect-aspect relation graph.
 
         node_attrib_name : str
-            Name of node's attibute that will be summed up in merged relations.
+            Name of node's attribute that will be summed up in merged relations.
 
         Returns
         -------
