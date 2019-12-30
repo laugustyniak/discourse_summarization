@@ -13,7 +13,7 @@ class LogisticRegressionSentimentAnalyzer(object):
         log.info('Sentiment Analyzer - status: initializing')
 
         if model_path is None:
-            log.info('Defaul sentiment model will be loaded: {}'.format(settings.SENTIMENT_MODEL_PROD.as_posix()))
+            log.info('Default sentiment model will be loaded: {}'.format(settings.SENTIMENT_MODEL_PROD.as_posix()))
             self.model = joblib.load(settings.SENTIMENT_MODEL_PROD.as_posix())
         else:
             self.model = joblib.load(model_path)
