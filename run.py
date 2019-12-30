@@ -106,7 +106,8 @@ class AspectAnalysisSystem:
             f_extension = basename(self.input_file_path).split('.')[-1]
 
             if f_extension in ['json']:
-                df = pd.DataFrame(json.load(open(self.input_file_path, 'r')).values(), columns=['text'])
+                with open(self.input_file_path, 'r') as json_file:
+                    df = pd.DataFrame(json.load(json_file).values(), columns=['text'])
             elif f_extension in ['csv', 'txt']:
                 df = pd.read_csv(self.input_file_path, header=None)
                 df.columns = ['text']
@@ -133,7 +134,7 @@ class AspectAnalysisSystem:
                     ), total=df.shape[0], desc='Discourse trees parsing to idx only')
                 )))
 
-            discourse_tree_df_path.parent.mkdir(parents=True)
+            discourse_tree_df_path.parent.mkdir(parents=True, exist_ok=True)
             df.to_pickle(discourse_tree_df_path)
         
         return df

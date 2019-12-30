@@ -10,9 +10,9 @@ class EDUTreeRulesExtractor(object):
         """
         Extracting rules from RST tress.
 
-        rules - dictionary of rules extracted from Discourse Trees, key is
-            document id, value list of rules for tree
-        tree - Discourse Tree
+        rules - dictionaty of rules extracted from Discourse Trees, key is
+            document id, value lsit of rules for tree
+        tree - Discource Tree
         accepted_edus - list of edu ids that consist of aspect
         left_child_parent - parent of actually analyzed left leaf
         right_child_parent - parent of actually analyzed right leaf
@@ -25,7 +25,7 @@ class EDUTreeRulesExtractor(object):
                 'gerani' - weight according to publication  Gerani, S., Mehdad,
                     Y., Carenini, G., Ng, R. T., & Nejat, B. (2014).
                     Abstractive Summarization of Product Reviews Using
-                    Discourse Structure. EMNLP, 1602-1613.
+                    Discourse Structure. Emnlp, 1602-1613.
         """
         if weight_type is None:
             weight_type = ['gerani']
