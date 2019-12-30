@@ -1,13 +1,14 @@
 import argparse
+import json
 import logging
+from concurrent.futures.process import ProcessPoolExecutor
 from copy import deepcopy
-from os.path import basename, exists, join, split, splitext, dirname
+from os.path import basename, dirname, exists, join, split, splitext
 from pathlib import Path
 
 import networkx as nx
 import nltk
 import pandas as pd
-import json
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
@@ -16,11 +17,13 @@ from aspects.aspects.edu_aspect_extractor import EDUAspectExtractor
 from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_preprocesser import EDUTreePreprocessor
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.sentiment.sentiment_analyzer import LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
+from aspects.rst.rst_parser_client import RSTParserClient
+from aspects.sentiment.sentiment_analyzer import (
+    LogisticRegressionSentimentAnalyzer as SentimentAnalyzer
+)
 from aspects.utilities import settings
 from aspects.utilities.data_paths import IOPaths
-from rst.rst_parser_client import RSTParserClient
-from utilities.settings import DISCOURSE_TREE_LEAF_PATTERN
+from aspects.utilities.settings import DISCOURSE_TREE_LEAF_PATTERN
 
 if not Path('logs').exists():
     Path('logs').mkdir(parents=True)
@@ -34,8 +37,20 @@ logging.basicConfig(
     filemode='w',
 )
 
+PARALLEL_CHUNK_SIZE = 100
+
+def extract_discourse_tree(parser, document):
+    return nltk.Tree.fromstring(parser.parse(document), leaf_pattern=DISCOURSE_TREE_LEAF_PATTERN)
+
+    
+def extract_discourse_tree_with_ids_only(discourse_tree):
+    edu_tree_preprocessor = EDUTreePreprocessor()
+    # TODO: rewrite it with simple return fashion not change the state of the tree
+    edu_tree_preprocessor.process_tree(discourse_tree)
+    return discourse_tree, edu_tree_preprocessor.get_preprocessed_edus()
 
 class AspectAnalysisSystem:
+
     def __init__(
             self,
             input_path,
@@ -76,12 +91,12 @@ class AspectAnalysisSystem:
         self.jobs = jobs
 
         # by how many examples logging will be done
-        self.n_loger = n_logger
+        self.n_logger = n_logger
 
         # count number of error within parsing RDT
         self.parsing_errors = 0
 
-    def get_discourse_trees(self):
+    def extract_discourse_trees(self):
         discourse_tree_df_path = Path(self.paths.discourse_trees_df)
 
         if discourse_tree_df_path.exists():
@@ -91,7 +106,6 @@ class AspectAnalysisSystem:
             discourse_trees = []
             edus = []
             discourse_trees_with_ids_only = []
-            documents_count = 0
             f_extension = basename(self.input_file_path).split('.')[-1]
 
             if f_extension in ['json']:
@@ -102,26 +116,33 @@ class AspectAnalysisSystem:
             else:
                 raise Exception('Wrong file type! It must be [json, txt or csv]')
 
-            # TODO: parallelize
-            for document in tqdm(df.text.values, desc='Extract docs and create Discourse Trees'):
-                documents_count += 1
-                discourse_tree = nltk.Tree.fromstring(parser.parse(document), leaf_pattern=DISCOURSE_TREE_LEAF_PATTERN)
-                discourse_trees.append(discourse_tree)
-                edu_tree_preprocessor = EDUTreePreprocessor()
-                discourse_tree_with_ids_only = deepcopy(discourse_tree)
-                edu_tree_preprocessor.process_tree(discourse_tree_with_ids_only)
-                discourse_trees_with_ids_only.append(discourse_tree_with_ids_only)
-                discourse_tree_edus = edu_tree_preprocessor.get_preprocessed_edus()
-                edus.append(discourse_tree_edus)
-                if self.max_docs is not None and self.max_docs < documents_count:
-                    break
+            if self.max_docs is not None:
+                df = df.head(self.max_docs)
+            
+            # Process the rows in chunks in parallel
+            with ProcessPoolExecutor(self.jobs) as pool:
+                df['discourse_tree'] = list(
+                    tqdm(pool.map(
+                        extract_discourse_tree, 
+                        parser, 
+                        df['text'], 
+                        chunksize=PARALLEL_CHUNK_SIZE
+                    ), total=df.shape[0], desc='Discourse trees parsing')
+                )
+                df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*list(
+                    tqdm(pool.map(
+                        extract_discourse_tree_with_ids_only, 
+                        df['discourse_tree'], 
+                        chunksize=PARALLEL_CHUNK_SIZE
+                    ), total=df.shape[0], desc='Discourse trees parsing to idx only')
+                )))
 
-            df['dt'] = discourse_trees
-            df['dt_with_ids_only'] = discourse_trees_with_ids_only
-            df['edus'] = edus
-            discourse_tree_df_path.mkdir(parents=True)
+            discourse_tree_df_path.parent.mkdir(parents=True)
             df.to_pickle(discourse_tree_df_path)
-            return df
+        
+        return df
+
+    
 
     def _filter_edu_by_sentiment(self):
         """Filter out EDUs without sentiment, with neutral sentiment too"""
@@ -266,7 +287,7 @@ class AspectAnalysisSystem:
 
     def run(self):
 
-        discourse_trees_df = self.get_discourse_trees()
+        discourse_trees_df = self.extract_discourse_trees()
 
         self._filter_edu_by_sentiment()
         self._extract_aspects_from_edu()
