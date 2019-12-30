@@ -1,6 +1,5 @@
 from collections import defaultdict, namedtuple
-
-from trees.parse_tree import ParseTree
+from nltk.tree import Tree
 
 EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
 
@@ -49,7 +48,7 @@ class EDUTreeRulesExtractor(object):
             else:
                 self.right_child_parent = tree
             # check if child is leaf or subtree
-            if isinstance(child, ParseTree):
+            if isinstance(child, Tree):
                 # go into subtree
                 self._process_tree(child)
             # recursively until leaf
@@ -100,7 +99,7 @@ class EDUTreeRulesExtractor(object):
         """
         Extract RST relation with BFS approach.
 
-        :param tree: ParseTree object
+        :param tree: Tree object
             RST Tree that will be parsed and relation will be extracted from it
         :param accepted_edus: list
             A list of aspect's ids.
