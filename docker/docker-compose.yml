@@ -1,9 +1,15 @@
 version: '3'
 
 services:
-  rst_api:
-    build: .
-    container_name: rst_api
+  # rst_api:
+  #   build: Dockerfile.rst
+  #   container_name: rst_api
+  #   ports:
+  #     - "5000:5000"
+  #   tty: true
+  sentiment_api:
+    build: Dockerfile.sentiment
+    container_name: sentiment_api
     ports:
-      - "5000:5000"
+      - "5002:5000"
     tty: true

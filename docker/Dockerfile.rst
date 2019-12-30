@@ -22,7 +22,7 @@ RUN pip install numpy==1.13.3 \
 RUN python -m spacy download en
 
 WORKDIR /app
-COPY . /app
+COPY rst /app
 
 RUN tar -zxf PyYAML-3.09.tar.gz \
     && cd PyYAML-3.09 \
@@ -56,6 +56,6 @@ RUN cd rhetorical_parser/tools/crfsuite \
 RUN cd rhetorical_parser/tools/crfsuite \
     && ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
 
-# ENTRYPOINT ["python"]
-#
-#CMD ["/app/rhetorical_parser/src/app.py"]
+ENTRYPOINT ["python"]
+
+CMD ["/app/rhetorical_parser/src/app.py"]
