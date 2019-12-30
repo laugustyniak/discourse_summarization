@@ -8,6 +8,14 @@ services:
     ports:
       - "5000:5000"
     tty: true
+  aspect_extractor_api:
+    build:
+      context: .
+      dockerfile: Dockerfile.aspect_extraction
+    container_name: aspect_extraction_api
+    ports:
+      - "5001:80"
+    tty: true
   sentiment_api:
     build:
       context: .

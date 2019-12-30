@@ -69,12 +69,9 @@ RST_PARSER_DOCKER_URL = 'http://localhost:5000/api/rst/parse/'
 
 # --------------------------------------------- ASPECT MODELS -------------------------------------------------------- #
 
-
-ASPECT_EXTRACTION_NEURAL_MODEL_PATH = DATA_PATH / 'models' / 'aspects'
-ASPECT_EXTRACTION_NEURAL_MODEL = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model-72eb2ef.h5'
-ASPECT_EXTRACTION_NEURAL_MODEL_INFO = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model-72eb2ef.info'
-
 ASPECT_EXTRACTION_TRAIN_DATASET = DATA_PATH / 'aspects' / 'merged-electronic-aspects-uni-tag.conll'
+
+ASPECT_EXTRACTOR_DOCKER_URL = "http://localhost:5001/api/aspects/"
 
 # --------------------------------------------- EMBEDDINGS ----------------------------------------------------------- #
 

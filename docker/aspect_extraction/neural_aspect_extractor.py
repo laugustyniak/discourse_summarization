@@ -1,14 +1,32 @@
 import pickle
+from pathlib import Path
 
-from aspects.utilities import settings
-from aspects.utilities.common_nlp import load_spacy
+import spacy
+
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras_contrib.layers import CRF
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_accuracy
 
-nlp = load_spacy()
+from util import http_get
+
+nlp = spacy.load('en_core_web_sm')
+
+MODEL_NAME = 'model-72eb2ef'
+
+ASPECT_EXTRACTION_NEURAL_MODEL_PATH = Path('models/aspects')
+ASPECT_EXTRACTION_NEURAL_MODEL = (
+    ASPECT_EXTRACTION_NEURAL_MODEL_PATH /
+    f'{MODEL_NAME}.h5'
+)
+ASPECT_EXTRACTION_NEURAL_MODEL_HTTP = f'http://oxygen.engine.kdm.wcss.pl:8001/aspects/{MODEL_NAME}.h5'
+
+ASPECT_EXTRACTION_NEURAL_MODEL_INFO = (
+    ASPECT_EXTRACTION_NEURAL_MODEL_PATH /
+    f'{MODEL_NAME}.info'
+)
+ASPECT_EXTRACTION_NEURAL_MODEL_INFO_HTTP = f'http://oxygen.engine.kdm.wcss.pl:8001/aspects/{MODEL_NAME}.info'
 
 
 class NeuralAspectExtractor:
@@ -25,10 +43,27 @@ class NeuralAspectExtractor:
         # self.char_embedding_vocab = self.model_info['char_vocab']
 
     def _load_model(self):
-        with open(settings.ASPECT_EXTRACTION_NEURAL_MODEL_INFO.as_posix(), 'rb') as f:
+        # check of models are downloaded, if not download them
+        if not ASPECT_EXTRACTION_NEURAL_MODEL.exists():
+            ASPECT_EXTRACTION_NEURAL_MODEL_PATH.mkdir(
+                parents=True, exist_ok=True)
+            http_get(
+                ASPECT_EXTRACTION_NEURAL_MODEL_HTTP,
+                ASPECT_EXTRACTION_NEURAL_MODEL_PATH / ASPECT_EXTRACTION_NEURAL_MODEL.name
+            )
+
+        if not ASPECT_EXTRACTION_NEURAL_MODEL_INFO.exists():
+            ASPECT_EXTRACTION_NEURAL_MODEL_PATH.mkdir(
+                parents=True, exist_ok=True)
+            http_get(
+                ASPECT_EXTRACTION_NEURAL_MODEL_INFO_HTTP,
+                ASPECT_EXTRACTION_NEURAL_MODEL_PATH / ASPECT_EXTRACTION_NEURAL_MODEL_INFO.name
+            )
+
+        with open(ASPECT_EXTRACTION_NEURAL_MODEL_INFO.as_posix(), 'rb') as f:
             model_info = pickle.load(f)
         model = load_model(
-            settings.ASPECT_EXTRACTION_NEURAL_MODEL.as_posix(),
+            ASPECT_EXTRACTION_NEURAL_MODEL.as_posix(),
             custom_objects={
                 'CRF': CRF,
                 'crf_loss': crf_loss,
@@ -38,7 +73,8 @@ class NeuralAspectExtractor:
         return model, model_info
 
     def extract(self, text):
-        text_padded = self._get_padding(text, self.word_embedding_vocab, self.model_info['sentence_len'])
+        text_padded = self._get_padding(
+            text, self.word_embedding_vocab, self.model_info['sentence_len'])
         prediction = self.model.predict(text_padded)
 
         prediction = prediction[0][:, 2]
