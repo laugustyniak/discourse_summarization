@@ -2,8 +2,9 @@ import logging
 
 from sklearn.externals import joblib
 
-log = logging.getLogger(__name__)
 from aspects.utilities import settings
+
+log = logging.getLogger(__name__)
 
 
 class LogisticRegressionSentimentAnalyzer(object):
