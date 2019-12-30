@@ -61,6 +61,12 @@ SENTIMENT_MODEL_TESTS = (
         'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-reviews_Apps_for_Android-500000-balanced.pkl'
 )
 
+SENTIMENT_DOCKER_URL = 'http://localhost:5002/api/sentiment/'
+
+# --------------------------------------------- RST  ----------------------------------------------------------------- #
+
+RST_PARSER_DOCKER_URL = 'http://localhost:5000/api/rst/parse/'
+
 # --------------------------------------------- ASPECT MODELS -------------------------------------------------------- #
 
 
