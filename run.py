@@ -39,7 +39,8 @@ logging.basicConfig(
 
 PARALLEL_CHUNK_SIZE = 100
 
-def extract_discourse_tree(parser, document):
+def extract_discourse_tree(document):
+    parser = RSTParserClient()
     return nltk.Tree.fromstring(parser.parse(document), leaf_pattern=DISCOURSE_TREE_LEAF_PATTERN)
 
     
@@ -102,10 +103,6 @@ class AspectAnalysisSystem:
         if discourse_tree_df_path.exists():
             return pd.read_pickle(discourse_tree_df_path)
         else:
-            parser = RSTParserClient()
-            discourse_trees = []
-            edus = []
-            discourse_trees_with_ids_only = []
             f_extension = basename(self.input_file_path).split('.')[-1]
 
             if f_extension in ['json']:
@@ -124,7 +121,6 @@ class AspectAnalysisSystem:
                 df['discourse_tree'] = list(
                     tqdm(pool.map(
                         extract_discourse_tree, 
-                        parser, 
                         df['text'], 
                         chunksize=PARALLEL_CHUNK_SIZE
                     ), total=df.shape[0], desc='Discourse trees parsing')
@@ -141,8 +137,6 @@ class AspectAnalysisSystem:
             df.to_pickle(discourse_tree_df_path)
         
         return df
-
-    
 
     def _filter_edu_by_sentiment(self):
         """Filter out EDUs without sentiment, with neutral sentiment too"""
