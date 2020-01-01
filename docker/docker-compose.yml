@@ -2,24 +2,25 @@ version: '3'
 
 services:
   rst_api:
-    context: .
-    dockerfile: Dockerfile.rst
+    build:
+      context: ./rst
+      dockerfile: Dockerfile
     container_name: rst_api
     ports:
       - "5000:5000"
     tty: true
   aspect_extractor_api:
     build:
-      context: .
-      dockerfile: Dockerfile.aspect_extraction
+      context: ./aspect_extraction
+      dockerfile: Dockerfile
     container_name: aspect_extraction_api
     ports:
       - "5001:80"
     tty: true
   sentiment_api:
     build:
-      context: .
-      dockerfile: Dockerfile.sentiment
+      context: ./sentiment
+      dockerfile: Dockerfile
     container_name: sentiment_api
     ports:
       - "5002:80"
