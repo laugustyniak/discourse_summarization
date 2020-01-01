@@ -1,14 +1,15 @@
-from collections import defaultdict, namedtuple
+from collections import namedtuple
+from typing import List
+
 from nltk.tree import Tree
-from typing import List, Sequence
 
 EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
 
 
 class EDUTreeRulesExtractor:
     def __init__(
-        self,
-        tree: Tree,
+            self,
+            tree: Tree,
         weight_type: List[str]=None,
         only_hierarchical_relations=True
     ):
@@ -97,9 +98,9 @@ class EDUTreeRulesExtractor:
                     # [S][N]
                     self.rules.append(
                         EDURelation(
-                            self.left_leaf, 
-                            self.right_leaf, 
-                            rel_name, 
+                            self.left_leaf,
+                            self.right_leaf,
+                            rel_name,
                             self.calculate_gerani_weight()
                         )
                     )
@@ -108,8 +109,8 @@ class EDUTreeRulesExtractor:
             for index, child in enumerate(tree):
                 self._make_rules(leaf_left, child)
 
-    def extract(self, tree: nltk.Tree) -> List[EDURelation]:
-        self._process_tree(tree)
+    def extract(self) -> List[EDURelation]:
+        self._process_tree(self.tree)
         return self.rules
 
     def calculate_gerani_weight(self):

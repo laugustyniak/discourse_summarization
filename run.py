@@ -4,7 +4,7 @@ import logging
 import multiprocessing
 from concurrent.futures.process import ProcessPoolExecutor
 from json.decoder import JSONDecodeError
-from os.path import basename, dirname, exists, join, split, splitext
+from os.path import basename, exists, join, split, splitext
 from pathlib import Path
 from typing import Callable, Sequence, List, Union, Tuple
 
@@ -53,7 +53,8 @@ def extract_discourse_tree_with_ids_only(discourse_tree: nltk.Tree) -> Tuple[nlt
     edu_tree_preprocessor.process_tree(discourse_tree)
     return discourse_tree, edu_tree_preprocessor.edus
 
-def extract_rules(discourse_tree: Tree) -> List:
+
+def extract_rules(discourse_tree: nltk.Tree) -> List:
     rules_extractor = EDUTreeRulesExtractor(tree=discourse_tree)
     return rules_extractor.extract()
 
@@ -105,10 +106,10 @@ class AspectAnalysisSystem:
         self.n_logger = n_logger
 
     def parallelized_extraction(
-        self, 
-        elements: Sequence, 
-        fn: Callable, 
-        desc: str = 'Running in parallel'
+            self,
+            elements: Sequence,
+            fn: Callable,
+            desc: str = 'Running in parallel'
     ) -> List:
         with ProcessPoolExecutor(self.jobs) as pool:
             return list(
@@ -146,15 +147,24 @@ class AspectAnalysisSystem:
 
             df['discourse_tree'] = self.parallelized_extraction(
                 df.text, extract_discourse_tree, 'Discourse trees parsing')
-            self.discourse_trees_df_checkpoint(df)
-            
+
             n_docs = len(df)
             df.dropna(subset=['discourse_tree'], inplace=True)
             logging.info(f'{n_docs - len(df)} discourse tree has been parser with errors and we skip them.')
-            
-            df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*self.parallelized_extraction(
-                df.discourse_tree, extract_discourse_tree_with_ids_only, 'Discourse trees parsing to idx only')))
+
+            assert not df.empty, 'No trees to process!'
+
             self.discourse_trees_df_checkpoint(df)
+
+        return df
+
+    def extract_discourse_trees_ids_only(self, df: pd.DataFrame) -> pd.DataFrame:
+        if 'discourse_tree_ids_only' in df.columns:
+            return df
+
+        df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*self.parallelized_extraction(
+            df.discourse_tree, extract_discourse_tree_with_ids_only, 'Discourse trees parsing to idx only')))
+        self.discourse_trees_df_checkpoint(df)
 
         return df
 
@@ -192,12 +202,13 @@ class AspectAnalysisSystem:
         return df
 
     def extract_edu_dependency_rules(self, df: pd.DataFrame) -> pd.DataFrame:
+        # TODO: ended here, ids of DT idx only in the beggining of tree coulkd be 0 not a Tree instance, same in the end of tree
         if 'rules' in df.columns:
             return df
-        
+
         pandas_utils.assert_columns(df, 'discourse_tree_ids_only')
 
-        df['rules'] = self.parallelized_extraction(df.discourse_tree_ids_only, extract_rules, 'Extracting rules')        
+        df['rules'] = self.parallelized_extraction(df.discourse_tree_ids_only, extract_rules, 'Extracting rules')
 
         self.discourse_trees_df_checkpoint(df)
 
@@ -259,6 +270,7 @@ class AspectAnalysisSystem:
     def run(self):
 
         discourse_trees_df = self.extract_discourse_trees()
+        discourse_trees_df = self.extract_discourse_trees_ids_only(discourse_trees_df)
         discourse_trees_df = self.extract_sentiment_from_edus(discourse_trees_df)
         discourse_trees_df = self.extract_aspects_from_edus(discourse_trees_df)
 
@@ -274,9 +286,9 @@ class AspectAnalysisSystem:
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(description='Process documents.')
     arg_parser.add_argument(
-        '-input', 
-        type=str, 
-        dest='input_file_path', 
+        '-input',
+        type=str,
+        dest='input_file_path',
         default=settings.DEFAULT_INPUT_FILE_PATH,
         help='Path to the file with documents (json, csv, pickle)'
     )
@@ -295,16 +307,16 @@ if __name__ == "__main__":
         help='path to sentiment model'
     )
     arg_parser.add_argument(
-        '-analysis_results_path', 
-        type=str, 
-        dest='analysis_results_path', 
+        '-analysis_results_path',
+        type=str,
+        dest='analysis_results_path',
         default=None,
         help='path to analysis results'
     )
     arg_parser.add_argument(
-        '-max_docs', 
+        '-max_docs',
         type=int,
-        dest='max_docs', 
+        dest='max_docs',
         default=None,
         help='Maximum number of documents to analyse'
     )
@@ -313,30 +325,30 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         '-p', type=int, dest='max_processes', default=1, help='Number of processes')
     arg_parser.add_argument(
-        '-cycles', 
-        type=bool, 
-        dest='cycles', 
-        default=False, 
+        '-cycles',
+        type=bool,
+        dest='cycles',
+        default=False,
         help='Do we want to have cycles in aspect relation? False by default'
     )
     arg_parser.add_argument(
-        '-filter_gerani', 
-        type=bool, 
-        dest='filter_gerani', 
+        '-filter_gerani',
+        type=bool,
+        dest='filter_gerani',
         default=False,
         help='Do we want to follow Gerani paper?'
-        )
+    )
     arg_parser.add_argument(
-        '-aht_gerani', 
-        type=bool, 
-        dest='aht_gerani', 
+        '-aht_gerani',
+        type=bool,
+        dest='aht_gerani',
         default=False,
         help='Do we want to create AHT by Gerani?'
     )
     arg_parser.add_argument(
-        '-neutral_sent', 
-        type=bool, 
-        dest='neutral_sent', 
+        '-neutral_sent',
+        type=bool,
+        dest='neutral_sent',
         default=False,
         help='Do we want to use neutral sentiment aspects too?'
     )
@@ -345,7 +357,7 @@ if __name__ == "__main__":
     input_file_full_name = split(args.input_file_path)[1]
     input_file_name = splitext(input_file_full_name)[0]
     output_path = join(args.output_file_path, input_file_name)
-    
+
     AAS = AspectAnalysisSystem(
         input_path=args.input_file_path,
         output_path=output_path,
