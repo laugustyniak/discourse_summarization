@@ -20,7 +20,7 @@ RUN pip install numpy==1.13.3 \
 RUN python -m spacy download en
 
 WORKDIR /app
-COPY rst /app
+COPY . /app
 
 RUN tar -zxf PyYAML-3.09.tar.gz \
     && cd PyYAML-3.09 \

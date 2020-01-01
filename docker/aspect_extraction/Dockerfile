@@ -13,7 +13,7 @@ RUN pip install fastapi==0.45.0 \
 
 RUN python -m spacy download en_core_web_sm
 
-COPY aspect_extraction /app
+COPY . /app
 WORKDIR /app
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
