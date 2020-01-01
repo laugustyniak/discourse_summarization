@@ -2,8 +2,6 @@ FROM java:7
 
 RUN python --version
 
-RUN echo "nameserver  156.17.248.121" > /etc/resolv.conf
-
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 RUN python get-pip.py
 

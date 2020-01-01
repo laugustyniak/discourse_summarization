@@ -15,4 +15,4 @@ class BiLSTMModel:
         return requests.post(self.url, json={self.json_request_key: text}).json()
 
     def get_sentiments(self, texts: List[str]) -> List[float]:
-        return [self.analyse(text)['value'] for text in texts]
+        return [self.analyse(text)['sentiment'] for text in texts]
