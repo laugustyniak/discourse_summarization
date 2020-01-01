@@ -53,6 +53,10 @@ def extract_discourse_tree_with_ids_only(discourse_tree: nltk.Tree) -> Tuple[nlt
     edu_tree_preprocessor.process_tree(discourse_tree)
     return discourse_tree, edu_tree_preprocessor.edus
 
+def extract_rules(discourse_tree: Tree) -> List:
+    rules_extractor = EDUTreeRulesExtractor(tree=discourse_tree)
+    return rules_extractor.extract()
+
 
 class AspectAnalysisSystem:
 
@@ -146,7 +150,6 @@ class AspectAnalysisSystem:
             
             n_docs = len(df)
             df.dropna(subset=['discourse_tree'], inplace=True)
-            # TODO: solve problem with RST tree and its parsing errors
             logging.info(f'{n_docs - len(df)} discourse tree has been parser with errors and we skip them.')
             
             df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*self.parallelized_extraction(
@@ -188,23 +191,17 @@ class AspectAnalysisSystem:
 
         return df
 
-    def _extract_edu_dependency_rules(self):
-        """Extract association rules to RST trees"""
-        if not exists(self.paths.edu_dependency_rules):
-            link_tree = None
-            rules_extractor = EDUTreeRulesExtractor()
-            rules = {}
-            docs_info = self.serializer.load(self.paths.docs_info)
-            for doc_id, doc_info in tqdm(
-                    docs_info.iteritems(), desc='Extract EDU dependency rules', total=len(docs_info)):
-                if len(doc_info['accepted_edus']) > 0:
-                    link_tree = self.serializer.load(
-                        join(self.paths.discourse_trees_df, str(doc_id)))
-                extracted_rules = rules_extractor.extract(
-                    link_tree, doc_info['accepted_edus'], doc_id)
-                rules.update(extracted_rules)
-            logging.info('Rules extracted.')
-            self.serializer.save(rules, self.paths.edu_dependency_rules)
+    def extract_edu_dependency_rules(self, df: pd.DataFrame) -> pd.DataFrame:
+        if 'rules' in df.columns:
+            return df
+        
+        pandas_utils.assert_columns(df, 'discourse_tree_ids_only')
+
+        df['rules'] = self.parallelized_extraction(df.discourse_tree_ids_only, extract_rules, 'Extracting rules')        
+
+        self.discourse_trees_df_checkpoint(df)
+
+        return df
 
     def _build_aspect_dependency_graph(self):
         """Build dependency graph"""
@@ -265,7 +262,7 @@ class AspectAnalysisSystem:
         discourse_trees_df = self.extract_sentiment_from_edus(discourse_trees_df)
         discourse_trees_df = self.extract_aspects_from_edus(discourse_trees_df)
 
-        # self._extract_edu_dependency_rules()
+        discourse_trees_df = self.extract_edu_dependency_rules(discourse_trees_df)
         # self._build_aspect_dependency_graph()
         # self._add_sentiment_and_dir_moi_to_graph()
         # aspects_graph = self.serializer.load(self.paths.aspects_graph)

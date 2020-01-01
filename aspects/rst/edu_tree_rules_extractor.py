@@ -1,19 +1,23 @@
 from collections import defaultdict, namedtuple
 from nltk.tree import Tree
+from typing import List, Sequence
 
 EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
 
 
-class EDUTreeRulesExtractor(object):
-    def __init__(self, weight_type=None,
-                 only_hierarchical_relations=True):
+class EDUTreeRulesExtractor:
+    def __init__(
+        self,
+        tree: Tree,
+        weight_type: List[str]=None,
+        only_hierarchical_relations=True
+    ):
         """
         Extracting rules from RST tress.
 
-        rules - dictionaty of rules extracted from Discourse Trees, key is
-            document id, value lsit of rules for tree
-        tree - Discource Tree
-        accepted_edus - list of edu ids that consist of aspect
+        rules - dictionary of rules extracted from Discourse Trees, key is
+            document id, value list of rules for tree
+        tree - Discourse Tree
         left_child_parent - parent of actually analyzed left leaf
         right_child_parent - parent of actually analyzed right leaf
 
@@ -29,16 +33,14 @@ class EDUTreeRulesExtractor(object):
         """
         if weight_type is None:
             weight_type = ['gerani']
-        self.rules = {}
-        self.tree = None
-        self.accepted_edus = None
+        self.rules: List[EDURelation] = []
+        self.tree = tree
         self.left_child_parent = None
         self.left_leaf = None
         self.right_child_parent = None
         self.right_leaf = None
         self.weight_type = [w.lower() for w in weight_type]
-        self.only_hierarchical_relations = only_hierarchical_relations
-        self.doc_id = None
+        self.only_hierarchical_relations: bool = only_hierarchical_relations
 
     def _process_tree(self, tree):
         for child_index, child in enumerate(tree):
@@ -73,54 +75,41 @@ class EDUTreeRulesExtractor(object):
     def _make_rules(self, leaf_left, tree):
         # if int we got leaf level
         if isinstance(tree, int):
-            if tree in self.accepted_edus and leaf_left in self.accepted_edus:
-                self.left_leaf = leaf_left
-                self.right_leaf = tree
-                relation = self.rst_relation_type()
-                # relation name, nucleus/satellite, nucleus/satellite
-                rel_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(relation)
-                if self.only_hierarchical_relations and not self.check_hierarchical_rst_relation(nuc_sat_1, nuc_sat_2):
-                    return
+            self.left_leaf = leaf_left
+            self.right_leaf = tree
+            relation = self.rst_relation_type()
+            # relation name, nucleus/satellite, nucleus/satellite
+            rel_name, nuc_sat_1, nuc_sat_2 = self.get_nucleus_satellite_and_relation_type(relation)
+            if self.only_hierarchical_relations and not self.check_hierarchical_rst_relation(nuc_sat_1, nuc_sat_2):
+                return
+            else:
+                if nuc_sat_1 == 'N':
+                    # [N][S] or [N][N]
+                    self.rules.append(
+                        EDURelation(
+                            self.right_leaf, 
+                            self.left_leaf, 
+                            rel_name, 
+                            self.calculate_gerani_weight()
+                        )
+                    )
                 else:
-                    if nuc_sat_1 == 'N':
-                        # [N][S] or [N][N]
-                        self.rules[self.doc_id].append(
-                            EDURelation(self.right_leaf, self.left_leaf, rel_name, self.calculate_gerani_weight()))
-                    else:
-                        # [S][N]
-                        self.rules[self.doc_id].append(
-                            EDURelation(self.left_leaf, self.right_leaf, rel_name, self.calculate_gerani_weight()))
+                    # [S][N]
+                    self.rules.append(
+                        EDURelation(
+                            self.left_leaf, 
+                            self.right_leaf, 
+                            rel_name, 
+                            self.calculate_gerani_weight()
+                        )
+                    )
         # do deeper into tree
         else:
             for index, child in enumerate(tree):
                 self._make_rules(leaf_left, child)
 
-    def extract(self, tree, accepted_edus, doc_id):
-        """
-        Extract RST relation with BFS approach.
-
-        :param tree: Tree object
-            RST Tree that will be parsed and relation will be extracted from it
-        :param accepted_edus: list
-            A list of aspect's ids.
-        :param doc_id : int
-            Document/tree id.
-
-        :return: dict
-            Dictionary with document id and list of tuples with nodes and
-            metadata (relations and weights)
-        """
-        if len(accepted_edus) > 1:
-            self.accepted_edus = accepted_edus
-        else:
-            # if there are not any aspects it's not needed to extract relations
-            return []
-
-        self.doc_id = doc_id
-        self.rules = defaultdict(list)
-        self.tree = tree
+    def extract(self, tree: nltk.Tree) -> List[EDURelation]:
         self._process_tree(tree)
-
         return self.rules
 
     def calculate_gerani_weight(self):
@@ -144,10 +133,7 @@ class EDUTreeRulesExtractor(object):
         return 0
 
     def rst_relation_type(self):
-        """
-        Find common nearest parent and take relation from heigher
-        parse tree
-        """
+        """ Find common nearest parent and take relation from higher parse tree """
         if self.left_child_parent.height() > self.right_child_parent.height():
             return self.left_child_parent.node
         else:
