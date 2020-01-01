@@ -61,17 +61,17 @@ SENTIMENT_MODEL_TESTS = (
         'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-reviews_Apps_for_Android-500000-balanced.pkl'
 )
 
-SENTIMENT_DOCKER_URL = 'http://localhost:5002/api/sentiment/'
+SENTIMENT_DOCKER_URL = 'http://localhost:5002/api/sentiment'
 
 # --------------------------------------------- RST  ----------------------------------------------------------------- #
 
-RST_PARSER_DOCKER_URL = 'http://localhost:5000/api/rst/parse/'
+RST_PARSER_DOCKER_URL = 'http://localhost:5000/api/rst/parse'
 
 # --------------------------------------------- ASPECT MODELS -------------------------------------------------------- #
 
 ASPECT_EXTRACTION_TRAIN_DATASET = DATA_PATH / 'aspects' / 'merged-electronic-aspects-uni-tag.conll'
 
-ASPECT_EXTRACTOR_DOCKER_URL = "http://localhost:5001/api/aspects/"
+ASPECT_EXTRACTOR_DOCKER_URL = "http://localhost:5001/api/aspects"
 
 # --------------------------------------------- EMBEDDINGS ----------------------------------------------------------- #
 
