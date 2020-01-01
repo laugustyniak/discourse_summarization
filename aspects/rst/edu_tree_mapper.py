@@ -13,10 +13,3 @@ class EDUTreeMapper:
             else:
                 tree[index] = len(self.edus)
                 self.edus.append(subtree)
-
-    def get_preprocessed_edus(self):
-        return {
-            idx: edu
-            for idx, edu
-            in enumerate(self.edus)
-        }
