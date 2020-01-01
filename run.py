@@ -1,10 +1,12 @@
 import argparse
 import json
 import logging
+import multiprocessing
 from concurrent.futures.process import ProcessPoolExecutor
+from json.decoder import JSONDecodeError
 from os.path import basename, dirname, exists, join, split, splitext
 from pathlib import Path
-from typing import Callable, Sequence, List
+from typing import Callable, Sequence, List, Union, Tuple
 
 import nltk
 import pandas as pd
@@ -34,15 +36,19 @@ logging.basicConfig(
 )
 
 
-def extract_discourse_tree(document):
+def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
     parser = RSTParserClient()
-    return nltk.Tree.fromstring(
-        parser.parse(document),
-        leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN
-    )
+    try:
+        return nltk.Tree.fromstring(
+            parser.parse(document),
+            leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN
+        )
+    except (ValueError, JSONDecodeError):
+        print(f'Document iwith erros: {document}')
+        return None
 
 
-def extract_discourse_tree_with_ids_only(discourse_tree):
+def extract_discourse_tree_with_ids_only(discourse_tree: nltk.Tree) -> Tuple[nltk.Tree, List[str]]:
     edu_tree_preprocessor = EDUTreeMapper()
     edu_tree_preprocessor.process_tree(discourse_tree)
     return discourse_tree, edu_tree_preprocessor.edus
@@ -52,11 +58,11 @@ class AspectAnalysisSystem:
 
     def __init__(
             self,
-            input_path,
-            output_path,
-            gold_standard_path,
-            analysis_results_path,
-            jobs=1,
+            input_path: Union[str, Path],
+            output_path: Union[str, Path],
+            gold_standard_path: Union[str, Path],
+            analysis_results_path: Union[str, Path],
+            jobs: int = None,
             sent_model_path=None,
             n_logger=1000,
             batch_size=None,
@@ -88,13 +94,13 @@ class AspectAnalysisSystem:
         self.cycle_in_relations = cycle_in_relations
 
         # number of all processes
-        self.jobs = jobs
+        if jobs is None:
+            self.jobs = multiprocessing.cpu_count()
+        else:
+            self.jobs = jobs
 
         # by how many examples logging will be done
         self.n_logger = n_logger
-
-        # count number of error within parsing RDT
-        self.parsing_errors = 0
 
     def parallelized_extraction(self, elements: Sequence, fn: Callable, desc: str = 'Running in parallel') -> List:
         with ProcessPoolExecutor(self.jobs) as pool:
@@ -133,6 +139,10 @@ class AspectAnalysisSystem:
 
             df['discourse_tree'] = self.parallelized_extraction(
                 df.text, extract_discourse_tree, 'Discourse trees parsing')
+            n_docs = len(df)
+            df.dropna(subset=['discourse_tree'], inplace=True)
+            # TODO: solve problem with RST tree and its parsing errors
+            logging.info(f'{n_docs - len(df)} discourse tree has been parser with errors and we skip them.')
             df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*self.parallelized_extraction(
                 df.discourse_tree, extract_discourse_tree_with_ids_only, 'Discourse trees parsing to idx only')))
 
