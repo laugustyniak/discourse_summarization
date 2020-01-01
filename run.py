@@ -2,25 +2,24 @@ import argparse
 import json
 import logging
 from concurrent.futures.process import ProcessPoolExecutor
-from copy import deepcopy
 from os.path import basename, dirname, exists, join, split, splitext
 from pathlib import Path
+from typing import Callable, Sequence, List
 
-import networkx as nx
 import nltk
 import pandas as pd
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
+from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_mapper import EDUTreeMapper
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.rst.rst_parser_client import RSTParserClient
+from aspects.sentiment.sentiment_client import BiLSTMModel
 from aspects.utilities import settings, pandas_utils
 from aspects.utilities.data_paths import IOPaths
-from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.sentiment.sentiment_client import BiLSTMModel
 
 if not Path('logs').exists():
     Path('logs').mkdir(parents=True)
@@ -45,9 +44,8 @@ def extract_discourse_tree(document):
 
 def extract_discourse_tree_with_ids_only(discourse_tree):
     edu_tree_preprocessor = EDUTreeMapper()
-    # TODO: rewrite it with simple return fashion not change the state of the tree
     edu_tree_preprocessor.process_tree(discourse_tree)
-    return discourse_tree, edu_tree_preprocessor.get_preprocessed_edus()
+    return discourse_tree, edu_tree_preprocessor.edus
 
 
 class AspectAnalysisSystem:
@@ -98,6 +96,20 @@ class AspectAnalysisSystem:
         # count number of error within parsing RDT
         self.parsing_errors = 0
 
+    def parallelized_extraction(self, elements: Sequence, fn: Callable, desc: str = 'Running in parallel') -> List:
+        with ProcessPoolExecutor(self.jobs) as pool:
+            return list(
+                tqdm(
+                    pool.map(
+                        fn,
+                        elements,
+                        chunksize=settings.PARALLEL_CHUNK_SIZE
+                    ),
+                    total=len(elements),
+                    desc=desc
+                )
+            )
+
     def extract_discourse_trees(self) -> pd.DataFrame:
         if self.paths.discourse_trees_df.exists():
             return pd.read_pickle(self.paths.discourse_trees_df)
@@ -117,24 +129,12 @@ class AspectAnalysisSystem:
                     'Wrong file type! It must be [json, txt or csv]')
 
             if self.max_docs is not None:
-                df = df.head(self.max_docs)
+                df = df.sample(self.max_docs)
 
-            # Process the rows in chunks in parallel
-            with ProcessPoolExecutor(self.jobs) as pool:
-                df['discourse_tree'] = list(
-                    tqdm(pool.map(
-                        extract_discourse_tree,
-                        df['text'],
-                        chunksize=settings.PARALLEL_CHUNK_SIZE
-                    ), total=df.shape[0], desc='Discourse trees parsing')
-                )
-                df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*list(
-                    tqdm(pool.map(
-                        extract_discourse_tree_with_ids_only,
-                        df['discourse_tree'],
-                        chunksize=settings.PARALLEL_CHUNK_SIZE
-                    ), total=df.shape[0], desc='Discourse trees parsing to idx only')
-                )))
+            df['discourse_tree'] = self.parallelized_extraction(
+                df.text, extract_discourse_tree, 'Discourse trees parsing')
+            df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*self.parallelized_extraction(
+                df.discourse_tree, extract_discourse_tree_with_ids_only, 'Discourse trees parsing to idx only')))
 
             self.paths.discourse_trees_df.parent.mkdir(parents=True, exist_ok=True)
             df.to_pickle(self.paths.discourse_trees_df)
@@ -143,51 +143,27 @@ class AspectAnalysisSystem:
 
     def extract_sentiment_from_edus(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'sentiment' in df.columns:
-            logging.info(
-                'Sentiments have been already extracted. Passing to the next step.')
+            logging.info('Sentiments have been already extracted. Passing to the next step.')
             return df
 
         pandas_utils.assert_columns(df, 'edus')
         analyzer = BiLSTMModel()
-
-        with ProcessPoolExecutor(self.jobs) as pool:
-            df['sentiment'] = list(
-                tqdm(
-                    pool.map(
-                        analyzer.get_sentiments,
-                        df.edus,
-                        chunksize=settings.PARALLEL_CHUNK_SIZE
-                    ),
-                    total=len(df),
-                    desc='Discourse trees parsing'
-                )
-            )
-
+        df['sentiment'] = self.parallelized_extraction(df.edus, analyzer.get_sentiments, 'Sentiment extracting')
         df.to_pickle(self.paths.discourse_trees_df)
 
         return df
 
     def extract_aspects_from_edus(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'aspects' in df.columns:
-            logging.info(
-                'Aspects have been already extracted. Passing to the next step.')
+            logging.info('Aspects have been already extracted. Passing to the next step.')
             return df
 
         pandas_utils.assert_columns(df, 'edus')
 
         extractor = AspectExtractor()
-        with ProcessPoolExecutor(self.jobs) as pool:
-            df['aspects'] = list(
-                tqdm(
-                    pool.map(
-                        extractor.extract_batch,
-                        df.edus,
-                        chunksize=settings.PARALLEL_CHUNK_SIZE
-                    ),
-                    total=len(df),
-                    desc='Aspect extracting'
-                )
-            )
+        df['aspects'] = self.parallelized_extraction(df.edus, extractor.extract_batch, 'Aspects extracting')
+        df['concepts'] = self.parallelized_extraction(df.aspects, extractor.extract_concepts_batch,
+                                                      'Concepts extracting')
 
         df.to_pickle(self.paths.discourse_trees_df)
 

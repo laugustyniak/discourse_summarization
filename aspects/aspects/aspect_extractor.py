@@ -1,14 +1,11 @@
 import logging
 from collections import defaultdict
-from typing import List, Tuple, Iterable, Sequence
+from typing import List, Sequence, Dict
 
 from aspects.aspects.neural_aspect_extractor_client import NeuralAspectExtractorClient
 from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
 from aspects.utilities import common_nlp
 from aspects.utilities import settings
-from concurrent.futures.process import ProcessPoolExecutor
-from tqdm import tqdm
-from multiprocessing import cpu_count
 
 log = logging.getLogger(__name__)
 
@@ -69,8 +66,12 @@ class AspectExtractor:
         aspects = self.neural_aspect_extractor_client.extract(text)
 
         if self.is_ner:
-            aspects += [ent.text for ent in nlp(
-                text).ents if ent.label_ in self.ner_types]
+            aspects += [
+                ent.text
+                for ent
+                in nlp(text).ents
+                if ent.label_ in self.ner_types
+            ]
 
         # lower case every aspect and only longer than 1
         return [
@@ -80,7 +81,7 @@ class AspectExtractor:
             if x not in self.aspects_to_skip and len(x) > 1
         ]
 
-    def extract_concept_from_conceptnet_io(self, aspects):
+    def extract_concept_from_conceptnet_io(self, aspects: List) -> Dict:
         conceptnet_io = load_conceptnet_io()
         conceptnet_aspects = defaultdict(list)
         for aspect in aspects:
@@ -88,7 +89,7 @@ class AspectExtractor:
                 conceptnet_aspects[aspect] += conceptnet_io[aspect]
         return conceptnet_aspects
 
-    def extract_concepts_from_sentic(self, aspects):
+    def extract_concepts_from_sentic(self, aspects: List):
         sentic_df = load_sentic()
         sentic_aspects = {}
         for aspect in aspects:
@@ -97,22 +98,13 @@ class AspectExtractor:
                 sentic_df, aspect, settings.SENTIC_EXACT_MATCH_CONCEPTS)
         return sentic_aspects
 
-    def extract_keywords(self, text):
-        rake = common_nlp.load_rake()
-        if text:
-            try:
-                # text_rank_keywords = keywords(text)
-                text_rank_keywords = []
-            except:
-                log.error('Cant get keywords from text: {}'.format(text))
-                text_rank_keywords = []
-
-            return {
-                'rake': rake.run(text),
-                'text_rank': text_rank_keywords
-            }
-        else:
-            return {
-                'rake': [(None, None)],
-                'text_rank': []
-            }
+    def extract_concepts_batch(self, aspects: Sequence[List[str]]) -> List[Dict]:
+        concepts = []
+        for aspects_internal in aspects:
+            concept_aspects = {}
+            if self.sentic:
+                concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects_internal)
+            if self.conceptnet:
+                concept_aspects['conceptnet_io'] = self.extract_concept_from_conceptnet_io(aspects_internal)
+            concepts.append(concept_aspects)
+        return concepts
