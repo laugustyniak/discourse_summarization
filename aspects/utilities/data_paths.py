@@ -26,7 +26,7 @@ class IOPaths(object):
         self.edu_trees = join(output_path, 'edu_trees_dir')
         self.ensure_path_exist(self.edu_trees)
 
-        self.discourse_trees_df = join(output_path, 'link_trees_df.pkl')
+        self.discourse_trees_df = Path(output_path) / 'link_trees_df.pkl'
 
         self.raw_edus = join(output_path, 'raw_edu_list')
         self.sentiment_filtered_edus = join(output_path, 'sentiment_filtered_edus')

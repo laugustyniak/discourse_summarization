@@ -4,7 +4,7 @@ ROOT_PATH = pathlib.Path(__file__).absolute().parent.parent
 DATA_PATH = ROOT_PATH / 'data'
 EDU_DEPENDENCY_PARSER_PATH = ROOT_PATH.parent / 'edu_dependency_parser'
 DEFAULT_OUTPUT_PATH = ROOT_PATH / 'results'
-DEFAULT_INPUT_FILE_PATH = ROOT_PATH / 'texts' / 'test.txt'
+DEFAULT_INPUT_FILE_PATH = ROOT_PATH / pathlib.Path('data/reviews/amazon/reviews_Apps_for_Android.json')
 
 # --------------------------------------------- AMAZON DATASETS PATHS -------------------------------------------------#
 AMAZON_REVIEWS_DATASETS_PATH = DATA_PATH / 'reviews' / 'amazon'
@@ -109,3 +109,5 @@ SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189'
 ML_GUSE_MODEL_2_LITE_PATH = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 
 DISCOURSE_TREE_LEAF_PATTERN = '(?<=_!).*(?=!_)'
+
+PARALLEL_CHUNK_SIZE = 100

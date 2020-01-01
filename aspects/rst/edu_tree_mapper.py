@@ -1,9 +1,7 @@
 from nltk import Tree
 
-from aspects.preprocessing import preprocessing
 
-
-class EDUTreePreprocessor:
+class EDUTreeMapper:
 
     def __init__(self):
         self.edus = []
@@ -13,9 +11,8 @@ class EDUTreePreprocessor:
             if isinstance(subtree, Tree):
                 self.process_tree(subtree)
             else:
-                extraction_result = preprocessing.preprocess(subtree)
                 tree[index] = len(self.edus)
-                self.edus.append(extraction_result)
+                self.edus.append(subtree)
 
     def get_preprocessed_edus(self):
         return {
