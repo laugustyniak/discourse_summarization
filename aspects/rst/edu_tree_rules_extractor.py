@@ -7,12 +7,7 @@ EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
 
 
 class EDUTreeRulesExtractor:
-    def __init__(
-            self,
-            tree: Tree,
-        weight_type: List[str]=None,
-        only_hierarchical_relations=True
-    ):
+    def __init__(self, tree: Tree, weight_type: List[str] = None, only_hierarchical_relations: bool = True):
         """
         Extracting rules from RST tress.
 
@@ -88,9 +83,9 @@ class EDUTreeRulesExtractor:
                     # [N][S] or [N][N]
                     self.rules.append(
                         EDURelation(
-                            self.right_leaf, 
-                            self.left_leaf, 
-                            rel_name, 
+                            self.right_leaf,
+                            self.left_leaf,
+                            rel_name,
                             self.calculate_gerani_weight()
                         )
                     )
