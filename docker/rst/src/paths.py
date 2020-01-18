@@ -1,7 +1,6 @@
 from pathlib import Path
 
-# TODO: remove one parent for docker
-ROOT_PATH = Path(__file__).absolute().parent.parent
+ROOT_PATH = Path(__file__).absolute().parent
 
 PARSED_TEXTS_PATH = ROOT_PATH / 'texts' / 'parsed_texts'
 STANFORD_PATH = ROOT_PATH / 'tools' / 'stanford_parser'

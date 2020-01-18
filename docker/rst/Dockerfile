@@ -5,7 +5,7 @@ RUN python --version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 RUN python get-pip.py
 
-RUN apt-get update && apt-get install build-essential python python-dev -y
+RUN apt-get update && apt-get install nginx build-essential python python-dev -y
 
 RUN pip install numpy==1.13.3 \
     flask==1.1.1 \
@@ -15,7 +15,8 @@ RUN pip install numpy==1.13.3 \
     # otherwise with version 10.1+ we get AttributeError: 'module' object has no attribute 'finders'
     setuptools==9.1 \
     six==1.10.0 \
-    spacy==1.9
+    spacy==1.9 \
+    uwsgi==2.0.18
 
 RUN python -m spacy download en
 
@@ -54,6 +55,7 @@ RUN cd rhetorical_parser/tools/crfsuite \
 RUN cd rhetorical_parser/tools/crfsuite \
     && ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
 
-ENTRYPOINT ["python"]
+COPY nginx.conf /etc/nginx
 
-CMD ["/app/rhetorical_parser/src/app.py"]
+RUN chmod +x rhetorical_parser/src/start.sh
+CMD ["./rhetorical_parser/src/start.sh"]
