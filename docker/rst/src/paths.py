@@ -1,6 +1,7 @@
 from pathlib import Path
 
-ROOT_PATH = Path(__file__).absolute().parent
+ROOT_PATH = Path(__file__).absolute().parent.parent
+print('ROOT PATH: {}'.format(ROOT_PATH))
 
 PARSED_TEXTS_PATH = ROOT_PATH / 'texts' / 'parsed_texts'
 STANFORD_PATH = ROOT_PATH / 'tools' / 'stanford_parser'
