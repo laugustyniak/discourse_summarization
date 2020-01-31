@@ -2,11 +2,11 @@ import re
 
 import spacy
 
-import prep_utils
 from document.dependency import Dependency
 from document.sentence import Sentence
 from document.token import Token
-from syntax_parser import SyntaxParser
+from prep import prep_utils
+from prep.syntax_parser import SyntaxParser
 from trees.lexicalized_tree import LexicalizedTree
 
 
@@ -17,8 +17,8 @@ class Preprocesser:
 
         try:
             self.syntax_parser = SyntaxParser()
-        except Exception, e:
-            raise e
+        except Exception as e:
+            raise Exception(str(e) + 'Please check paths.py file and ROOT PATH if it points to the right directory')
 
         self.max_sentence_len = 100
         self.nlp = spacy.load('en')
