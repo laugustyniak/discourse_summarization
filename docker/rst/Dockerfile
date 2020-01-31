@@ -32,30 +32,29 @@ RUN tar -zxf nltk-2.0b9.tar.gz \
 	&& python setup.py install
 
 # gCRF and other resources
-RUN tar -zxf rhetorical_parser.tar.gz \
-    && cd rhetorical_parser/tools/crfsuite/liblbfgs-1.10 \
+RUN cd tools/crfsuite/liblbfgs-1.10 \
     && ./configure --prefix=$HOME/local \
     && make \
     && make install
 
-# add rhetorical source code to parser directory
-RUN mv src rhetorical_parser
-RUN ls -l rhetorical_parser/src
-
-RUN cd rhetorical_parser/tools/crfsuite/crfsuite-0.12 \
+RUN cd tools/crfsuite/crfsuite-0.12 \
     && chmod +x configure \
     && ./configure --prefix=$HOME/local --with-liblbfgs=$HOME/local \
     && make \
     && make install
 
-RUN cd rhetorical_parser/tools/crfsuite \
+RUN cd tools/crfsuite \
     && cp $HOME/local/bin/crfsuite crfsuite-stdin \
     && chmod +x crfsuite-stdin
 
-RUN cd rhetorical_parser/tools/crfsuite \
+RUN ln -s /app/tools/crfsuite/crfsuite-0.12/lib/crf/.libs/libcrfsuite-0.12.so /usr/lib/libcrfsuite-0.12.so
+RUN ln -s /app/tools/crfsuite/crfsuite-0.12/lib/liblbfgs-1.10.so /usr/lib/liblbfgs-1.10.so
+RUN ln -s /app/tools/crfsuite/crfsuite-0.12/lib/cqdb/.libs/libcqdb-0.12.so /usr/lib/libcqdb-0.12.so
+
+RUN cd tools/crfsuite \
     && ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
 
 COPY nginx.conf /etc/nginx
 
-RUN chmod +x rhetorical_parser/src/start.sh
-CMD ["./rhetorical_parser/src/start.sh"]
+RUN chmod +x start.sh
+#CMD ["./start.sh"]

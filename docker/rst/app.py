@@ -1,15 +1,12 @@
 import sys
 
 from flask import Flask, request, jsonify, abort
-from flask_restful import Api
 
-sys.path.append('/app/rhetorical_parser/src')
+sys.path.append('/app/src')
 
 from parse import DiscourseParser
 
 app = Flask(__name__)
-api = Api(app)
-
 parser = DiscourseParser()
 
 

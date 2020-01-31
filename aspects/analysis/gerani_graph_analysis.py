@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 log = logging.getLogger(__name__)
 
-
+# TODO: doc info remove
 def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
     n_skipped_edus = 0
     n_aspects_not_in_graph = 0
