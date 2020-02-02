@@ -1,8 +1,4 @@
-import sys
-
 from flask import Flask, request, jsonify, abort
-
-sys.path.append('/app/src')
 
 from parse import DiscourseParser
 

@@ -2,14 +2,14 @@ import argparse
 import json
 import logging
 import multiprocessing
-from concurrent.futures.process import ProcessPoolExecutor
 from json.decoder import JSONDecodeError
 from os.path import basename, exists, join, split, splitext
-from pathlib import Path
 from typing import Callable, Sequence, List, Union, Tuple
 
 import nltk
 import pandas as pd
+from concurrent.futures.process import ProcessPoolExecutor
+from pathlib import Path
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
@@ -202,7 +202,7 @@ class AspectAnalysisSystem:
         return df
 
     def extract_edu_dependency_rules(self, df: pd.DataFrame) -> pd.DataFrame:
-        # TODO: ended here, ids of DT idx only in the beggining of tree coulkd be 0 not a Tree instance, same in the end of tree
+        # TODO: ended here, ids of DT idx only in the beggining of tree could be 0 not a Tree instance, same in the end of tree
         if 'rules' in df.columns:
             return df
 

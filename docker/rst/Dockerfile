@@ -20,6 +20,9 @@ RUN pip install numpy==1.13.3 \
 
 RUN python -m spacy download en
 
+ENV PYTHONPATH "${PYTHONPATH}:/app/src"
+ENV CCFLAGS "-m32"
+
 WORKDIR /app
 COPY . /app
 
@@ -48,13 +51,20 @@ RUN cd tools/crfsuite \
     && chmod +x crfsuite-stdin
 
 RUN ln -s /app/tools/crfsuite/crfsuite-0.12/lib/crf/.libs/libcrfsuite-0.12.so /usr/lib/libcrfsuite-0.12.so
-RUN ln -s /app/tools/crfsuite/crfsuite-0.12/lib/liblbfgs-1.10.so /usr/lib/liblbfgs-1.10.so
 RUN ln -s /app/tools/crfsuite/crfsuite-0.12/lib/cqdb/.libs/libcqdb-0.12.so /usr/lib/libcqdb-0.12.so
+
+# problematic lib, I'm leaving it for future error :)
+#RUN ln -s /app/tools/crfsuite/crfsuite-0.12/lib/liblbfgs-1.10.so /usr/lib/liblbfgs-1.10.so  # 32bit errors
+#RUN ln -s /root/local/lib/liblbfgs-1.10.so/ /usr/lib/liblbfgs-1.10.so  # permission denied
+RUN ln -s /app/tools/crfsuite/liblbfgs-1.10/lib/.libs/liblbfgs-1.10.so /usr/lib/liblbfgs-1.10.so
 
 RUN cd tools/crfsuite \
     && ./crfsuite-stdin tag -pi -m ../../model/tree_build_set_CRF/label/intra.crfsuite test.txt
 
 COPY nginx.conf /etc/nginx
 
+
+
+WORKDIR /app/src
 RUN chmod +x start.sh
-#CMD ["./start.sh"]
+CMD ["./start.sh"]
