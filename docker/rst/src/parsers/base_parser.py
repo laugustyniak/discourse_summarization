@@ -69,10 +69,6 @@ class BaseParser:
             for k in range(len(s)):
                 c = s[k]
 
-                #                print 'k', k, c
-                #                print c
-                #                print
-
                 if k == 0:
                     c0 = None
                 else:
@@ -104,15 +100,6 @@ class BaseParser:
 
                     positions = [-1, 0, 1]
                     hash_key = (c1_tot, c0_num_edus, c1_num_edus, c2_num_edus, c3_num_edus)
-
-                    #                    if post_editing:
-                    #                        if c0:
-                    #                            print 'c0:', c0, c0.parse_subtree
-                    #                        print 'c1:', c1, c1.parse_subtree
-                    #                        print 'c2:', c2, c2.parse_subtree
-                    #                        if c3:
-                    #                            print 'c3:', c3, c3.parse_subtree
-
                     if self.verbose:
                         print 'c0:', c0
                         print 'c1:', c1
@@ -120,12 +107,10 @@ class BaseParser:
                         print 'c3:', c3
 
                     if hash_key in self.cached_mc_features:
-                        #                    if False:
                         inst_features_str = self.cached_mc_features[hash_key]
                     else:
-                        inst_features = self.feature_writer.write_features_for_constituents(C, positions,
-                                                                                            self.scope,
-                                                                                            labeling=True)
+                        inst_features = self.feature_writer.write_features_for_constituents(
+                            C, positions, self.scope, labeling=True)
 
                         inst_features_str = '\t'.join(list(inst_features))
                         self.cached_mc_features[hash_key] = inst_features_str
@@ -133,7 +118,6 @@ class BaseParser:
                     inst_features_str = 'Num_EDUs=1'
 
                 features.append('%d\t%s' % (0, inst_features_str))
-        #                print inst_features_str
 
         if not labeling:
             classifier = self.bin_classifier

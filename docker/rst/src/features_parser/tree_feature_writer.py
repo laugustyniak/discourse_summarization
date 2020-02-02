@@ -54,11 +54,6 @@ class CRFTreeFeatureWriter:
         '''
 
         for n in range(1, 4):
-            #            if self.verbose:
-            #                print 'stump', stump
-            #                print breaks
-            #                print offset
-            #                print
 
             pref_PoS_ngrams = constituent.get_POS_ngram(n)
             self.features.add('Beginning_POS_%d-grams_Unit%d=%s@%d' % (n, unit, '-'.join(pref_PoS_ngrams), position))

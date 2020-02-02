@@ -30,9 +30,6 @@ class MultiSententialParser(BaseParser):
             return
 
         for i in range(len(doc.constituents) - 1):
-            #            print 'constituent', i, doc.constituents[i]
-            #            print doc.constituents[i].parse_subtree
-            #            print
             bin_score = self.classify_pair(doc, i)
             doc.constituent_scores.append(bin_score)
 
@@ -52,8 +49,6 @@ class MultiSententialParser(BaseParser):
         else:
             doc.discourse_tree = u''
 
-    #        print doc.discourse_tree
-
     def classify_pair(self, doc, i):
         max_prob = -20
         max_prob_sequence = None
@@ -67,12 +62,6 @@ class MultiSententialParser(BaseParser):
                 max_prob = sequence_prob
                 max_prob_sequence = (s, j)
                 max_prob_predictions = predictions
-
-            #            if self.verbose:
-            #                print sequence_prob
-            #                for pred in predictions:
-            #                    print pred
-            #                print
 
         (s_star, j_star) = max_prob_sequence
         struct_prob = max_prob_predictions[j_star]
@@ -114,9 +103,6 @@ class MultiSententialParser(BaseParser):
         return max_prob, i - j_star, len(s_star)
 
     def connect_stumps(self, i, doc):
-        #        print stumps
-        # print stumps_mc_scores[i]
-
         if self.verbose:
             print 'Connecting stumps[%d] and stumps[%d]' % (i, i + 1)
             print 'stumps[%d]' % i, doc.constituents[i]
@@ -129,22 +115,13 @@ class MultiSententialParser(BaseParser):
         doc.constituents[i:i + 2] = [new_constituent]
 
         (seq_prob, start, s_len) = self.relabel_stumps(doc, i)
-        #        (seq_prob, start, s_len) = self.relabel_stumps(stumps, offsets, i, prev_tree, tree_offset)
-
-        #        print 'scores', len(doc.constituent_scores)
         for k in range(max(0, start - (self.window_size - 1) / 2 - 1), i):
             bin_score = self.classify_pair(doc, k)
-
-            #            print 'k', k, len(doc.constituent_scores)
             doc.constituent_scores[k] = bin_score
 
         for k in range(i + 2, min(len(doc.constituents) - 1, i + 2 + (self.window_size - 1) / 2 + s_len)):
             bin_score = self.classify_pair(doc, k - 1)
-
-            #            print 'k', k, len(doc.constituent_scores)
             doc.constituent_scores[k] = bin_score
 
         doc.constituent_scores[i: i + 1] = []
-        #        print
-
         return seq_prob

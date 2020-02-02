@@ -23,7 +23,6 @@ class CRFClassifier:
         self.classifier_cmd = '%s/crfsuite-stdin tag -pi -m %s -' % (
             paths.CRFSUITE_PATH, join(self.model_path, self.model_fname)
         )
-        print(self.classifier_cmd)
         self.classifier = subprocess.Popen(
             self.classifier_cmd, shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE
         )
@@ -36,10 +35,7 @@ class CRFClassifier:
 
     def classify(self, vectors):
         out, err = self.getConsole().communicate('\n'.join(vectors) + "\n\n")
-        print('out', out)
-        print('err', err)
         lines = out.split("\n")
-        print('lines', lines)
 
         if self.classifier.poll():
             raise OSError('crf_classifier subprocess died')

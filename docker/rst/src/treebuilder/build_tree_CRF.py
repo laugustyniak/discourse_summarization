@@ -63,8 +63,6 @@ class CRFTreeBuilder:
         else:
             raise Exception('Unknown classifier name', name)
 
-        # print 'Added classifier', name, 'to treebuilder', self.name
-
         self.classifiers.append(classifier)
 
     def add_feature_writer(self):
@@ -73,11 +71,7 @@ class CRFTreeBuilder:
         self.intra_parser.feature_writer = feature_writer
         self.multi_parser.feature_writer = feature_writer
 
-        # print 'Added feature writer to treebuilder'
-
     def build_tree(self, doc):
-        #        print self.use_contextual_features
-        # Check if only one EDU
         if len(doc.edus) == 1:
             return [ParseTree("n/a", [doc.edus[0]])]
 
