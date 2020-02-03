@@ -55,7 +55,6 @@ class MultiSententialParser(BaseParser):
         max_prob_predictions = None
 
         for (s, j) in self.generate_crf_sequences(doc.constituents, i, labeling=False):
-            #            print 's', s
             (sequence_prob, predictions) = self.parse_single_sequence(s, labeling=False)
 
             if sequence_prob > max_prob:

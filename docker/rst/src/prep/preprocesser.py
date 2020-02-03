@@ -32,7 +32,6 @@ class Preprocesser:
 
         # TODO initialization of Lexicalized Trees
         parse = LexicalizedTree.parse(parse_tree_str, leaf_pattern='(?<=\\s)[^\)\(]+')
-        # parse = LexicalizedTree()
         sentence.set_unlexicalized_tree(parse)
 
         for (token_id, te) in enumerate(parse.leaves()):

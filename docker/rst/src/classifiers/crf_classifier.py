@@ -38,7 +38,7 @@ class CRFClassifier:
         lines = out.split("\n")
 
         if self.classifier.poll():
-            raise OSError('crf_classifier subprocess died')
+            raise OSError('crf_classifier subprocess died. Error: {}'.format(err))
 
         predictions = []
         for line in lines[1:]:
