@@ -51,14 +51,21 @@ class DiscourseParser(object):
 
         pt = self.treebuilder.build_tree(doc)
         doc.discourse_tree = pt
-        if len(doc.edus) > 1:
-            for idx, edu_tokens in enumerate(doc.edus):
-                # sometimes RST parser duplicates last three chars and adds a new token in edu, remove it
-                if edu_tokens[-2].endswith(edu_tokens[-1]):
-                    edu_tokens = edu_tokens[:-1]
-                pt.__setitem__(pt.leaf_treeposition(idx), '_!%s!_' % ' '.join(edu_tokens))
-        else:
+        if len(doc.edus) == 0:
+            return ''
+        elif len(doc.edus) == 1:
             pt = pt[0]
-            pt.__setitem__(pt.leaf_treeposition(0), '_!%s!_' % ' '.join(doc.edus[0]))
+            pt.__setitem__(pt.leaf_treeposition(0), '_!%s!_' % ' '.join(self.edu_tokens_cleanup(doc.edus[0])))
+        else:
+            for idx, edu_tokens in enumerate(doc.edus):
+                pt.__setitem__(pt.leaf_treeposition(idx), '_!%s!_' % ' '.join(self.edu_tokens_cleanup(edu_tokens)))
 
         return str(pt)
+
+    def edu_tokens_cleanup(self, edu_tokens):
+        # sometimes RST parser duplicates last three chars and adds a new token in edu, remove it
+        if len(edu_tokens) > 2:
+            if ''.join(edu_tokens[-3:-1]).endswith(edu_tokens[-1]):
+                edu_tokens = edu_tokens[:-1]
+        return edu_tokens
+
