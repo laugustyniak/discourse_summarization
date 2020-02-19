@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os.path
 
 from document.doc import Document
@@ -43,8 +45,13 @@ class DiscourseParser(object):
             self.treebuilder.unload()
 
     def parse(self, text):
+        text = text.encode("utf-8")
         doc = Document()
-        doc.preprocess(text, self.preprocesser)
+        try:
+            doc.preprocess(text, self.preprocesser)
+        # TODO: fix it in future, right now just skip problematic cases
+        except:
+            return ''
 
         if not doc.segmented:
             self.segmenter.segment(doc)
@@ -68,4 +75,3 @@ class DiscourseParser(object):
             if ''.join(edu_tokens[-3:-1]).endswith(edu_tokens[-1]):
                 edu_tokens = edu_tokens[:-1]
         return edu_tokens
-

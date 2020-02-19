@@ -134,12 +134,6 @@ class LexicalizedTree(ParseTree):
             self.head = heads[0]
             self.head_sup = head_sups[0]
 
-    #            print "\n\n#### Lexicalization ERROR\n"
-    #            print heads
-    #            print head_sups
-    #            print self
-    #            exit(-1)
-
     def _pprint_flat(self, nodesep, parens, quotes):
         childstrs = []
 
