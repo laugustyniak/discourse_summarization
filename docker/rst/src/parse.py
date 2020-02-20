@@ -47,11 +47,7 @@ class DiscourseParser(object):
     def parse(self, text):
         text = text.encode("utf-8")
         doc = Document()
-        try:
-            doc.preprocess(text, self.preprocesser)
-        # TODO: fix it in future, right now just skip problematic cases
-        except:
-            return ''
+        doc.preprocess(text, self.preprocesser)
 
         if not doc.segmented:
             self.segmenter.segment(doc)
