@@ -11,7 +11,6 @@ class IOPaths:
         self.output_path = Path(output_path)
         self.output_path.mkdir(exist_ok=True, parents=True)
 
-        self.paths = {}
         self.input = input_path
 
         self.discourse_trees_df = Path(output_path) / 'discourse_trees_df.pkl'
