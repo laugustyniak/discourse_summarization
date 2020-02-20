@@ -104,8 +104,8 @@ NER_TYPES = [u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC']
 ASPECT_EXTRACTION_SERIALIZATION_STEP = 10000
 
 # sample trees
-SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177'
-SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189'
+SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177.tree'
+SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189.tree'
 
 ML_GUSE_MODEL_2_LITE_PATH = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 
