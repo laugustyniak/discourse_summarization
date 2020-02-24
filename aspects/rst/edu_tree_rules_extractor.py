@@ -1,9 +1,12 @@
+import logging
 from collections import namedtuple
 from typing import List
 
 from nltk.tree import Tree
 
 EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
+
+loger = logging.getLogger()
 
 
 class EDUTreeRulesExtractor:
@@ -30,7 +33,7 @@ class EDUTreeRulesExtractor:
         if weight_type is None:
             weight_type = ['gerani']
         self.rules: List[EDURelation] = []
-        self.tree = tree
+        self.tree: Tree = tree
         self.left_child_parent = None
         self.left_leaf = None
         self.right_child_parent = None
@@ -38,39 +41,57 @@ class EDUTreeRulesExtractor:
         self.weight_type = [w.lower() for w in weight_type]
         self.only_hierarchical_relations: bool = only_hierarchical_relations
 
+    def extract(self) -> List[EDURelation]:
+        try:
+            if len(self.tree) == 0:
+                # empty rules list
+                return self.rules
+            self._process_tree(self.tree)
+        # TODO: fix AttributeError: 'int' object has no attribute 'height' in gerani calculation
+        except AttributeError as e:
+            loger.info(f'Error with parsing tree: {self.tree}')
+            loger.info(f'Error: {str(e)}')
+            return []
+        return self.rules
+
     def _process_tree(self, tree):
-        for child_index, child in enumerate(tree):
-            # go to the subtree left child_index = 0, or right child_index = 1
-            if not child_index:
-                self.left_child_parent = tree
-            else:
-                self.right_child_parent = tree
+        # there are max two childred for each subtree
+        if len(tree) > 1:
+            self.left_child_parent = tree
+            self.right_child_parent = tree
+        else:
+            self.left_child_parent = tree
+
+        for child in tree:
             # check if child is leaf or subtree
             if isinstance(child, Tree):
                 # go into subtree
                 self._process_tree(child)
             # recursively until leaf
             else:
-                # leaf, parent/current subtree, child_index of leaf in the tree
-                self._traverse_parent(child, tree, child_index)
+                # leaf, parent/current subtree
+                self._traverse_parent(child, tree)
 
-    def _traverse_parent(self, leaf, parent, child_index):
+    def _traverse_parent(self, leaf, parent):
         """ we reached leaf and want to parse sibling of leaf """
         # leaf = child
+        # todo: check if none or sth other
         if parent is not None:
-            # get sibling of leaf or in false you got the same leaf
-            for index in range(child_index + 1, len(parent)):
-                self.right_child_parent = parent
-                self._make_rules(leaf, parent[index])
+            self.right_child_parent = parent
+            for child in parent:
+                if child != leaf:
+                    self._make_rules(leaf, child)
 
             # go up in the tree
-            if parent.parent is not None:
-                self.relation = parent.node
-                self._traverse_parent(leaf, parent.parent, parent.parent_index)
+            try:
+                self.relation = parent.label()
+                self._traverse_parent(leaf, parent.parent)
+            except AttributeError:
+                pass
 
     def _make_rules(self, leaf_left, tree):
-        # if int we got leaf level
-        if isinstance(tree, int):
+        # if anything other than Tree we got leaf level
+        if not isinstance(tree, Tree):
             self.left_leaf = leaf_left
             self.right_leaf = tree
             relation = self.rst_relation_type()
@@ -101,12 +122,8 @@ class EDUTreeRulesExtractor:
                     )
         # do deeper into tree
         else:
-            for index, child in enumerate(tree):
+            for child in tree:
                 self._make_rules(leaf_left, child)
-
-    def extract(self) -> List[EDURelation]:
-        self._process_tree(self.tree)
-        return self.rules
 
     def calculate_gerani_weight(self):
         """
@@ -114,10 +131,11 @@ class EDUTreeRulesExtractor:
         Mehdad paper
         """
         if self.right_leaf is not None or self.left_leaf is not None:
-            # calculate how many edus are between analyzed leaf,
+            # calculate how many edus are between analyzed leafs,
             # leaf are integers hence we may substract them
-            n_edus_between_analyzed_edus = self.right_leaf - self.left_leaf - 1
-            n_edus_in_tree = len(self.tree.leaves())
+            leaves = self.tree.leaves()
+            n_edus_between_analyzed_edus = leaves.index(self.right_leaf) - leaves.index(self.left_leaf)
+            n_edus_in_tree = len(leaves)
             tree_height = self.tree.height()
             if self.left_child_parent.height() > self.right_child_parent.height():
                 sub_tree_height = self.left_child_parent.height()
@@ -130,10 +148,12 @@ class EDUTreeRulesExtractor:
 
     def rst_relation_type(self):
         """ Find common nearest parent and take relation from higher parse tree """
-        if self.left_child_parent.height() > self.right_child_parent.height():
-            return self.left_child_parent.node
+        if not isinstance(self.left_child_parent, Tree):
+            return self.right_child_parent.label()
+        elif self.left_child_parent.height() > self.right_child_parent.height():
+            return self.left_child_parent.label()
         else:
-            return self.right_child_parent.node
+            return self.right_child_parent.label()
 
     def get_nucleus_satellite_and_relation_type(self, relation):
         """
