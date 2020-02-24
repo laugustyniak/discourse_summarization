@@ -1,3 +1,5 @@
+import uuid
+
 from nltk import Tree
 
 
@@ -11,5 +13,5 @@ class EDUTreeMapper:
             if isinstance(subtree, Tree):
                 self.process_tree(subtree)
             else:
-                tree[index] = len(self.edus)
+                tree[index] = int(uuid.uuid4())
                 self.edus.append(subtree)
