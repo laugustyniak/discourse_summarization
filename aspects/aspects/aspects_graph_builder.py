@@ -3,27 +3,26 @@ import operator
 from collections import OrderedDict, defaultdict, Counter, namedtuple
 from itertools import groupby
 from operator import itemgetter
+from typing import List
 
 import networkx as nx
 from more_itertools import flatten
 from tqdm import tqdm
 
-from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
-from aspects.data_io.serializer import Serializer
+from aspects.analysis.gerani_graph_analysis import calculate_moi_by_gerani
+from rst.edu_tree_rules_extractor import EDURelation
 
 log = logging.getLogger(__name__)
 
 AspectsRelation = namedtuple('AspectsRelation', 'aspect1 aspect2 relation_type gerani_weight')
 
 
-class AspectsGraphBuilder(object):
-    def __init__(self, aspects_per_edu=None, alpha_gerani=0.5, with_cycles_between_aspects=False):
+class AspectsGraphBuilder:
+    def __init__(self, alpha_gerani=0.5, with_cycles_between_aspects=False):
         """
 
         Parameters
         ----------
-        aspects_per_edu : list
-            List of rules aspect, aspect, relation and weights.
 
         alpha_gerani : float
             Alpha parameter for moi function. 0.5 as default.
@@ -35,16 +34,17 @@ class AspectsGraphBuilder(object):
         """
         self.with_cycles_between_aspects = with_cycles_between_aspects
         self.alpha_gerani = alpha_gerani
-        if aspects_per_edu is None:
-            aspects_per_edu = []
-        self.aspects_per_edu = dict(aspects_per_edu)
-        self.serializer = Serializer()
 
-    def build(self, rules, docs_info=None, conceptnet_io=False, filter_gerani=False, aht_gerani=False,
-              aspect_graph_path=None):
+    def build(
+            self,
+            rules: List[EDURelation],
+            conceptnet_io=False,
+            filter_gerani=False,
+            aht_gerani=False,
+            aspect_graph_path=None
+    ):
         """
-        Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet
-        relation.
+        Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet relation.
 
         Parameters
         ----------
@@ -62,9 +62,6 @@ class AspectsGraphBuilder(object):
             Do we want to follow Gerani's approach and calculate mai function?
             ARRG would be updated accordingly is True. False as default.
 
-        docs_info: dict
-            Dictionary with information about each edu.
-
         conceptnet_io: bool
             Do we use ConceptNet.io relation in graph?
 
@@ -80,32 +77,31 @@ class AspectsGraphBuilder(object):
             PageRank counted for aspect-aspect graph.
 
         """
-        if docs_info is None:
-            docs_info = {}
-        if filter_gerani:
-            rules = self.filter_gerani(rules)
+        # TODO: add filtering again
+        # if filter_gerani:
+        #     rules = self.filter_gerani(rules)
         graph = self.build_aspects_graph(rules)
 
         aspect = None
-        # fixme please fix fucking iteration via aspects_concept dicts
-        # started rewriting for data frames in other branch
-        if conceptnet_io:
-            # add relation from conceptnet
-            for doc_id, doc_info in docs_info.iteritems():
-                try:
-                    for _, concepts_all in doc_info['aspect_concepts'].iteritems():
-                        for aspect, concepts in concepts_all['conceptnet_io'].iteritems():
-                            log.info(aspect)
-                            for concept in concepts:
-                                graph.add_edge(concept['start'], concept['end'], relation_type=concept['relation'])
-                except KeyError:
-                    log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
+        # TODO: add conceptnet again
+        # if conceptnet_io:
+        #     # add relation from conceptnet
+        #     for doc_id, doc_info in docs_info.iteritems():
+        #         try:
+        #             for _, concepts_all in doc_info['aspect_concepts'].iteritems():
+        #                 for aspect, concepts in concepts_all['conceptnet_io'].iteritems():
+        #                     log.info(aspect)
+        #                     for concept in concepts:
+        #                         graph.add_edge(concept['start'], concept['end'], relation_type=concept['relation'])
+        #         except KeyError:
+        #             log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
 
         if aspect_graph_path is not None:
             log.info('Save ARRG graph based on rules only (with conceptnets relations!)')
             nx.write_gexf(graph, aspect_graph_path + '_based_on_rules_only.gexf')
 
-        graph = get_dir_moi_for_node(graph, self.aspects_per_edu, docs_info)
+        # TODO: separete method
+        # graph = get_dir_moi_for_node(graph, self.aspects_per_edu, docs_info)
         graph, page_ranks = calculate_moi_by_gerani(graph, self.alpha_gerani)
         if aht_gerani:
             graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')
@@ -113,7 +109,7 @@ class AspectsGraphBuilder(object):
             page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
         return graph, page_ranks
 
-    def build_aspects_graph(self, rules):
+    def build_aspects_graph(self, rules: List[EDURelation]) -> nx.MultiDiGraph:
         """
         Build graph based on list of tuples with apsects ids.
 
@@ -128,7 +124,7 @@ class AspectsGraphBuilder(object):
         graph : networkx.DiGraph
             Graph with aspect-aspect relation.
         """
-        graph = nx.DiGraph()
+        graph = nx.MultiDiGraph()
         for _, document_rules in tqdm(rules.items(), desc='Generating aspect-aspect graph based on rules'):
             for rule in document_rules:
                 log.debug('Rule: {}'.format(rule))
@@ -139,7 +135,6 @@ class AspectsGraphBuilder(object):
                     left_node, right_node, relation, gerani_weight = rule
                     for aspect_left, aspect_right in self.aspects_iterator(left_node, right_node):
                         graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
-
         return graph
 
     def add_aspects_to_graph(self, graph, aspect_left, aspect_right, relation, gerani_weight):
