@@ -1,15 +1,15 @@
-from os import makedirs, system
-from os.path import join, exists
+from os import system
+from pathlib import Path
 
 from IPython.display import Image, display
 from nltk.draw import TreeWidget
 from nltk.draw.util import CanvasFrame
+from nltk.tree import Tree
 
 
-def jupyter_draw_nltk_tree(tree, directory='trees', f_name='tmp', show_tree=False):
-    f_name = join(directory, f_name)
-    if not exists(directory):
-        makedirs(directory)
+def jupyter_draw_nltk_tree(tree: Tree = None, directory: str = '/tmp', f_name: str = 'tmp', show_tree: bool = False):
+    f_name = Path(directory) / f_name
+    f_name.parent.mkdir(exist_ok=True, parents=True)
 
     cf = CanvasFrame()
     tc = TreeWidget(cf.canvas(), tree)
@@ -18,10 +18,22 @@ def jupyter_draw_nltk_tree(tree, directory='trees', f_name='tmp', show_tree=Fals
     tc['node_color'] = '#005990'
     tc['leaf_color'] = '#3F8F57'
     tc['line_color'] = '#175252'
+
     cf.add_widget(tc, 20, 20)
-    cf.print_to_file('{}.ps'.format(f_name))
+    ps_file_name = f_name.with_suffix('.ps').as_posix()
+    cf.print_to_file(ps_file_name)
     cf.destroy()
-    system('convert {}.ps {}.png'.format(f_name, f_name))
+
+    png_file_name = f_name.with_suffix(".png").as_posix()
+    system(f'convert {ps_file_name} {png_file_name}')
+
     if show_tree:
-        display(Image(filename='{}.png'.format(f_name)))
-    system('rm {}.ps'.format(f_name))
+        display(
+            (Image(filename=png_file_name), )
+        )
+
+    system(f'rm {f_name}.ps')
+
+
+if __name__ == '__main__':
+    jupyter_draw_nltk_tree()
