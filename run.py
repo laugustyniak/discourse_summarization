@@ -4,12 +4,13 @@ import logging
 import multiprocessing
 from concurrent.futures.process import ProcessPoolExecutor
 from json.decoder import JSONDecodeError
-from os.path import basename, exists, join, split, splitext
+from os.path import basename, join, split, splitext
 from pathlib import Path
 from typing import Callable, Sequence, List, Union, Tuple
 
 import nltk
 import pandas as pd
+from more_itertools import flatten
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
@@ -35,16 +36,19 @@ logging.basicConfig(
     filemode='w',
 )
 
+loger = logging.getLogger()
+
 
 def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
     parser = RSTParserClient()
     try:
-        return nltk.Tree.fromstring(
+        return nltk.tree.Tree.fromstring(
             parser.parse(document),
-            leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN
+            leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN,
+            remove_empty_top_bracketing=True
         )
-    except (ValueError, JSONDecodeError):
-        logging.info(f'Document with errors: {document}')
+    except (ValueError, JSONDecodeError) as e:
+        logging.info(f'Document with errors: {document}. Error: {str(e)}')
         return None
 
 
@@ -133,24 +137,22 @@ class AspectAnalysisSystem:
 
             if f_extension in ['json']:
                 with open(self.input_file_path, 'r') as json_file:
-                    df = pd.DataFrame(
-                        json.load(json_file).values(), columns=['text'])
+                    df = pd.DataFrame(json.load(json_file).values(), columns=['text'])
             elif f_extension in ['csv', 'txt']:
                 df = pd.read_csv(self.input_file_path, header=None)
                 df.columns = ['text']
             else:
-                raise Exception(
-                    'Wrong file type! It must be [json, txt or csv]')
+                raise Exception('Wrong file type! It must be [json, txt or csv]')
 
             if self.max_docs is not None:
-                df = df.sample(self.max_docs)
+                df = df.head(self.max_docs)
 
             df['discourse_tree'] = self.parallelized_extraction(
                 df.text.tolist(), extract_discourse_tree, 'Discourse trees parsing')
 
             n_docs = len(df)
             df.dropna(subset=['discourse_tree'], inplace=True)
-            logging.info(f'{n_docs - len(df)} discourse tree has been parser with errors and we skip them.')
+            loger.info(f'{n_docs - len(df)} discourse tree has been parser with errors and we skip them.')
 
             assert not df.empty, 'No trees to process!'
 
@@ -163,30 +165,38 @@ class AspectAnalysisSystem:
             return df
 
         df['discourse_tree_ids_only'], df['edus'] = tuple(zip(*self.parallelized_extraction(
-            df.discourse_tree.tolist(), extract_discourse_tree_with_ids_only, 'Discourse trees parsing to idx only')))
+            df.discourse_tree.tolist(),
+            extract_discourse_tree_with_ids_only,
+            'Discourse trees parsing to idx only'
+        )))
         self.discourse_trees_df_checkpoint(df)
 
         return df
 
-    def discourse_trees_df_checkpoint(self, df):
+    def discourse_trees_df_checkpoint(self, df: pd.DataFrame):
+        loger.info(f'Discourse data frame - saving.')
         df.to_pickle(self.paths.discourse_trees_df)
+        loger.info(f'Discourse data frame - saved.')
 
     def extract_sentiment_from_edus(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'sentiment' in df.columns:
-            logging.info('Sentiments have been already extracted. Passing to the next step.')
+            loger.info('Sentiments have been already extracted. Passing to the next step.')
             return df
 
         pandas_utils.assert_columns(df, 'edus')
         analyzer = BiLSTMModel()
         df['sentiment'] = self.parallelized_extraction(
-            df.edus.tolist(), analyzer.get_sentiments, 'Sentiment extracting')
+            df.edus.tolist(),
+            analyzer.get_sentiments,
+            'Sentiment extracting'
+        )
         self.discourse_trees_df_checkpoint(df)
 
         return df
 
     def extract_aspects_from_edus(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'aspects' in df.columns:
-            logging.info('Aspects have been already extracted. Passing to the next step.')
+            loger.info('Aspects have been already extracted. Passing to the next step.')
             return df
 
         pandas_utils.assert_columns(df, 'edus')
@@ -202,7 +212,6 @@ class AspectAnalysisSystem:
         return df
 
     def extract_edu_dependency_rules(self, df: pd.DataFrame) -> pd.DataFrame:
-        # TODO: ended here, ids of DT idx only in the beggining of tree could be 0 not a Tree instance, same in the end of tree
         if 'rules' in df.columns:
             return df
 
@@ -215,20 +224,14 @@ class AspectAnalysisSystem:
 
         return df
 
-    def _build_aspect_dependency_graph(self):
+    def _build_aspect_dependency_graph(self, df: pd.DataFrame):
         """Build dependency graph"""
+        rules = list(flatten(df.rules.tolist()))
 
-        if not (exists(self.paths.aspects_graph) and exists(self.paths.aspects_page_ranks)):
-            dependency_rules = self.serializer.load(
-                self.paths.edu_dependency_rules)
-            aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
-            documents_info = self.serializer.load(self.paths.docs_info)
-
-            builder = AspectsGraphBuilder(
-                aspects_per_edu, with_cycles_between_aspects=self.cycle_in_relations)
+        if not (self.paths.aspects_graph.exists() and self.paths.aspects_page_ranks.exists()):
+            builder = AspectsGraphBuilder(with_cycles_between_aspects=self.cycle_in_relations)
             graph, page_ranks = builder.build(
-                rules=dependency_rules,
-                docs_info=documents_info,
+                rules=rules,
                 conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
                 filter_gerani=self.filter_gerani,
                 aht_gerani=self.aht_gerani,
@@ -261,11 +264,11 @@ class AspectAnalysisSystem:
         self.serializer.save(documents_info, self.paths.final_docs_info)
 
     def _add_sentiment_and_dir_moi_to_graph(self):
+        # TODO: fix paths, due to cleanup they has been removed
         aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
         documents_info = self.serializer.load(self.paths.docs_info)
         aspect_graph = self.serializer.load(self.paths.aspects_graph)
-        aspect_graph = get_dir_moi_for_node(
-            aspect_graph, aspects_per_edu, documents_info)
+        aspect_graph = get_dir_moi_for_node(aspect_graph, aspects_per_edu, documents_info)
         self.serializer.save(aspect_graph, self.paths.aspects_graph)
 
     def run(self):
@@ -276,7 +279,7 @@ class AspectAnalysisSystem:
         discourse_trees_df = self.extract_aspects_from_edus(discourse_trees_df)
 
         discourse_trees_df = self.extract_edu_dependency_rules(discourse_trees_df)
-        # self._build_aspect_dependency_graph()
+        self._build_aspect_dependency_graph(discourse_trees_df)
         # self._add_sentiment_and_dir_moi_to_graph()
         # aspects_graph = self.serializer.load(self.paths.aspects_graph)
         # nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
