@@ -104,6 +104,7 @@ NER_TYPES = [u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC']
 ASPECT_EXTRACTION_SERIALIZATION_STEP = 10000
 
 # sample trees
+SAMPLE_TREE_1 = DATA_PATH / 'sample_trees' / '1.tree'
 SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177.tree'
 SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189.tree'
 
