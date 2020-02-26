@@ -3,105 +3,71 @@ import operator
 from collections import OrderedDict, defaultdict, Counter, namedtuple
 from itertools import groupby, product
 from operator import itemgetter
+from pathlib import Path
+from typing import Callable
 
 import networkx as nx
 import pandas as pd
 from more_itertools import flatten
 from tqdm import tqdm
 
-from aspects.analysis.gerani_graph_analysis import calculate_moi_by_gerani
-
+tqdm.pandas()
 log = logging.getLogger(__name__)
 
 AspectsRelation = namedtuple('AspectsRelation', 'aspect1 aspect2 relation_type gerani_weight')
 
 
 class AspectsGraphBuilder:
-    def __init__(self, alpha_gerani=0.5, with_cycles_between_aspects=False):
+    def __init__(self, with_cycles_between_aspects=False):
         """
 
         Parameters
         ----------
-
-        alpha_gerani : float
-            Alpha parameter for moi function. 0.5 as default.
-
         with_cycles_between_aspects : bool
             Do we want to have cycles for aspect, in arrg there could be aspect1-aspect1 relation or not. False by
             default.
 
         """
         self.with_cycles_between_aspects = with_cycles_between_aspects
-        self.alpha_gerani = alpha_gerani
 
     def build(
             self,
             discourse_tree_df: pd.DataFrame,
-            conceptnet_io=False,
-            filter_gerani=False,
-            aht_gerani=False,
-            aspect_graph_path=None
+            aspect_graph_path: str = None,
+            conceptnet_io: bool = False,
+            filter_relation_fn: Callable = None
     ):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet relation.
 
         Parameters
         ----------
-        filter_gerani: bool
-            Do we want to get only max weight if there are more than one
-            rule with the same node_1, node_2 and relation type in processed
-            RST Tree? False as default.
+        discourse_tree_df: pd.DataFrame
 
-        aht_gerani : bool
-            Do we want to follow Gerani's approach and calculate mai function?
-            ARRG would be updated accordingly is True. False as default.
+        filter_relation_fn:
+
+        aspect_graph_path : str
+            Path to save temporal ARRG.
 
         conceptnet_io: bool
             Do we use ConceptNet.io relation in graph?
 
-        aspect_graph_path : str
-            Path to save temporal ARRG.
 
         Returns
         -------
         graph: networkx.DiGraph
             Graph with aspect-aspect relations
 
-        page_rank: networkx.PageRank
-            PageRank counted for aspect-aspect graph.
-
         """
-        # TODO: add filtering again
-        # if filter_gerani:
-        #     rules = self.filter_gerani(rules)
+        if filter_relation_fn:
+            discourse_tree_df.rules = discourse_tree_df.rules.progress_apply(filter_relation_fn)
         graph = self.build_aspects_graph(discourse_tree_df)
 
-        aspect = None
-        # TODO: add conceptnet again
-        # if conceptnet_io:
-        #     # add relation from conceptnet
-        #     for doc_id, doc_info in docs_info.iteritems():
-        #         try:
-        #             for _, concepts_all in doc_info['aspect_concepts'].iteritems():
-        #                 for aspect, concepts in concepts_all['conceptnet_io'].iteritems():
-        #                     log.info(aspect)
-        #                     for concept in concepts:
-        #                         graph.add_edge(concept['start'], concept['end'], relation_type=concept['relation'])
-        #         except KeyError:
-        #             log.info('Aspect not in ConceptNet.io: {}'.format(aspect))
-
         if aspect_graph_path is not None:
-            log.info('Save ARRG graph based on rules only (with conceptnets relations!)')
-            nx.write_gexf(graph, aspect_graph_path + '_based_on_rules_only.gexf')
+            log.info('Saving ARRG graph.')
+            nx.write_gexf(graph, Path(aspect_graph_path).with_suffix('.gexf').as_posix())
 
-        # TODO: separete method
-        # graph = get_dir_moi_for_node(graph, self.aspects_per_edu, docs_info)
-        graph, page_ranks = calculate_moi_by_gerani(graph, self.alpha_gerani)
-        if aht_gerani:
-            graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')
-        else:
-            page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
-        return graph, page_ranks
+        return graph
 
     def build_aspects_graph(self, discourse_tree_df: pd.DataFrame) -> nx.MultiDiGraph:
         graph = nx.MultiDiGraph()
@@ -121,6 +87,7 @@ class AspectsGraphBuilder:
             graph.add_edge(aspect_left, aspect_right, relation_type=relation, gerani_weight=gerani_weight)
         return graph
 
+    # TODO: move to separate module
     def calculate_page_ranks(self, graph, weight='weight'):
         """
         Calculate Page Rank for ARRG.
@@ -177,33 +144,34 @@ class AspectsGraphBuilder:
             for rule in rules_list:
                 log.debug('Rule: {}'.format(rule))
                 left_node, right_node, relation, gerani_weight = rule
-                for aspect_left, aspect_right in self.aspects_iterator(
-                        left_node, right_node):
-                    rules_filtered.append(AspectsRelation(aspect_left,
-                                                          aspect_right,
-                                                          relation,
-                                                          gerani_weight))
+                for aspect_left, aspect_right in self.aspects_iterator(left_node, right_node):
+                    rules_filtered.append(AspectsRelation(aspect_left, aspect_right, relation,gerani_weight))
             if len(rules_filtered):
                 relation_counter = Counter([x[:3] for x in rules_filtered])
-                rule_confidence = sorted(relation_counter,
-                                         key=operator.itemgetter(1),
-                                         reverse=True)[0]
-                rules_confidence = [r for r in rules_filtered
-                                    if rule_confidence == r[:3]]
+                rule_confidence = sorted(relation_counter, key=operator.itemgetter(1), reverse=True)[0]
+                rules_confidence = [r for r in rules_filtered if rule_confidence == r[:3]]
                 rule_per_doc[doc_id].extend(
-                    [max(v, key=lambda rel: rel.gerani_weight) for g, v in
-                     groupby(sorted(rules_confidence),
-                             key=lambda rel: rel[:3])])
+                    [
+                        max(v, key=lambda rel: rel.gerani_weight)
+                        for g, v
+                        in groupby(sorted(rules_confidence), key=lambda rel: rel[:3])
+                    ]
+                )
             else:
                 log.info('Empty rule list for document {}'.format(doc_id))
         relations_list = [
-            (group + (sum([rel.gerani_weight for rel in relations]),))
-            for group, relations in
-            groupby(sorted(flatten(rule_per_doc.values())),
-                    key=lambda rel: rel[:3])]
+            (
+                    group + (sum([rel.gerani_weight for rel in relations]),)
+            )
+            for group, relations
+            in groupby(sorted(flatten(rule_per_doc.values())), key=lambda rel: rel[:3])
+        ]
         # map relations into namedtuples
-        relations_list = [AspectsRelation(a1, a2, r, w) for
-                          a1, a2, r, w in relations_list]
+        relations_list = [
+            AspectsRelation(a1, a2, r, w)
+            for a1, a2, r, w
+            in relations_list
+        ]
         rules = {-1: relations_list}
         return rules
 

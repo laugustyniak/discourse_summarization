@@ -3,29 +3,23 @@ from collections import defaultdict
 
 import networkx as nx
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 log = logging.getLogger(__name__)
 
-# TODO: doc info remove
-def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
-    n_skipped_edus = 0
+
+def extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df: pd.DataFrame):
     n_aspects_not_in_graph = 0
     n_aspects_updated = 0
-    n_all_documents = len(documents_info)
     aspect_sentiments = defaultdict(list)
 
-    if not isinstance(aspects_per_edu, dict):
-        aspects_per_edu = dict(aspects_per_edu)
-    for doc_info in documents_info.itervalues():
-        for edu_id, sentiment in doc_info['sentiment'].iteritems():
-            try:
-                for aspect in aspects_per_edu[edu_id]:
-                    aspect_sentiments[aspect].append(sentiment)
-            except KeyError as err:
-                n_skipped_edus += 1
-                log.info('Aspect: {} not extracted from edu: {}'.format(str(err), edu_id))
-    for aspect, sentiments in aspect_sentiments.iteritems():
+    for _, row in tqdm(discourse_trees_df.iterrows(), total=len(discourse_trees_df), desc='Aspects and sentiment'):
+        for aspects, sentiment in zip(row.aspects, row.sentiment):
+            for aspect in aspects:
+                aspect_sentiments[aspect].append(sentiment)
+
+    for aspect, sentiments in tqdm(aspect_sentiments.items(), desc='Adding attributes to the graph nodes'):
         try:
             graph.node[aspect]['count'] = len(sentiments)
             graph.node[aspect]['sentiment_avg'] = float(np.average(sentiments))
@@ -36,7 +30,6 @@ def get_dir_moi_for_node(graph, aspects_per_edu, documents_info):
             n_aspects_not_in_graph += 1
             log.info('There is not aspect: {} in graph'.format(str(err)))
 
-    log.info('#{} skipped aspects out of #{} documents'.format(n_skipped_edus, n_all_documents))
     log.info('#{} aspects not in graph'.format(n_aspects_not_in_graph))
     log.info('#{} aspects updated in graph'.format(n_aspects_updated))
 

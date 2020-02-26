@@ -6,7 +6,7 @@ import nltk
 
 from rst.edu_tree_mapper import EDUTreeMapper
 from rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from rst.rst_parser_client import RSTParserClient
+from rst.parser_client import RSTParserClient
 from utilities import settings
 
 

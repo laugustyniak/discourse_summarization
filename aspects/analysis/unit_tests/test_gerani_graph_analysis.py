@@ -2,7 +2,8 @@ import unittest
 
 import networkx as nx
 
-from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
+from aspects.analysis.gerani_graph_analysis import extend_graph_nodes_with_sentiments_and_weights, \
+    calculate_moi_by_gerani
 
 
 class GeraniGraphAnalysisTest(unittest.TestCase):
@@ -24,8 +25,8 @@ class GeraniGraphAnalysisTest(unittest.TestCase):
         graph.add_edge('screen', 'phone')
         graph.add_edge('speaker', 'apple')
 
-        graph_expected = get_dir_moi_for_node(graph, aspects_per_edu,
-                                              documents_info)
+        graph_expected = extend_graph_nodes_with_sentiments_and_weights(graph, aspects_per_edu,
+                                                                        documents_info)
         attribs = nx.get_node_attributes(graph_expected, 'dir_moi')
         self.assertEqual(attribs['phone'], 1)
         self.assertEqual(attribs['apple'], 3)

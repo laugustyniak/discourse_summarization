@@ -10,7 +10,8 @@ from typing import Callable, Sequence, List, Union
 import pandas as pd
 from tqdm import tqdm
 
-from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
+from aspects.analysis.gerani_graph_analysis import extend_graph_nodes_with_sentiments_and_weights, \
+    calculate_moi_by_gerani
 from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.data_io.serializer import Serializer
@@ -42,14 +43,15 @@ class AspectAnalysis:
             output_path: Union[str, Path],
             analysis_results_path: Union[str, Path] = None,
             jobs: int = None,
-            sent_model_path=None,
-            n_logger=1000,
-            batch_size=None,
-            max_docs=None,
-            cycle_in_relations=True,
+            sent_model_path: Union[str, Path] = None,
+            n_logger: int = 1000,
+            batch_size: int = None,
+            max_docs: int = None,
+            cycle_in_relations: bool = True,
             filter_gerani=False,
             aht_gerani=False,
-            neutral_sent=False
+            neutral_sent=False,
+            alpha_coefficient: float = 0.5
     ):
         self.neutral_sent = neutral_sent
         self.aht_gerani = aht_gerani
@@ -197,22 +199,21 @@ class AspectAnalysis:
         return df
 
     def build_aspect_to_aspect_graph(self, df: pd.DataFrame):
-        """Build dependency graph"""
-
-        if not (self.paths.aspects_graph.exists() and self.paths.aspects_page_ranks.exists()):
+        if self.paths.aspects_graph.exists():
+            return self.serializer.load(self.paths.aspects_graph)
+        else:
             builder = AspectsGraphBuilder(with_cycles_between_aspects=self.cycle_in_relations)
             graph = builder.build(
                 discourse_tree_df=df,
-                conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
-                filter_gerani=self.filter_gerani,
-                aht_gerani=self.aht_gerani,
                 aspect_graph_path=self.paths.aspects_graph,
+                conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
+                # TODO: add fn filtering
+                # TODO: update gerani-based filtering using data frame with discourse trees
+                filter_relation_fn=None
             )
 
             self.serializer.save(graph, self.paths.aspects_graph)
             return graph
-        else:
-            return self.serializer.load(self.paths.aspects_graph)
 
     def _filter_aspects(self, threshold: float):
         """Filter out aspects according to threshold"""
@@ -237,8 +238,6 @@ class AspectAnalysis:
         self.serializer.save(documents_info, self.paths.final_docs_info)
 
     def calculate_aspects_weights(self, graph):
-        # TODO: separete method
-        # graph = get_dir_moi_for_node(graph, self.aspects_per_edu, docs_info)
         graph, page_ranks = calculate_moi_by_gerani(graph, self.alpha_gerani)
         if self.aht_gerani:
             graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')
@@ -246,11 +245,14 @@ class AspectAnalysis:
             page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
         return graph, page_ranks
 
-    def _add_sentiment_and_dir_moi_to_graph(self):
-        # TODO: fix paths, due to cleanup they has been removed
-        aspect_graph = self.serializer.load(self.paths.aspects_graph)
-        aspect_graph = get_dir_moi_for_node(aspect_graph, aspects_per_edu, documents_info)
-        self.serializer.save(aspect_graph, self.paths.aspects_graph)
+    def add_sentiment_and_weight_to_nodes(self, graph, discourse_trees_df: pd.DataFrame):
+        try:
+            graph.node[list(graph.nodes)[0]].sentiment
+            graph = self.serializer.load(self.paths.aspects_graph)
+        except:
+            graph = extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df)
+            self.serializer.save(graph, self.paths.aspects_graph)
+        return graph
 
     def run(self):
 
@@ -262,7 +264,8 @@ class AspectAnalysis:
                               )
 
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
-        # self._add_sentiment_and_dir_moi_to_graph()
+        graph = self.add_sentiment_and_weight_to_nodes(graph, discourse_trees_df)
+
         # aspects_graph = self.serializer.load(self.paths.aspects_graph)
         # nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
         # # for gephi
