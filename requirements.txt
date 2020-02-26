@@ -26,6 +26,7 @@ sentencepiece==0.1.85
 smart-open==1.9.0
 spacy==2.2.0
 srsly==0.2.0
+streamlit==0.56.0
 summa==1.2.0
 tensorboard==2.0.2
 tensorflow==2.0.0
