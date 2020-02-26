@@ -10,7 +10,6 @@ from typing import Callable, Sequence, List, Union, Tuple
 
 import nltk
 import pandas as pd
-from more_itertools import flatten
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
@@ -130,6 +129,7 @@ class AspectAnalysisSystem:
 
     def extract_discourse_trees(self) -> pd.DataFrame:
         if self.paths.discourse_trees_df.exists():
+            loger.info('Discourse trees loading.')
             return pd.read_pickle(self.paths.discourse_trees_df)
         else:
             print(f'{self.input_file_path} will be loaded!')
@@ -226,12 +226,11 @@ class AspectAnalysisSystem:
 
     def _build_aspect_dependency_graph(self, df: pd.DataFrame):
         """Build dependency graph"""
-        rules = list(flatten(df.rules.tolist()))
 
         if not (self.paths.aspects_graph.exists() and self.paths.aspects_page_ranks.exists()):
             builder = AspectsGraphBuilder(with_cycles_between_aspects=self.cycle_in_relations)
             graph, page_ranks = builder.build(
-                rules=rules,
+                discourse_tree_df=df,
                 conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
                 filter_gerani=self.filter_gerani,
                 aht_gerani=self.aht_gerani,
@@ -241,7 +240,7 @@ class AspectAnalysisSystem:
             self.serializer.save(graph, self.paths.aspects_graph)
             self.serializer.save(page_ranks, self.paths.aspects_page_ranks)
 
-    def _filter_aspects(self, threshold):
+    def _filter_aspects(self, threshold: float):
         """Filter out aspects according to threshold"""
         aspects_importance = self.serializer.load(
             self.paths.aspects_page_ranks)
@@ -265,8 +264,6 @@ class AspectAnalysisSystem:
 
     def _add_sentiment_and_dir_moi_to_graph(self):
         # TODO: fix paths, due to cleanup they has been removed
-        aspects_per_edu = self.serializer.load(self.paths.aspects_per_edu)
-        documents_info = self.serializer.load(self.paths.docs_info)
         aspect_graph = self.serializer.load(self.paths.aspects_graph)
         aspect_graph = get_dir_moi_for_node(aspect_graph, aspects_per_edu, documents_info)
         self.serializer.save(aspect_graph, self.paths.aspects_graph)

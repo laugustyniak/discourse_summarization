@@ -1,16 +1,15 @@
 import logging
 import operator
 from collections import OrderedDict, defaultdict, Counter, namedtuple
-from itertools import groupby
+from itertools import groupby, product
 from operator import itemgetter
-from typing import List
 
 import networkx as nx
+import pandas as pd
 from more_itertools import flatten
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import calculate_moi_by_gerani
-from rst.edu_tree_rules_extractor import EDURelation
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ class AspectsGraphBuilder:
 
     def build(
             self,
-            rules: List[EDURelation],
+            discourse_tree_df: pd.DataFrame,
             conceptnet_io=False,
             filter_gerani=False,
             aht_gerani=False,
@@ -52,11 +51,6 @@ class AspectsGraphBuilder:
             Do we want to get only max weight if there are more than one
             rule with the same node_1, node_2 and relation type in processed
             RST Tree? False as default.
-
-        rules: dict
-            Dictionary with document id and list of rules that will be used to
-            create aspect-aspect graph, list elements: (node_1, node_2,
-            relation type, weight).
 
         aht_gerani : bool
             Do we want to follow Gerani's approach and calculate mai function?
@@ -80,7 +74,7 @@ class AspectsGraphBuilder:
         # TODO: add filtering again
         # if filter_gerani:
         #     rules = self.filter_gerani(rules)
-        graph = self.build_aspects_graph(rules)
+        graph = self.build_aspects_graph(discourse_tree_df)
 
         aspect = None
         # TODO: add conceptnet again
@@ -109,37 +103,21 @@ class AspectsGraphBuilder:
             page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
         return graph, page_ranks
 
-    def build_aspects_graph(self, rules: List[EDURelation]) -> nx.MultiDiGraph:
-        """
-        Build graph based on list of tuples with apsects ids.
-
-        Parameters
-        ----------
-        rules : dict
-            List of tuples (aspect_id_1, aspect_id_2, relation, gerani_weight)
-            or namedtuple as RelationAspects()
-
-        Returns
-        -------
-        graph : networkx.DiGraph
-            Graph with aspect-aspect relation.
-        """
+    def build_aspects_graph(self, discourse_tree_df: pd.DataFrame) -> nx.MultiDiGraph:
         graph = nx.MultiDiGraph()
-        for _, document_rules in tqdm(rules.items(), desc='Generating aspect-aspect graph based on rules'):
-            for rule in document_rules:
-                log.debug('Rule: {}'.format(rule))
-                if isinstance(rule, AspectsRelation):
-                    aspect_left, aspect_right, relation, gerani_weight = rule
+        for row_id, row in tqdm(
+                discourse_tree_df.iterrows(),
+                total=len(discourse_tree_df),
+                desc='Generating aspect-aspect graph based on rules'
+        ):
+            for edu_left, edu_right, relation, gerani_weight in row.rules:
+                for aspect_left, aspect_right in product(row.aspects[edu_left], row.aspects[edu_right]):
                     graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
-                else:
-                    left_node, right_node, relation, gerani_weight = rule
-                    for aspect_left, aspect_right in self.aspects_iterator(left_node, right_node):
-                        graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
         return graph
 
     def add_aspects_to_graph(self, graph, aspect_left, aspect_right, relation, gerani_weight):
         if self.with_cycles_between_aspects or aspect_left != aspect_right:
-            log.info('Skip rule: {}-{}'.format(aspect_left, aspect_right))
+            log.info(f'Add rule: {(aspect_left, aspect_right, relation, gerani_weight)}')
             graph.add_edge(aspect_left, aspect_right, relation_type=relation, gerani_weight=gerani_weight)
         return graph
 
@@ -167,30 +145,6 @@ class AspectsGraphBuilder:
         log.info('Weighted Page Rank calculation ended.')
         page_ranks = OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
         return page_ranks
-
-    def aspects_iterator(self, edu_id_1, edu_id_2):
-        """
-        Generator for aspect pairs of provided edu id pairs.
-
-        Parameters
-        ----------
-        edu_id_1 : int
-            EDU ID
-        edu_id_2 : int
-            EDU ID
-
-        Returns
-        -------
-        tuple
-            (aspect, aspect)
-        """
-        try:
-            for aspect_left in self.aspects_per_edu[str(edu_id_1)]:
-                for aspect_right in self.aspects_per_edu[str(edu_id_2)]:
-                    yield (aspect_left, aspect_right)
-        except KeyError as err:
-            log.info('Lack of aspect: {}'.format(str(err)))
-            # raise KeyError(str(err))
 
     def filter_gerani(self, rules):
         """
