@@ -16,6 +16,7 @@ plac==0.9.6
 plotly==4.4.1
 preshed==3.0.2
 protobuf==3.11.2
+pydot==1.4.1
 pytest==5.3.2
 python-rake==1.4.5
 requests==2.22.0
