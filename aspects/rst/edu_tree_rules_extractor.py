@@ -1,10 +1,15 @@
 import logging
-from collections import namedtuple
-from typing import List
+from typing import List, NamedTuple
 
 from nltk.tree import Tree
 
-EDURelation = namedtuple('EDURelation', 'edu1 edu2 relation_type gerani')
+
+class EDURelation(NamedTuple):
+    edu1: int
+    edu2: int
+    relation_type: str
+    gerani: float
+
 
 loger = logging.getLogger()
 
