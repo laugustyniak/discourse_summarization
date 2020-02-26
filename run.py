@@ -3,25 +3,21 @@ import json
 import logging
 import multiprocessing
 from concurrent.futures.process import ProcessPoolExecutor
-from json.decoder import JSONDecodeError
 from os.path import basename, join, split, splitext
 from pathlib import Path
-from typing import Callable, Sequence, List, Union, Tuple
+from typing import Callable, Sequence, List, Union
 
-import nltk
 import pandas as pd
 from tqdm import tqdm
 
-from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node
+from aspects.analysis.gerani_graph_analysis import get_dir_moi_for_node, calculate_moi_by_gerani
 from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
 from aspects.data_io.serializer import Serializer
-from aspects.rst.edu_tree_mapper import EDUTreeMapper
-from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from aspects.rst.rst_parser_client import RSTParserClient
 from aspects.sentiment.sentiment_client import BiLSTMModel
 from aspects.utilities import settings, pandas_utils
 from aspects.utilities.data_paths import IOPaths
+from rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
 
 if not Path('logs').exists():
     Path('logs').mkdir(parents=True)
@@ -38,31 +34,7 @@ logging.basicConfig(
 loger = logging.getLogger()
 
 
-def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
-    parser = RSTParserClient()
-    try:
-        return nltk.tree.Tree.fromstring(
-            parser.parse(document),
-            leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN,
-            remove_empty_top_bracketing=True
-        )
-    except (ValueError, JSONDecodeError) as e:
-        logging.info(f'Document with errors: {document}. Error: {str(e)}')
-        return None
-
-
-def extract_discourse_tree_with_ids_only(discourse_tree: nltk.Tree) -> Tuple[nltk.Tree, List[str]]:
-    edu_tree_preprocessor = EDUTreeMapper()
-    edu_tree_preprocessor.process_tree(discourse_tree)
-    return discourse_tree, edu_tree_preprocessor.edus
-
-
-def extract_rules(discourse_tree: nltk.Tree) -> List:
-    rules_extractor = EDUTreeRulesExtractor(tree=discourse_tree)
-    return rules_extractor.extract()
-
-
-class AspectAnalysisSystem:
+class AspectAnalysis:
 
     def __init__(
             self,
@@ -178,7 +150,7 @@ class AspectAnalysisSystem:
         df.to_pickle(self.paths.discourse_trees_df)
         loger.info(f'Discourse data frame - saved.')
 
-    def extract_sentiment_from_edus(self, df: pd.DataFrame) -> pd.DataFrame:
+    def extract_sentiment(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'sentiment' in df.columns:
             loger.info('Sentiments have been already extracted. Passing to the next step.')
             return df
@@ -194,7 +166,7 @@ class AspectAnalysisSystem:
 
         return df
 
-    def extract_aspects_from_edus(self, df: pd.DataFrame) -> pd.DataFrame:
+    def extract_aspects(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'aspects' in df.columns:
             loger.info('Aspects have been already extracted. Passing to the next step.')
             return df
@@ -211,7 +183,7 @@ class AspectAnalysisSystem:
 
         return df
 
-    def extract_edu_dependency_rules(self, df: pd.DataFrame) -> pd.DataFrame:
+    def extract_edu_rhetorical_rules(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'rules' in df.columns:
             return df
 
@@ -224,12 +196,12 @@ class AspectAnalysisSystem:
 
         return df
 
-    def _build_aspect_dependency_graph(self, df: pd.DataFrame):
+    def build_aspect_to_aspect_graph(self, df: pd.DataFrame):
         """Build dependency graph"""
 
         if not (self.paths.aspects_graph.exists() and self.paths.aspects_page_ranks.exists()):
             builder = AspectsGraphBuilder(with_cycles_between_aspects=self.cycle_in_relations)
-            graph, page_ranks = builder.build(
+            graph = builder.build(
                 discourse_tree_df=df,
                 conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
                 filter_gerani=self.filter_gerani,
@@ -238,7 +210,9 @@ class AspectAnalysisSystem:
             )
 
             self.serializer.save(graph, self.paths.aspects_graph)
-            self.serializer.save(page_ranks, self.paths.aspects_page_ranks)
+            return graph
+        else:
+            return self.serializer.load(self.paths.aspects_graph)
 
     def _filter_aspects(self, threshold: float):
         """Filter out aspects according to threshold"""
@@ -262,6 +236,16 @@ class AspectAnalysisSystem:
             documents_info[documentId]['aspects'] = aspects
         self.serializer.save(documents_info, self.paths.final_docs_info)
 
+    def calculate_aspects_weights(self, graph):
+        # TODO: separete method
+        # graph = get_dir_moi_for_node(graph, self.aspects_per_edu, docs_info)
+        graph, page_ranks = calculate_moi_by_gerani(graph, self.alpha_gerani)
+        if self.aht_gerani:
+            graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')
+        else:
+            page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
+        return graph, page_ranks
+
     def _add_sentiment_and_dir_moi_to_graph(self):
         # TODO: fix paths, due to cleanup they has been removed
         aspect_graph = self.serializer.load(self.paths.aspects_graph)
@@ -270,13 +254,14 @@ class AspectAnalysisSystem:
 
     def run(self):
 
-        discourse_trees_df = self.extract_discourse_trees()
-        discourse_trees_df = self.extract_discourse_trees_ids_only(discourse_trees_df)
-        discourse_trees_df = self.extract_sentiment_from_edus(discourse_trees_df)
-        discourse_trees_df = self.extract_aspects_from_edus(discourse_trees_df)
+        discourse_trees_df = (self.extract_discourse_trees()
+                              .pipe(self.extract_discourse_trees_ids_only)
+                              .pipe(self.extract_sentiment)
+                              .pipe(self.extract_aspects)
+                              .pipe(self.extract_edu_rhetorical_rules)
+                              )
 
-        discourse_trees_df = self.extract_edu_dependency_rules(discourse_trees_df)
-        self._build_aspect_dependency_graph(discourse_trees_df)
+        graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
         # self._add_sentiment_and_dir_moi_to_graph()
         # aspects_graph = self.serializer.load(self.paths.aspects_graph)
         # nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
@@ -359,7 +344,7 @@ if __name__ == "__main__":
     input_file_name = splitext(input_file_full_name)[0]
     output_path = join(args.output_file_path, input_file_name)
 
-    AAS = AspectAnalysisSystem(
+    AAS = AspectAnalysis(
         input_path=args.input_file_path,
         output_path=output_path,
         analysis_results_path=args.analysis_results_path,
