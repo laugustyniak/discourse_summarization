@@ -2,12 +2,12 @@ import unittest
 from collections import OrderedDict
 
 import networkx as nx
+from edu_dependency_parser.trees.parse_tree import ParseTree
 
-from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder, AspectsRelation
+from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph, AspectsRelation
 from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities import settings
-from edu_dependency_parser.trees.parse_tree import ParseTree
 
 
 class AspectGraphBuilderTest(unittest.TestCase):
@@ -64,7 +64,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, []),
                            ]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        aspects_graph_builder = Aspect2AspectGraph(aspects_per_edu)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
         documents_info = {189: {'EDUs': [559, 560, 561, 562, 563],
@@ -111,7 +111,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, [])]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        aspects_graph_builder = Aspect2AspectGraph(aspects_per_edu)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
         graph, page_rank = aspects_graph_builder.build(rules, None, False)
@@ -129,7 +129,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (562,
                             [u'store clerk', u'apple', u'teenager', u'advice']),
                            (563, [])]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu, with_cycles_between_aspects=True)
+        aspects_graph_builder = Aspect2AspectGraph(aspects_per_edu, with_cycles_between_aspects=True)
         rules_extractor = EDUTreeRulesExtractor()
         rules = rules_extractor.extract(self.link_tree, [559, 560, 562], 1)
         graph, page_rank = aspects_graph_builder.build(rules, conceptnet_io=False)
@@ -161,7 +161,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (516, [u'speaker']),
                            (517, [u'screen', u'speaker']),
                            ]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        aspects_graph_builder = Aspect2AspectGraph(aspects_per_edu)
         rules_obtained = aspects_graph_builder.filter_gerani(rules)
         rules_expected = {
             -1: [AspectsRelation(aspect1=u'screen', aspect2=u'phone', relation_type='Elaboration', gerani_weight=1.38),
@@ -186,7 +186,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (516, [u'speaker']),
                            (517, [u'screen', u'speaker']),
                            ]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        aspects_graph_builder = Aspect2AspectGraph(aspects_per_edu)
         rules_obtained = aspects_graph_builder.filter_gerani(rules)
         rules_expected = {
             -1: [AspectsRelation(aspect1=u'screen', aspect2=u'phone',
@@ -216,7 +216,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (516, [u'speaker']),
                            (517, [u'screen', u'speaker']),
                            ]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu)
+        aspects_graph_builder = Aspect2AspectGraph(aspects_per_edu)
         graph, pagerank = aspects_graph_builder.build(rules, docs_info={}, conceptnet_io=False, filter_gerani=True)
         gerani_weight_attrib = nx.get_edge_attributes(graph, 'gerani_weight')
         relation_type_weight_attrib = nx.get_edge_attributes(graph, 'relation_type')
@@ -250,7 +250,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                            (516, [u'speaker']),
                            (517, [u'screen', u'speaker']),
                            ]
-        aspects_graph_builder = AspectsGraphBuilder(aspects_per_edu, with_cycles_between_aspects=True)
+        aspects_graph_builder = Aspect2AspectGraph(aspects_per_edu, with_cycles_between_aspects=True)
         graph, pagerank = aspects_graph_builder.build(rules, docs_info={}, conceptnet_io=False, filter_gerani=False)
         self.assertTrue(isinstance(graph, nx.DiGraph))
         self.assertEqual(graph.number_of_nodes(), 5)
@@ -276,7 +276,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
 
     def test_build_without_conceptnet_multi_rules_gerani_moi(self):
         self._set_rst_rules_document_info()
-        aspects_graph_builder = AspectsGraphBuilder(self.aspects_per_edu, alpha_gerani=0.5)
+        aspects_graph_builder = Aspect2AspectGraph(self.aspects_per_edu, alpha_gerani=0.5)
         graph, pagerank = aspects_graph_builder.build(self.rules, docs_info=self.docs_info, conceptnet_io=False,
                                                       filter_gerani=True, aht_gerani=False)
         self.assertTrue(isinstance(graph, nx.DiGraph))
@@ -288,7 +288,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                          {0: {'relation_type': 'Elaboration', 'gerani_weight': 0.29}})
 
     def test_calculate_page_ranks(self):
-        aspects_graph_builder = AspectsGraphBuilder()
+        aspects_graph_builder = Aspect2AspectGraph()
         self._set_multigraph_arrg()
         pagerank = aspects_graph_builder.calculate_page_ranks(
             self.arrg_sample_graph, weight='gerani_weight')
@@ -304,7 +304,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.arrg_sample_graph.add_edge('voicemail', 'cellphone', gerani_weight=4.38)
 
     def test_calculate_page_ranks_no_weight(self):
-        aspects_graph_builder = AspectsGraphBuilder()
+        aspects_graph_builder = Aspect2AspectGraph()
         self._set_multigraph_arrg()
         pagerank = aspects_graph_builder.calculate_page_ranks(self.arrg_sample_graph)
         pagerank_expected = OrderedDict(
@@ -313,7 +313,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.assertEqual(pagerank, pagerank_expected)
 
     def test_merge_multiedges_in_arrg(self):
-        aspects_graph_builder = AspectsGraphBuilder()
+        aspects_graph_builder = Aspect2AspectGraph()
         graph = nx.DiGraph()
         graph.add_edge('screen', 'phone', gerani_weight=10, relation='Elaboration')
         graph.add_edge('screen', 'phone', gerani_weight=10, relation='same-unit')
@@ -328,7 +328,7 @@ class AspectGraphBuilderTest(unittest.TestCase):
                          {('phone', 'voicemail'): 35, ('phone', 'signal'): 37, ('phone', 'screen'): 20})
 
     def test_arrg_to_aht(self):
-        aspects_graph_builder = AspectsGraphBuilder()
+        aspects_graph_builder = Aspect2AspectGraph()
         graph = nx.Graph()
         graph.add_edge('phone', 'screen', gerani_weight=20)
         graph.add_edge('phone', 'voicemail', gerani_weight=35)
@@ -357,14 +357,14 @@ class AspectGraphBuilderTest(unittest.TestCase):
                           })
 
     def test_add_aspects_to_graph_not_equal_aspects(self):
-        aspects_graph_builder = AspectsGraphBuilder(with_cycles_between_aspects=True)
+        aspects_graph_builder = Aspect2AspectGraph(with_cycles_between_aspects=True)
         graph = nx.Graph()
         aspects_graph_builder.add_aspects_to_graph(graph, 'phone', 'battery', 'rel', 55)
         self.assertEquals(len(graph.nodes()), 2)
         self.assertEquals(len(graph.edges()), 1)
 
     def test_add_aspects_to_graph_equal_aspects(self):
-        aspects_graph_builder = AspectsGraphBuilder(with_cycles_between_aspects=False)
+        aspects_graph_builder = Aspect2AspectGraph(with_cycles_between_aspects=False)
         graph = nx.Graph()
         aspects_graph_builder.add_aspects_to_graph(graph, 'phone', 'phone', 'rel', 55)
         self.assertEquals(len(graph.nodes()), 0)

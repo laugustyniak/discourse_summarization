@@ -13,12 +13,13 @@ class IOPaths:
 
         self.input = input_path
 
-        self.discourse_trees_df = Path(output_path) / 'discourse_trees_df.pkl'
+        self.discourse_trees_df = self.output_path / 'discourse_trees_df.pkl'
 
-        self.aspects_graph = self.output_path / self._add_suffix('aspects_graph')
-        self.aspects_graph_gpkl = self.output_path / self._add_suffix('aspects_graph.gpkl')
-        self.aspects_graph_gexf = self.output_path / self._add_suffix('aspects_graph.gexf')
-        self.aspects_page_ranks = self.output_path / self._add_suffix('aspects_page_ranks')
+        self.aspects_graph = self.output_path / self._add_suffix('aspects_graph.pkl')
+        self.spanning_tree = self.output_path / self._add_suffix('spanning_tree.pkl')
+        self.graph_flatten = self.output_path / self._add_suffix('graph_flatten.pkl')
+        self.aspect_sentiments = self.output_path / self._add_suffix('aspect_sentiments.pkl')
+        self.aspects_weighted_page_ranks = self.output_path / self._add_suffix('aspects_page_ranks')
 
         self.final_docs_info = self.output_path / self._add_suffix('final_documents_info')
 

@@ -10,10 +10,17 @@ from typing import Callable, Sequence, List, Union
 import pandas as pd
 from tqdm import tqdm
 
-from aspects.analysis.gerani_graph_analysis import extend_graph_nodes_with_sentiments_and_weights, \
-    calculate_moi_by_gerani
+from aspects.analysis.gerani_graph_analysis import (
+    extend_graph_nodes_with_sentiments_and_weights,
+    calculate_moi_by_gerani,
+)
 from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
+from aspects.aspects.aspects_graph_builder import (
+    Aspect2AspectGraph,
+    calculate_weighted_page_rank,
+    extract_spanning_tree,
+    merge_multiedges
+)
 from aspects.data_io.serializer import Serializer
 from aspects.sentiment.sentiment_client import BiLSTMModel
 from aspects.utilities import settings, pandas_utils
@@ -44,14 +51,13 @@ class AspectAnalysis:
             analysis_results_path: Union[str, Path] = None,
             jobs: int = None,
             sent_model_path: Union[str, Path] = None,
-            n_logger: int = 1000,
             batch_size: int = None,
             max_docs: int = None,
             cycle_in_relations: bool = True,
             filter_gerani=False,
             aht_gerani=False,
             neutral_sent=False,
-            alpha_coefficient: float = 0.5
+            alpha_coefficient: float = 0.5,
     ):
         self.neutral_sent = neutral_sent
         self.aht_gerani = aht_gerani
@@ -65,8 +71,7 @@ class AspectAnalysis:
         else:
             self.output_path = output_path
         if filter_gerani:
-            self.paths = IOPaths(
-                input_path, self.output_path, suffix='gerani_one_rule_per_document')
+            self.paths = IOPaths(input_path, self.output_path)
         else:
             self.paths = IOPaths(input_path, self.output_path)
         self.sent_model_path = sent_model_path
@@ -78,9 +83,7 @@ class AspectAnalysis:
             self.jobs = multiprocessing.cpu_count()
         else:
             self.jobs = jobs
-
-        # by how many examples logging will be done
-        self.n_logger = n_logger
+        self.alpha_coefficient = alpha_coefficient
 
     def parallelized_extraction(
             self,
@@ -91,11 +94,7 @@ class AspectAnalysis:
         with ProcessPoolExecutor(self.jobs) as pool:
             return list(
                 tqdm(
-                    pool.map(
-                        fn,
-                        elements,
-                        chunksize=self.batch_size
-                    ),
+                    pool.map(fn, elements, chunksize=self.batch_size),
                     total=len(elements),
                     desc=desc
                 )
@@ -202,10 +201,9 @@ class AspectAnalysis:
         if self.paths.aspects_graph.exists():
             return self.serializer.load(self.paths.aspects_graph)
         else:
-            builder = AspectsGraphBuilder(with_cycles_between_aspects=self.cycle_in_relations)
+            builder = Aspect2AspectGraph(with_cycles_between_aspects=self.cycle_in_relations)
             graph = builder.build(
                 discourse_tree_df=df,
-                aspect_graph_path=self.paths.aspects_graph,
                 conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
                 # TODO: add fn filtering
                 # TODO: update gerani-based filtering using data frame with discourse trees
@@ -215,44 +213,16 @@ class AspectAnalysis:
             self.serializer.save(graph, self.paths.aspects_graph)
             return graph
 
-    def _filter_aspects(self, threshold: float):
-        """Filter out aspects according to threshold"""
-        aspects_importance = self.serializer.load(
-            self.paths.aspects_page_ranks)
-        documents_info = self.serializer.load(self.paths.docs_info)
-
-        aspects_count = len(aspects_importance)
-        aspects_list = list(aspects_importance)
-
-        for documentId, document_info in tqdm(
-                documents_info.iteritems(), desc='Filter aspects', total=len(documents_info)):
-            aspects = []
-            if 'aspects' in document_info:
-                for aspect in document_info['aspects']:
-                    if aspect in aspects_importance:
-                        aspect_position = float(
-                            aspects_list.index(aspect) + 1) / aspects_count
-                        if aspect_position < threshold:
-                            aspects.append(aspect)
-            documents_info[documentId]['aspects'] = aspects
-        self.serializer.save(documents_info, self.paths.final_docs_info)
-
-    def calculate_aspects_weights(self, graph):
-        graph, page_ranks = calculate_moi_by_gerani(graph, self.alpha_gerani)
-        if self.aht_gerani:
-            graph = self.arrg_to_aht(graph=graph, weight='gerani_weight')
-        else:
-            page_ranks = self.calculate_page_ranks(graph, weight='gerani_weight')
-        return graph, page_ranks
-
-    def add_sentiment_and_weight_to_nodes(self, graph, discourse_trees_df: pd.DataFrame):
-        try:
-            graph.node[list(graph.nodes)[0]].sentiment
+    def add_sentiments_and_weights_to_nodes(self, graph, discourse_trees_df: pd.DataFrame):
+        # check if we have any attributes in the graph
+        if graph.node[list(graph.nodes)[0]]:
             graph = self.serializer.load(self.paths.aspects_graph)
-        except:
-            graph = extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df)
+            aspect_sentiments = self.serializer.load(self.paths.aspect_sentiments)
+        else:
+            graph, aspect_sentiments = extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df)
             self.serializer.save(graph, self.paths.aspects_graph)
-        return graph
+            self.serializer.save(aspect_sentiments, self.paths.aspect_sentiments)
+        return graph, aspect_sentiments
 
     def run(self):
 
@@ -264,7 +234,19 @@ class AspectAnalysis:
                               )
 
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
-        graph = self.add_sentiment_and_weight_to_nodes(graph, discourse_trees_df)
+        graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
+        aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
+        self.serializer.save(aspects_weighted_page_rank, self.paths.aspects_weighted_page_ranks)
+
+        graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank, self.alpha_coefficient)
+        self.serializer.save(graph, self.paths.aspects_graph)
+
+        graph_flatten = merge_multiedges(graph)
+        self.serializer.save(graph_flatten, self.paths.graph_flatten)
+
+        spanning_tree = extract_spanning_tree(graph_flatten, max_number_of_nodes=100)
+        self.serializer.save(spanning_tree, self.paths.aspects_graph)
+        # graph = arrg_to_aht(graph=graph)
 
         # aspects_graph = self.serializer.load(self.paths.aspects_graph)
         # nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)

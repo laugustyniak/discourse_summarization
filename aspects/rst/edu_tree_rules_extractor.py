@@ -8,14 +8,14 @@ class EDURelation(NamedTuple):
     edu1: int
     edu2: int
     relation_type: str
-    gerani: float
+    weight: float
 
 
 loger = logging.getLogger()
 
 
 class EDUTreeRulesExtractor:
-    def __init__(self, tree: Tree, weight_type: List[str] = None, only_hierarchical_relations: bool = True):
+    def __init__(self, tree: Tree, only_hierarchical_relations: bool = True):
         """
         Extracting rules from RST tress.
 
@@ -28,22 +28,14 @@ class EDUTreeRulesExtractor:
         :param only_hierarchical_relations: bool
             Do we want only hierarchical type of relations (especially from
             RST), True as default
-        :param weight_type - list of weights calculated for discourse tree and
-                their relations.
-                'gerani' - weight according to publication  Gerani, S., Mehdad,
-                    Y., Carenini, G., Ng, R. T., & Nejat, B. (2014).
-                    Abstractive Summarization of Product Reviews Using
-                    Discourse Structure. Emnlp, 1602-1613.
+
         """
-        if weight_type is None:
-            weight_type = ['gerani']
         self.rules: List[EDURelation] = []
         self.tree: Tree = tree
         self.left_child_parent = None
         self.left_leaf = None
         self.right_child_parent = None
         self.right_leaf = None
-        self.weight_type = [w.lower() for w in weight_type]
         self.only_hierarchical_relations: bool = only_hierarchical_relations
 
     def extract(self) -> List[EDURelation]:
@@ -108,22 +100,12 @@ class EDUTreeRulesExtractor:
                 if nuc_sat_1 == 'N':
                     # [N][S] or [N][N]
                     self.rules.append(
-                        EDURelation(
-                            self.right_leaf,
-                            self.left_leaf,
-                            rel_name,
-                            self.calculate_gerani_weight()
-                        )
+                        EDURelation(self.right_leaf, self.left_leaf, rel_name, self.calculate_gerani_weight())
                     )
                 else:
                     # [S][N]
                     self.rules.append(
-                        EDURelation(
-                            self.left_leaf,
-                            self.right_leaf,
-                            rel_name,
-                            self.calculate_gerani_weight()
-                        )
+                        EDURelation(self.left_leaf, self.right_leaf, rel_name, self.calculate_gerani_weight())
                     )
         # do deeper into tree
         else:
@@ -131,10 +113,6 @@ class EDUTreeRulesExtractor:
                 self._make_rules(leaf_left, child)
 
     def calculate_gerani_weight(self):
-        """
-        Calculate weights for edu relations based on Gerani and
-        Mehdad paper
-        """
         if self.right_leaf is not None or self.left_leaf is not None:
             # calculate how many edus are between analyzed leafs,
             # leaf are integers hence we may substract them
@@ -146,9 +124,11 @@ class EDUTreeRulesExtractor:
                 sub_tree_height = self.left_child_parent.height()
             else:
                 sub_tree_height = self.right_child_parent.height()
-            return round(1 - 0.5 * (
-                    float(n_edus_between_analyzed_edus) / n_edus_in_tree)
-                         - 0.5 * (float(sub_tree_height) / tree_height), 2)
+            return round(
+                1 - 0.5 *
+                (float(n_edus_between_analyzed_edus) / n_edus_in_tree)
+                - 0.5 * (float(sub_tree_height) / tree_height), 2
+            )
         return 0
 
     def rst_relation_type(self):
