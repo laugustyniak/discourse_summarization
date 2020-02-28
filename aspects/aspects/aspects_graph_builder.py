@@ -120,7 +120,7 @@ class Aspect2AspectGraph:
     #     return rules
 
 
-def merge_multiedges(graph: object, node_attrib_name: object = 'weight') -> object:
+def merge_multiedges(graph: object, node_attrib_name: object = 'weight') -> nx.Graph:
     """
     Merge multiple edges between nodes into one relation and sum attribute weight.
 
@@ -141,6 +141,7 @@ def merge_multiedges(graph: object, node_attrib_name: object = 'weight') -> obje
         Aspect-aspect graph with maximum single relation between each pair of nodes.
 
     """
+    # TODO: add nodes attibutes!!
     graph_new = nx.Graph()
     for u, v, data in graph.edges(data=True):
         w = data[node_attrib_name] if node_attrib_name in data else 1.0
@@ -149,27 +150,6 @@ def merge_multiedges(graph: object, node_attrib_name: object = 'weight') -> obje
         else:
             graph_new.add_edge(u, v, weight=w)
     return graph_new
-
-
-def extract_spanning_tree(graph: Union[nx.Graph], weight: str = 'weight', max_number_of_nodes: int = None) -> nx.Graph:
-    """
-    To obtain a hierarchical tree structure from the extracted subgraph (filtered by moi measure). We find
-    the Maximum Spanning Tree of the undirected subgraph and set the highest weighted aspect as the root of the
-    tree. This process results in a useful knowledge structure of aspects with their associated weight and sentiment
-    polarity connected with the rhetorical relations called Aspect Hierarchical Tree (AHT).
-
-    Parameters
-    ----------
-    graph : nx.Graph
-        Graph with merged relations between aspects to sum of their weights - merge_multiedges_in_arrg method.
-    weight : str
-        Name of weight attribute for maximum spanning tree.
-    max_number_of_nodes : int
-
-    """
-    spanning_tree = nx.maximum_spanning_tree(graph, weight=weight)
-    sorted_nodes = sorted(spanning_tree.degree, key=lambda node_degree_pair: node_degree_pair[1], reverse=True)
-    return spanning_tree.subgraph(sorted_nodes[:max_number_of_nodes].nodes)
 
 
 def calculate_weighted_page_rank(
