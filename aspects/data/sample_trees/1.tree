@@ -1,0 +1,13 @@
+(Evaluation[N][S]
+  (Manner-Means[N][S]
+      _!Celery is a task queue for Python with batteries included .!_
+          (Contrast[N][N]
+                _!It used to have a Flask integration!_
+                      _!but it became unnecessary after some restructuring of the internals of Celery with Version 3 .  3.!_))
+                        (Contrast[S][N]
+                            (Elaboration[N][S]
+                                  _!This guide fills in the blanks!_
+                                        _!in how to properly use Celery with Flask!_)
+                                            (Attribution[S][N]
+                                                  _!but assumes!_
+                                                        _!that you generally already read the First Steps with Celery guide in the official Celery documentation .!_)))

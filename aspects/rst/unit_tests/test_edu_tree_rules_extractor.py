@@ -1,33 +1,45 @@
 import unittest
 
-from aspects.data_io.serializer import Serializer
-from aspects.rst.edu_tree_rules_extractor import EDURelation
-from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
+from nltk.tree import Tree
+
+from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor, EDURelation
 from aspects.utilities import settings
-from edu_dependency_parser.trees.parse_tree import ParseTree
 
 
 class AspectExtractionTest(unittest.TestCase):
-    def setUp(self):
-        self.serializer = Serializer()
-        self.rules_extractor = EDUTreeRulesExtractor()
-        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_177.as_posix())
+
+    def _load_tree(self, discourse_tree: str) -> Tree:
+        return Tree.fromstring(
+            discourse_tree,
+            leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN,
+            remove_empty_top_bracketing=True
+        )
+
+    def _with_simple_discourse_tree(self):
+        self.discourse_tree = self._load_tree(settings.SAMPLE_TREE_177.open('r').read())
+
+    def _with_celery_text_discourse_tree(self):
+        self.discourse_tree = self._load_tree(settings.SAMPLE_TREE_1.open('r').read())
 
     def _multi_aspect_per_edu_tree(self):
-        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_189.as_posix())
+        self.discourse_tree = self._load_tree(settings.SAMPLE_TREE_189.open('r').read())
 
     def test_load_serialized_tree(self):
-        self.assertEqual(isinstance(self.link_tree, ParseTree), True)
-        self.assertEqual(self.link_tree.height(), 5)
+        self._with_simple_discourse_tree()
+        self.rules_extractor = EDUTreeRulesExtractor(self.discourse_tree, only_hierarchical_relations=True)
+        rules = self.rules_extractor.extract()
+        self.assertEqual(len(rules), 5)
 
-    def test_tree_parsing_and_get_empty_rules(self):
-        rules = self.rules_extractor.extract(self.link_tree, [], 0)
-        self.assertEqual(len(rules), 0)
+    def test_extract_rules_from_simple_celery_discourse_tree_hierarchical_only_relations(self):
+        self._with_celery_text_discourse_tree()
+        self.rules_extractor = EDUTreeRulesExtractor(self.discourse_tree, only_hierarchical_relations=False)
+        rules = self.rules_extractor.extract()
+        self.assertEqual(len(rules), 6)
 
     def test_tree_parsing_and_get_rules_hierarchical(self):
-        rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
-                                                only_hierarchical_relations=True)
-        rules = rules_extractor.extract(self.link_tree,
+        rules_extractor = EDUTreeRulesExtractor(
+            weight_type=['gerani'], only_hierarchical_relations=True)
+        rules = rules_extractor.extract(self.discourse_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
         expected_rules = {1: [EDURelation(edu1=514, edu2=513, relation_type='Elaboration', gerani=0.8),
@@ -38,7 +50,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_tree_parsing_and_get_rules_all(self):
         rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
                                                 only_hierarchical_relations=False)
-        rules = rules_extractor.extract(self.link_tree,
+        rules = rules_extractor.extract(self.discourse_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
         expected_rules = {1: [EDURelation(edu1=514, edu2=513, relation_type='Elaboration', gerani=0.8),
@@ -77,7 +89,7 @@ class AspectExtractionTest(unittest.TestCase):
     def test_bfs_for_several_aspects_in_one_edu(self):
         rules_extractor = EDUTreeRulesExtractor(weight_type=['gerani'],
                                                 only_hierarchical_relations=True)
-        rules = rules_extractor.extract(self.link_tree,
+        rules = rules_extractor.extract(self.discourse_tree,
                                         [513, 514, 515, 516, 517],
                                         1)
         expected_rules = {1: [EDURelation(edu1=514, edu2=513, relation_type='Elaboration', gerani=0.8),
@@ -89,7 +101,7 @@ class AspectExtractionTest(unittest.TestCase):
         self._multi_aspect_per_edu_tree()
         rules_extractor = EDUTreeRulesExtractor(
             only_hierarchical_relations=False)
-        rules = rules_extractor.extract(self.link_tree,
+        rules = rules_extractor.extract(self.discourse_tree,
                                         [559, 560, 561, 562, 563],
                                         doc_id=1)
         expected_rules = {1: [EDURelation(edu1=560, edu2=559, relation_type='Elaboration', gerani=0.63),

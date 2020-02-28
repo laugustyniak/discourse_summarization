@@ -1,30 +1,20 @@
-import logging
-import multiprocessing
-from os.path import join, basename
+from os.path import join
 
 from aspects.utilities import settings
-from run import AspectAnalysisSystem
-
-log = logging.getLogger(__name__)
+from run import AspectAnalysis
 
 DATASET_PATH = settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON
-N_JOBS = multiprocessing.cpu_count() - 2
 
-OXYGEN_RESULTS_PATH = '/datasets/sentiment/aspects/results'
-
-AAS = AspectAnalysisSystem(
+AAS = AspectAnalysis(
     input_path=DATASET_PATH.as_posix(),
     output_path=join('results', DATASET_PATH.stem),
-    # output_path=join(OXYGEN_RESULTS_PATH, basename(DATASET_PATH).replace('.json', '')),
-    gold_standard_path=None,
-    analysis_results_path=None,
-    jobs=N_JOBS,
-    batch_size=1000,
+    jobs=2,
+    batch_size=10,
     neutral_sent=True,
     cycle_in_relations=False,
     filter_gerani=False,
     aht_gerani=False,
-    # max_docs=20000,
+    max_docs=50000
 )
 
 AAS.run()

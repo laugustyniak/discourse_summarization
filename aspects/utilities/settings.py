@@ -4,7 +4,7 @@ ROOT_PATH = pathlib.Path(__file__).absolute().parent.parent
 DATA_PATH = ROOT_PATH / 'data'
 EDU_DEPENDENCY_PARSER_PATH = ROOT_PATH.parent / 'edu_dependency_parser'
 DEFAULT_OUTPUT_PATH = ROOT_PATH / 'results'
-DEFAULT_INPUT_FILE_PATH = ROOT_PATH / 'texts' / 'test.txt'
+DEFAULT_INPUT_FILE_PATH = ROOT_PATH / pathlib.Path('data/reviews/amazon/reviews_Apps_for_Android.json')
 
 # --------------------------------------------- AMAZON DATASETS PATHS -------------------------------------------------#
 AMAZON_REVIEWS_DATASETS_PATH = DATA_PATH / 'reviews' / 'amazon'
@@ -48,7 +48,7 @@ SEMEVAL_RESTAURANTS_TEST_XML = SEMEVAL_DATASETS_2014 / 'Restaurants_Test_Data_ph
 SEMEVAL_LAPTOPS_TRAIN_XML = SEMEVAL_DATASETS_2014 / 'Laptops_Train.xml'
 SEMEVAL_LAPTOPS_TEST_XML = SEMEVAL_DATASETS_2014 / 'Laptops_Test_Data_phaseB.xml'
 
-# --------------------------------------------- SENITMENT MODELS ----------------------------------------------------- #
+# --------------------------------------------- SENTIMENT MODELS ----------------------------------------------------- #
 SENTIMENT_MODELS_PATH = DATA_PATH / 'models' / 'sentiment'
 SENTIMENT_MODEL_PROD = (
         SENTIMENT_MODELS_PATH /
@@ -61,14 +61,18 @@ SENTIMENT_MODEL_TESTS = (
         'Pipeline-LogisticRegression-CountVectorizer-n_grams_1_2-stars-1-3-5-reviews_Apps_for_Android-500000-balanced.pkl'
 )
 
+SENTIMENT_DOCKER_URL = 'http://localhost:5002/api/sentiment'
+
+# --------------------------------------------- RST  ----------------------------------------------------------------- #
+
+RST_PARSER_DOCKER_URL = 'http://localhost:5000/api/rst/parse'
+RETRIES_LIMIT = 100
+
 # --------------------------------------------- ASPECT MODELS -------------------------------------------------------- #
 
-
-ASPECT_EXTRACTION_NEURAL_MODEL_PATH = DATA_PATH / 'models' / 'aspects'
-ASPECT_EXTRACTION_NEURAL_MODEL = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model-72eb2ef.h5'
-ASPECT_EXTRACTION_NEURAL_MODEL_INFO = ASPECT_EXTRACTION_NEURAL_MODEL_PATH / 'model-72eb2ef.info'
-
 ASPECT_EXTRACTION_TRAIN_DATASET = DATA_PATH / 'aspects' / 'merged-electronic-aspects-uni-tag.conll'
+
+ASPECT_EXTRACTOR_DOCKER_URL = "http://localhost:5001/api/aspects"
 
 # --------------------------------------------- EMBEDDINGS ----------------------------------------------------------- #
 
@@ -100,7 +104,10 @@ NER_TYPES = [u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC']
 ASPECT_EXTRACTION_SERIALIZATION_STEP = 10000
 
 # sample trees
-SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177'
-SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189'
+SAMPLE_TREE_1 = DATA_PATH / 'sample_trees' / '1.tree'
+SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177.tree'
+SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189.tree'
 
 ML_GUSE_MODEL_2_LITE_PATH = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
+
+DISCOURSE_TREE_LEAF_PATTERN = '(?<=_!).*(?=!_)'

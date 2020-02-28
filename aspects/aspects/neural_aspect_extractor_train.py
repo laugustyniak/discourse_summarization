@@ -22,10 +22,15 @@ from keras_preprocessing.sequence import pad_sequences
 from tqdm import tqdm
 
 from aspects.aspects.neural_aspect_extractor import get_padding_for_tokens, NeuralAspectExtractor
-from embeddings.utils import get_word_embedding_vocab
-from utilities import settings
-from utilities.git_utils import get_git_revision_short_hash
+from aspects.embeddings.utils import get_word_embedding_vocab
+from aspects.utilities import settings
+from aspects.utilities.git_utils import get_git_revision_short_hash
 
+TAG_VOCAB = {
+        'O': 1,
+        'I-aspect': 2
+    }
+OOV_WORD_ID = 1
 
 @click.command()
 @click.option('--dataset-path', required=False, type=Path, default=None, help='Path to the training dataset')
