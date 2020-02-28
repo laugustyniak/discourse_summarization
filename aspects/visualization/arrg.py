@@ -4,10 +4,10 @@ from pathlib import Path
 import networkx as nx
 import streamlit as st
 
+sys.path.append('/datasets/sentiment/aspects/sentiment-backend/')
+
 from aspects.data_io.serializer import Serializer
 from aspects.utilities.data_paths import ExperimentPaths
-
-sys.path.append('/datasets/sentiment/aspects/sentiment-backend/')
 
 serializer = Serializer()
 
@@ -37,7 +37,10 @@ aspect_sentiments = dict(serializer.load(paths.aspect_sentiments))
 st.header('Aspect sentiments')
 # st.write(aspect_sentiments)
 
-st.write(paths.discourse_trees_df)
-arrg = serializer.load(paths.aspect_hierarchical_tree)
-dot = nx.nx_pydot.to_pydot(arrg)
-st.graphviz_chart(dot.to_string())
+# arrg = serializer.load(paths.aspect_to_aspect_graph)
+# arrg_dot = nx.nx_pydot.to_pydot(arrg)
+# st.graphviz_chart(arrg_dot.to_string())
+
+aht = serializer.load(paths.aspect_hierarchical_tree)
+aht_dot = nx.nx_pydot.to_pydot(aht)
+st.graphviz_chart(aht_dot.to_string())
