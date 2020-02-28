@@ -3,7 +3,7 @@ import multiprocessing
 from glob import glob
 from os.path import join, basename
 
-from run import AspectAnalysisSystem
+from run import AspectAnalysis
 
 reviews = glob('aspects/data/reviews/*.json')
 
@@ -17,7 +17,7 @@ for review in reviews:
 
     N_JOBS = multiprocessing.cpu_count() / 2
 
-    AAS = AspectAnalysisSystem(
+    AAS = AspectAnalysis(
         input_path=review,
         output_path=join('results', basename(review).replace('.json', '')),
         gold_standard_path=None,

@@ -12,19 +12,14 @@ from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import (
     extend_graph_nodes_with_sentiments_and_weights,
-    calculate_moi_by_gerani,
+    gerani_paper_arrg_to_aht
 )
 from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.aspects.aspects_graph_builder import (
-    Aspect2AspectGraph,
-    calculate_weighted_page_rank,
-    extract_spanning_tree,
-    merge_multiedges
-)
+from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
 from aspects.data_io.serializer import Serializer
 from aspects.sentiment.sentiment_client import BiLSTMModel
 from aspects.utilities import settings, pandas_utils
-from aspects.utilities.data_paths import IOPaths
+from aspects.utilities.data_paths import ExperimentPaths
 from rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
 
 if not Path('logs').exists():
@@ -71,9 +66,9 @@ class AspectAnalysis:
         else:
             self.output_path = output_path
         if filter_gerani:
-            self.paths = IOPaths(input_path, self.output_path)
+            self.paths = ExperimentPaths(input_path, self.output_path)
         else:
-            self.paths = IOPaths(input_path, self.output_path)
+            self.paths = ExperimentPaths(input_path, self.output_path)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
         self.cycle_in_relations = cycle_in_relations
@@ -198,8 +193,8 @@ class AspectAnalysis:
         return df
 
     def build_aspect_to_aspect_graph(self, df: pd.DataFrame):
-        if self.paths.aspects_graph.exists():
-            return self.serializer.load(self.paths.aspects_graph)
+        if self.paths.aspect_to_aspect_graph.exists():
+            return self.serializer.load(self.paths.aspect_to_aspect_graph)
         else:
             builder = Aspect2AspectGraph(with_cycles_between_aspects=self.cycle_in_relations)
             graph = builder.build(
@@ -210,17 +205,17 @@ class AspectAnalysis:
                 filter_relation_fn=None
             )
 
-            self.serializer.save(graph, self.paths.aspects_graph)
+            self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
             return graph
 
     def add_sentiments_and_weights_to_nodes(self, graph, discourse_trees_df: pd.DataFrame):
         # check if we have any attributes in the graph
         if graph.node[list(graph.nodes)[0]]:
-            graph = self.serializer.load(self.paths.aspects_graph)
+            graph = self.serializer.load(self.paths.aspect_to_aspect_graph)
             aspect_sentiments = self.serializer.load(self.paths.aspect_sentiments)
         else:
             graph, aspect_sentiments = extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df)
-            self.serializer.save(graph, self.paths.aspects_graph)
+            self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
             self.serializer.save(aspect_sentiments, self.paths.aspect_sentiments)
         return graph, aspect_sentiments
 
@@ -234,19 +229,10 @@ class AspectAnalysis:
                               )
 
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
-        graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
-        aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
-        self.serializer.save(aspects_weighted_page_rank, self.paths.aspects_weighted_page_ranks)
+        graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph)
+        aht_graph = gerani_paper_arrg_to_aht(graph)
 
-        graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank, self.alpha_coefficient)
-        self.serializer.save(graph, self.paths.aspects_graph)
-
-        graph_flatten = merge_multiedges(graph)
-        self.serializer.save(graph_flatten, self.paths.graph_flatten)
-
-        spanning_tree = extract_spanning_tree(graph_flatten, max_number_of_nodes=100)
-        self.serializer.save(spanning_tree, self.paths.aspects_graph)
-        # graph = arrg_to_aht(graph=graph)
+        self.serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
         # aspects_graph = self.serializer.load(self.paths.aspects_graph)
         # nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
