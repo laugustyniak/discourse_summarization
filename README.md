@@ -14,8 +14,10 @@
 
 ## Run dockers with API for sentiment, RST parsing and aspect extraction
 
-`cd docker`
-`./restart.sh`
+```
+cd docker
+./restart.sh
+```
 
 ## Prapare conceptnet.io pickle and amazon reviews
 `python aspects/io.parser.py`
