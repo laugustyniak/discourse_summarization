@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from tqdm import tqdm
 
-from aspects.aspects.aspects_graph_builder import AspectsGraphBuilder
+from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
 from aspects.data_io.serializer import Serializer
 from aspects.utilities import settings
 
@@ -20,7 +20,7 @@ with open((REVIEWS_RESULTS / 'aspects_per_edu.json').as_posix(), 'r') as f:
 
 aspect_relations = serializer.load((REVIEWS_RESULTS / 'edu_dependency_rules').as_posix())
 
-aspect_graph_builder = AspectsGraphBuilder(aspects_per_edu=aspects_per_edu)
+aspect_graph_builder = Aspect2AspectGraph(aspects_per_edu=aspects_per_edu)
 
 aspect_rules = []
 

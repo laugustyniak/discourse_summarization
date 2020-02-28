@@ -5,7 +5,13 @@ from typing import Tuple, Dict, Union
 import networkx as nx
 import numpy as np
 import pandas as pd
+from toolz import pluck
 from tqdm import tqdm
+
+from aspects.aspects.aspects_graph_builder import (
+    calculate_weighted_page_rank,
+    merge_multiedges,
+)
 
 log = logging.getLogger(__name__)
 
@@ -59,3 +65,18 @@ def calculate_moi_by_gerani(
         graph.node[aspect]['pagerank'] = weighted_page_rank_element
 
     return graph
+
+
+def gerani_paper_arrg_to_aht(
+        graph: nx.MultiDiGraph,
+        max_number_of_nodes: int = 100,
+        weight: str = 'weight'
+) -> nx.Graph:
+    aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
+    graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank)
+
+    graph_flatten = merge_multiedges(graph)
+    sorted_nodes = sorted(list(graph_flatten.degree()), key=lambda node_degree_pair: node_degree_pair[1], reverse=True)
+    top_nodes = list(pluck(0, sorted_nodes[:max_number_of_nodes]))
+    sub_graph = graph_flatten.subgraph(top_nodes)
+    return nx.maximum_spanning_tree(sub_graph, weight=weight)
