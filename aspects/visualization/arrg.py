@@ -9,9 +9,28 @@ sys.path.append('/datasets/sentiment/aspects/sentiment-backend/')
 from aspects.data_io.serializer import Serializer
 from aspects.utilities.data_paths import ExperimentPaths
 
+
 serializer = Serializer()
 
 RESULTS_PATH = Path('/datasets/sentiment/aspects/sentiment-backend/results')
+
+# TODO: to uncomment must no display variable in linux must be fixed, not needed for now
+
+# it doesn't work
+# from os import system
+# system('export DISPLAY=:0.0')
+
+# st.title('Draw Discourse Tree')
+# input_text_for_discourse_tree = st.text_area(
+#     "Text to create example Discourse Tree",
+#     "Top card doesn't work / Bottom card works. Bought the top card June 18 2018 for a Nintendo Switch."
+# )
+# png_file = jupyter_draw_nltk_tree(
+#     tree=extract_discourse_tree(input_text_for_discourse_tree),
+#     f_name='discourse_tree_test'
+# )
+# discourse_tree_image = Image.open(png_file)
+# st.image(discourse_tree_image)
 
 st.title('ARRG Visualisations')
 

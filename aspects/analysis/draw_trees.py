@@ -1,13 +1,17 @@
 from os import system
 from pathlib import Path
 
-from IPython.display import Image, display
 from nltk.draw import TreeWidget
 from nltk.draw.util import CanvasFrame
 from nltk.tree import Tree
 
 
-def jupyter_draw_nltk_tree(tree: Tree = None, directory: str = '/tmp', f_name: str = 'tmp', show_tree: bool = False):
+def jupyter_draw_nltk_tree(
+        tree: Tree = None,
+        directory: str = '/tmp',
+        f_name: str = 'tmp',
+        show_tree: bool = False
+):
     f_name = Path(directory) / f_name
     f_name.parent.mkdir(exist_ok=True, parents=True)
 
@@ -27,13 +31,11 @@ def jupyter_draw_nltk_tree(tree: Tree = None, directory: str = '/tmp', f_name: s
     png_file_name = f_name.with_suffix(".png").as_posix()
     system(f'convert {ps_file_name} {png_file_name}')
 
-    if show_tree:
-        display(
-            (Image(filename=png_file_name), )
-        )
+    # if show_tree:
+    #     display(
+    #         (Image(filename=png_file_name), )
+    #     )
 
-    system(f'rm {f_name}.ps')
+    # system(f'rm {f_name}.ps')
 
-
-if __name__ == '__main__':
-    jupyter_draw_nltk_tree()
+    return png_file_name
