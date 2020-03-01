@@ -4,10 +4,10 @@ from typing import Union, Tuple, List
 
 import nltk
 
-from rst.edu_tree_mapper import EDUTreeMapper
-from rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
-from rst.parser_client import RSTParserClient
-from utilities import settings
+from aspects.rst.edu_tree_mapper import EDUTreeMapper
+from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
+from aspects.rst.parser_client import RSTParserClient
+from aspects.utilities import settings
 
 
 def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
