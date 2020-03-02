@@ -17,6 +17,7 @@ async def sentiment(request: Request):
     classifier.predict(sentence)
     label = sentence.labels[0]
     return {
+        # positive > 0, negative < 0
         'value': label.value,
-        'sentiment': label.score
+        'sentiment': label.score if label.value == 'POSITIVE' else label.score * -1
     }
