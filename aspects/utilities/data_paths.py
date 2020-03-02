@@ -13,6 +13,7 @@ class ExperimentPaths:
         self.discourse_trees_df = self.output_path / 'discourse_trees_df.pkl'
         self.aspect_to_aspect_graph = self.output_path / 'aspect_2_aspect_graph.pkl'
         self.aspect_hierarchical_tree = self.output_path / 'aspect_hierarchical_tree.pkl'
+        self.aspect_hierarchical_tree_netwulf_config = self.output_path / 'aspect_hierarchical_tree_netwulf_config.pkl'
         self.aspect_to_aspect_graph_flatten = self.output_path / 'aspect_2_aspect_graph_flatten.pkl'
         self.aspect_sentiments = self.output_path / 'aspect_sentiments.pkl'
         self.aspects_weighted_page_ranks = self.output_path / 'aspects_weighted_page_ranks.pkl'
