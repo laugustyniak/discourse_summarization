@@ -17,10 +17,10 @@ from aspects.analysis.gerani_graph_analysis import (
 from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
 from aspects.data_io.serializer import Serializer
+from aspects.rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
 from aspects.sentiment.sentiment_client import BiLSTMModel
 from aspects.utilities import settings, pandas_utils
 from aspects.utilities.data_paths import ExperimentPaths
-from rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
 
 if not Path('logs').exists():
     Path('logs').mkdir(parents=True)
@@ -229,8 +229,8 @@ class AspectAnalysis:
                               )
 
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
-        graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph)
-        aht_graph = gerani_paper_arrg_to_aht(graph)
+        graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
+        aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=50)
 
         self.serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
