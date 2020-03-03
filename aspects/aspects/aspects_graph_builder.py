@@ -13,8 +13,6 @@ loger = logging.getLogger(__name__)
 
 
 class Aspect2AspectGraph:
-    def __init__(self, with_cycles_between_aspects=False):
-        self.with_cycles_between_aspects = with_cycles_between_aspects
 
     def build(self, discourse_tree_df: pd.DataFrame, conceptnet_io: bool = False, filter_relation_fn: Callable = None):
         """
@@ -52,72 +50,10 @@ class Aspect2AspectGraph:
         return graph
 
     def add_aspects_to_graph(self, graph, aspect_left, aspect_right, relation, gerani_weight):
-        if self.with_cycles_between_aspects or aspect_left != aspect_right:
+        if aspect_left != aspect_right:
             loger.info(f'Add rule: {(aspect_left, aspect_right, relation, gerani_weight)}')
             graph.add_edge(aspect_left, aspect_right, relation_type=relation, gerani_weight=gerani_weight)
         return graph
-
-    # def filter_gerani(self, rules):
-    #     """
-    #     Filter rules by its confidence,
-    #
-    #     Parameters
-    #     ----------
-    #     rules : dict
-    #         Dictionary of document id and list of rules. Relation tuple
-    #         Relation(aspect_right, aspect, relation, gerani_weight)
-    #
-    #     Returns
-    #     -------
-    #     rules_filtered : defaultdict
-    #         Dictionary of document id (-1 as indicator for all documents)
-    #         and list of rules/relations between aspects with their maximum
-    #         gerani weights.
-    #
-    #         Examples
-    #         {-1: [Relation(aspect1=u'screen', aspect2=u'phone',
-    #                                     relation_type='Elaboration',
-    #                                     gerani_weight=1.38),
-    #                            Relation(aspect1=u'speaker', aspect2=u'sound',
-    #                                     relation_type='Elaboration',
-    #                                     gerani_weight=0.29)]}
-    #     """
-    #     rule_per_doc = defaultdict(list)
-    #     for doc_id, rules_list in rules.iteritems():
-    #         rules_filtered = []
-    #         for rule in rules_list:
-    #             log.debug('Rule: {}'.format(rule))
-    #             left_node, right_node, relation, gerani_weight = rule
-    #             for aspect_left, aspect_right in self.aspects_iterator(left_node, right_node):
-    #                 rules_filtered.append(AspectsRelation(aspect_left, aspect_right, relation, gerani_weight))
-    #         if len(rules_filtered):
-    #             relation_counter = Counter([x[:3] for x in rules_filtered])
-    #             rule_confidence = sorted(relation_counter, key=operator.itemgetter(1), reverse=True)[0]
-    #             rules_confidence = [r for r in rules_filtered if rule_confidence == r[:3]]
-    #             rule_per_doc[doc_id].extend(
-    #                 [
-    #                     max(v, key=lambda rel: rel.gerani_weight)
-    #                     for g, v
-    #                     in groupby(sorted(rules_confidence), key=lambda rel: rel[:3])
-    #                 ]
-    #             )
-    #         else:
-    #             log.info('Empty rule list for document {}'.format(doc_id))
-    #     relations_list = [
-    #         (
-    #                 group + (sum([rel.gerani_weight for rel in relations]),)
-    #         )
-    #         for group, relations
-    #         in groupby(sorted(flatten(rule_per_doc.values())), key=lambda rel: rel[:3])
-    #     ]
-    #     # map relations into namedtuples
-    #     relations_list = [
-    #         AspectsRelation(a1, a2, r, w)
-    #         for a1, a2, r, w
-    #         in relations_list
-    #     ]
-    #     rules = {-1: relations_list}
-    #     return rules
 
 
 def merge_multiedges(graph: object, node_attrib_name: object = 'weight', default_node_weight: float = 1) -> nx.Graph:
@@ -182,6 +118,60 @@ def calculate_weighted_page_rank(
     page_ranks = nx.pagerank_scipy(graph, weight=weight)
     loger.info('Weighted Page Rank calculation ended.')
     return OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
+
+
+# def filter_rules_gerani(rules_rows: List[EDURelation]) -> List[EDURelation]:
+#     """
+#     Filter rules by its confidence,
+#
+#     Parameters
+#     ----------
+#     rules_rows : dict
+#         Dictionary of document id and list of rules. Relation tuple
+#         Relation(aspect_right, aspect, relation, gerani_weight)
+#
+#     Returns
+#     -------
+#     rules_filtered : list
+#         List of rules/relations between aspects with their maximum gerani weights.
+#
+#         Examples
+#         [
+#             Relation(aspect1=u'screen', aspect2=u'phone', relation_type='Elaboration', gerani_weight=1.38),
+#             Relation(aspect1=u'speaker', aspect2=u'sound', relation_type='Elaboration', gerani_weight=0.29)
+#         ]
+#     """
+#     for rules in rules_rows:
+#         rules_filtered = []
+#         for rule in rules:
+#             left_node, right_node, relation, weight = rule
+#             relation_counter = Counter([x[:3] for x in rules_filtered])
+#             rule_confidence = sorted(relation_counter, key=operator.itemgetter(1), reverse=True)[0]
+#             rules_confidence = [r for r in rules_filtered if rule_confidence == r[:3]]
+#             rule_per_doc[doc_id].extend(
+#                 [
+#                     max(v, key=lambda rel: rel.gerani_weight)
+#                     for g, v
+#                     in groupby(sorted(rules_confidence), key=lambda rel: rel[:3])
+#                 ]
+#             )
+#         else:
+#             logging.info('Empty rule list for document {}'.format(doc_id))
+#     relations_list = [
+#         (
+#                 group + (sum([rel.gerani_weight for rel in relations]),)
+#         )
+#         for group, relations
+#         in groupby(sorted(flatten(rule_per_doc.values())), key=lambda rel: rel[:3])
+#     ]
+#     # map relations into namedtuples
+#     relations_list = [
+#         AspectsRelation(a1, a2, r, w)
+#         for a1, a2, r, w
+#         in relations_list
+#     ]
+#     rules = {-1: relations_list}
+#     return rules
 
 
 def sort_networkx_attibutes(graph_attribs_tuples):
