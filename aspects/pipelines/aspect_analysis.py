@@ -1,9 +1,8 @@
-import argparse
 import json
 import logging
 import multiprocessing
 from concurrent.futures.process import ProcessPoolExecutor
-from os.path import basename, join, split, splitext
+from os.path import basename
 from pathlib import Path
 from typing import Callable, Sequence, List, Union
 
@@ -22,19 +21,15 @@ from aspects.sentiment.sentiment_client import BiLSTMModel
 from aspects.utilities import settings, pandas_utils
 from aspects.utilities.data_paths import ExperimentPaths
 
-if not Path('logs').exists():
-    Path('logs').mkdir(parents=True)
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s;%(filename)s:%(lineno)s;'
-           '%(funcName)s();%(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    filename='logs/run.log',
-    filemode='w',
-)
-
-loger = logging.getLogger()
+def setup_logger(loger_path: str):
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s;%(filename)s:%(lineno)s;'
+               '%(funcName)s();%(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        filename=loger_path,
+    )
 
 
 class AspectAnalysis:
@@ -43,35 +38,22 @@ class AspectAnalysis:
             self,
             input_path: Union[str, Path],
             output_path: Union[str, Path],
-            analysis_results_path: Union[str, Path] = None,
             jobs: int = None,
             sent_model_path: Union[str, Path] = None,
             batch_size: int = None,
             max_docs: int = None,
-            cycle_in_relations: bool = True,
-            filter_gerani=False,
-            aht_gerani=False,
-            neutral_sent=False,
             alpha_coefficient: float = 0.5,
     ):
-        self.neutral_sent = neutral_sent
-        self.aht_gerani = aht_gerani
-        self.filter_gerani = filter_gerani
         self.max_docs = max_docs
         self.batch_size = batch_size
-        self.analysis_results_path = analysis_results_path
         self.input_file_path = input_path
         if self.max_docs is not None:
             self.output_path = '{}-{}-docs'.format(output_path, self.max_docs)
         else:
             self.output_path = output_path
-        if filter_gerani:
-            self.paths = ExperimentPaths(input_path, self.output_path)
-        else:
-            self.paths = ExperimentPaths(input_path, self.output_path)
+        self.paths = ExperimentPaths(input_path, self.output_path)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
-        self.cycle_in_relations = cycle_in_relations
 
         # number of all processes
         if jobs is None:
@@ -97,7 +79,7 @@ class AspectAnalysis:
 
     def extract_discourse_trees(self) -> pd.DataFrame:
         if self.paths.discourse_trees_df.exists():
-            loger.info('Discourse trees loading.')
+            logging.info('Discourse trees loading.')
             return pd.read_pickle(self.paths.discourse_trees_df)
         else:
             print(f'{self.input_file_path} will be loaded!')
@@ -120,7 +102,7 @@ class AspectAnalysis:
 
             n_docs = len(df)
             df.dropna(subset=['discourse_tree'], inplace=True)
-            loger.info(f'{n_docs - len(df)} discourse tree has been parser with errors and we skip them.')
+            logging.info(f'{n_docs - len(df)} discourse tree has been parser with errors and we skip them.')
 
             assert not df.empty, 'No trees to process!'
 
@@ -142,14 +124,14 @@ class AspectAnalysis:
         return df
 
     def discourse_trees_df_checkpoint(self, df: pd.DataFrame):
-        loger.info(f'Discourse data frame - saving.')
+        logging.info(f'Discourse data frame - saving.')
         df.to_pickle(self.paths.discourse_trees_df)
-        loger.info(f'Discourse data frame - saved.')
+        logging.info(f'Discourse data frame - saved.')
 
     def extract_sentiment(self, df: pd.DataFrame) -> pd.DataFrame:
-        if 'sentiment' in df.columns:
-            loger.info('Sentiments have been already extracted. Passing to the next step.')
-            return df
+        # if 'sentiment' in df.columns:
+        #     logging.info('Sentiments have been already extracted. Passing to the next step.')
+        #     return df
 
         pandas_utils.assert_columns(df, 'edus')
         analyzer = BiLSTMModel()
@@ -164,7 +146,7 @@ class AspectAnalysis:
 
     def extract_aspects(self, df: pd.DataFrame) -> pd.DataFrame:
         if 'aspects' in df.columns:
-            loger.info('Aspects have been already extracted. Passing to the next step.')
+            logging.info('Aspects have been already extracted. Passing to the next step.')
             return df
 
         pandas_utils.assert_columns(df, 'edus')
@@ -196,7 +178,7 @@ class AspectAnalysis:
         if self.paths.aspect_to_aspect_graph.exists():
             return self.serializer.load(self.paths.aspect_to_aspect_graph)
         else:
-            builder = Aspect2AspectGraph(with_cycles_between_aspects=self.cycle_in_relations)
+            builder = Aspect2AspectGraph()
             graph = builder.build(
                 discourse_tree_df=df,
                 conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
@@ -219,7 +201,7 @@ class AspectAnalysis:
             self.serializer.save(aspect_sentiments, self.paths.aspect_sentiments)
         return graph, aspect_sentiments
 
-    def run(self):
+    def gerani_pipeline(self):
 
         discourse_trees_df = (self.extract_discourse_trees()
                               .pipe(self.extract_discourse_trees_ids_only)
@@ -233,99 +215,3 @@ class AspectAnalysis:
         aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=50)
 
         self.serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
-
-        # aspects_graph = self.serializer.load(self.paths.aspects_graph)
-        # nx.write_gpickle(aspects_graph, self.paths.aspects_graph_gpkl)
-        # # for gephi
-        # nx.write_gexf(aspects_graph, self.paths.aspects_graph_gexf)
-
-
-if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser(description='Process documents.')
-    arg_parser.add_argument(
-        '-input',
-        type=str,
-        dest='input_file_path',
-        default=settings.DEFAULT_INPUT_FILE_PATH,
-        help='Path to the file with documents (json, csv, pickle)'
-    )
-    arg_parser.add_argument(
-        '-output',
-        type=str,
-        dest='output_file_path',
-        default=settings.DEFAULT_OUTPUT_PATH,
-        help='Number of processes'
-    )
-    arg_parser.add_argument(
-        '-sent_model',
-        type=str,
-        dest='sent_model_path',
-        default=None,
-        help='path to sentiment model'
-    )
-    arg_parser.add_argument(
-        '-analysis_results_path',
-        type=str,
-        dest='analysis_results_path',
-        default=None,
-        help='path to analysis results'
-    )
-    arg_parser.add_argument(
-        '-max_docs',
-        type=int,
-        dest='max_docs',
-        default=None,
-        help='Maximum number of documents to analyse'
-    )
-    arg_parser.add_argument(
-        '-batch', type=int, dest='batch_size', default=None, help='batch size for each process')
-    arg_parser.add_argument(
-        '-p', type=int, dest='max_processes', default=1, help='Number of processes')
-    arg_parser.add_argument(
-        '-cycles',
-        type=bool,
-        dest='cycles',
-        default=False,
-        help='Do we want to have cycles in aspect relation? False by default'
-    )
-    arg_parser.add_argument(
-        '-filter_gerani',
-        type=bool,
-        dest='filter_gerani',
-        default=False,
-        help='Do we want to follow Gerani paper?'
-    )
-    arg_parser.add_argument(
-        '-aht_gerani',
-        type=bool,
-        dest='aht_gerani',
-        default=False,
-        help='Do we want to create AHT by Gerani?'
-    )
-    arg_parser.add_argument(
-        '-neutral_sent',
-        type=bool,
-        dest='neutral_sent',
-        default=False,
-        help='Do we want to use neutral sentiment aspects too?'
-    )
-    args = arg_parser.parse_args()
-
-    input_file_full_name = split(args.input_file_path)[1]
-    input_file_name = splitext(input_file_full_name)[0]
-    output_path = join(args.output_file_path, input_file_name)
-
-    AAS = AspectAnalysis(
-        input_path=args.input_file_path,
-        output_path=output_path,
-        analysis_results_path=args.analysis_results_path,
-        jobs=args.max_processes,
-        sent_model_path=args.sent_model_path,
-        batch_size=args.batch_size,
-        max_docs=args.max_docs,
-        cycle_in_relations=True if args.cycles else False,
-        filter_gerani=args.filter_gerani,
-        aht_gerani=args.aht_gerani,
-        neutral_sent=args.neutral_sent
-    )
-    AAS.run()
