@@ -1,6 +1,7 @@
 from os import system
 from pathlib import Path
 
+from IPython.core.display import display, Image
 from nltk.draw import TreeWidget
 from nltk.draw.util import CanvasFrame
 from nltk.tree import Tree
@@ -31,11 +32,11 @@ def jupyter_draw_nltk_tree(
     png_file_name = f_name.with_suffix(".png").as_posix()
     system(f'convert {ps_file_name} {png_file_name}')
 
-    # if show_tree:
-    #     display(
-    #         (Image(filename=png_file_name), )
-    #     )
+    if show_tree:
+        display(
+            (Image(filename=png_file_name),)
+        )
 
-    # system(f'rm {f_name}.ps')
+    system(f'rm {f_name}.ps')
 
     return png_file_name
