@@ -44,15 +44,15 @@ class Aspect2AspectGraph:
                 total=len(discourse_tree_df),
                 desc='Generating aspect-aspect graph based on rules'
         ):
-            for edu_left, edu_right, relation, gerani_weight in row.rules:
+            for edu_left, edu_right, relation, weight in row.rules:
                 for aspect_left, aspect_right in product(row.aspects[edu_left], row.aspects[edu_right]):
-                    graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, gerani_weight)
+                    graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, weight)
         return graph
 
-    def add_aspects_to_graph(self, graph, aspect_left, aspect_right, relation, gerani_weight):
+    def add_aspects_to_graph(self, graph, aspect_left, aspect_right, relation, weight):
         if aspect_left != aspect_right:
-            loger.info(f'Add rule: {(aspect_left, aspect_right, relation, gerani_weight)}')
-            graph.add_edge(aspect_left, aspect_right, relation_type=relation, gerani_weight=gerani_weight)
+            loger.info(f'Add rule: {(aspect_left, aspect_right, relation, weight)}')
+            graph.add_edge(aspect_left, aspect_right, relation_type=relation, weight=weight)
         return graph
 
 
