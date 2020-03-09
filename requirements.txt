@@ -34,6 +34,7 @@ streamlit==0.56.0
 summa==1.2.0
 tensorboard==2.0.2
 tensorflow==2.0.0
+textblob==0.15.3
 thinc==7.1.1
 toolz==0.10.0
 tqdm==4.41.0
