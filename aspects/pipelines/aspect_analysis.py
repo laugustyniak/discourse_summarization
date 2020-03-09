@@ -17,7 +17,7 @@ from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
 from aspects.data_io.serializer import Serializer
 from aspects.rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
-from aspects.sentiment.sentiment_client import BiLSTMModel
+from aspects.sentiment.simple_textblob import analyze
 from aspects.utilities import settings, pandas_utils
 from aspects.utilities.data_paths import ExperimentPaths
 
@@ -48,7 +48,7 @@ class AspectAnalysis:
         self.batch_size = batch_size
         self.input_file_path = input_path
         if self.max_docs is not None:
-            self.output_path = '{}-{}-docs'.format(output_path, self.max_docs)
+            self.output_path = f'{str(output_path)}-{self.max_docs}-docs'
         else:
             self.output_path = output_path
         self.paths = ExperimentPaths(input_path, self.output_path)
@@ -134,10 +134,9 @@ class AspectAnalysis:
         #     return df
 
         pandas_utils.assert_columns(df, 'edus')
-        analyzer = BiLSTMModel()
         df['sentiment'] = self.parallelized_extraction(
             df.edus.tolist(),
-            analyzer.get_sentiments,
+            analyze,
             'Sentiment extracting'
         )
         self.discourse_trees_df_checkpoint(df)

@@ -7,7 +7,8 @@ from aspects.utilities import settings
 log = logging.getLogger(__name__)
 
 
-class LogisticRegressionSentimentAnalyzer(object):
+# FIXME: trained with old scikit and python 2
+class LogisticRegressionSentimentAnalyzer:
 
     def __init__(self, model_path=None):
         log.info('Sentiment Analyzer - status: initializing')
