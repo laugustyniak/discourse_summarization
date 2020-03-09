@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def assert_columns(df: pd.DataFrame, *columns: str, **columns_with_types):
     available_columns = set(df.columns)
     expected_columns = columns + tuple(columns_with_types.keys())

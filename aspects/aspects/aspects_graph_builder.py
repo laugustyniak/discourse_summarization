@@ -120,59 +120,5 @@ def calculate_weighted_page_rank(
     return OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
 
 
-# def filter_rules_gerani(rules_rows: List[EDURelation]) -> List[EDURelation]:
-#     """
-#     Filter rules by its confidence,
-#
-#     Parameters
-#     ----------
-#     rules_rows : dict
-#         Dictionary of document id and list of rules. Relation tuple
-#         Relation(aspect_right, aspect, relation, gerani_weight)
-#
-#     Returns
-#     -------
-#     rules_filtered : list
-#         List of rules/relations between aspects with their maximum gerani weights.
-#
-#         Examples
-#         [
-#             Relation(aspect1=u'screen', aspect2=u'phone', relation_type='Elaboration', gerani_weight=1.38),
-#             Relation(aspect1=u'speaker', aspect2=u'sound', relation_type='Elaboration', gerani_weight=0.29)
-#         ]
-#     """
-#     for rules in rules_rows:
-#         rules_filtered = []
-#         for rule in rules:
-#             left_node, right_node, relation, weight = rule
-#             relation_counter = Counter([x[:3] for x in rules_filtered])
-#             rule_confidence = sorted(relation_counter, key=operator.itemgetter(1), reverse=True)[0]
-#             rules_confidence = [r for r in rules_filtered if rule_confidence == r[:3]]
-#             rule_per_doc[doc_id].extend(
-#                 [
-#                     max(v, key=lambda rel: rel.gerani_weight)
-#                     for g, v
-#                     in groupby(sorted(rules_confidence), key=lambda rel: rel[:3])
-#                 ]
-#             )
-#         else:
-#             logging.info('Empty rule list for document {}'.format(doc_id))
-#     relations_list = [
-#         (
-#                 group + (sum([rel.gerani_weight for rel in relations]),)
-#         )
-#         for group, relations
-#         in groupby(sorted(flatten(rule_per_doc.values())), key=lambda rel: rel[:3])
-#     ]
-#     # map relations into namedtuples
-#     relations_list = [
-#         AspectsRelation(a1, a2, r, w)
-#         for a1, a2, r, w
-#         in relations_list
-#     ]
-#     rules = {-1: relations_list}
-#     return rules
-
-
 def sort_networkx_attibutes(graph_attribs_tuples):
     return sorted(list(graph_attribs_tuples), key=lambda node_attrib_pair: node_attrib_pair[1], reverse=True)

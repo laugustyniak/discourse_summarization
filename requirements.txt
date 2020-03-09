@@ -16,6 +16,7 @@ pandas==0.25.3
 plac==0.9.6
 plotly==4.4.1
 preshed==3.0.2
+PyHamcrest==2.0.2
 protobuf==3.11.2
 py2cytoscape==.0.7.1
 pydot==1.4.1
