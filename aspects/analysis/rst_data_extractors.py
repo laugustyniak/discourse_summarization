@@ -1,8 +1,9 @@
-from more_itertools import flatten
 from pathlib import Path
+
+from more_itertools import flatten
 from tqdm import tqdm
 
-from utilities.transformations import load_serialized
+from aspects.utilities.transformations import load_serialized
 
 
 def get_extracted_documents(data_path_extracted_documents):
