@@ -129,9 +129,9 @@ class AspectAnalysis:
         logging.info(f'Discourse data frame - saved.')
 
     def extract_sentiment(self, df: pd.DataFrame) -> pd.DataFrame:
-        # if 'sentiment' in df.columns:
-        #     logging.info('Sentiments have been already extracted. Passing to the next step.')
-        #     return df
+        if 'sentiment' in df.columns:
+            logging.info('Sentiments have been already extracted. Passing to the next step.')
+            return df
 
         pandas_utils.assert_columns(df, 'edus')
         df['sentiment'] = self.parallelized_extraction(
