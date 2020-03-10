@@ -1,4 +1,4 @@
-from analysis.aspects_hierarchy import AspectHierarchyRST
+from aspects.analysis.aspects_hierarchy import AspectHierarchyRST
 
 amazon_cellphone_aspect_hierarchy_100000_reviews = [
     AspectHierarchyRST(nucleus=u'phone', satellite=u'case', all_relations=633),
