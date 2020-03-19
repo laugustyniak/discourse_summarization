@@ -70,6 +70,30 @@ def calculate_moi_by_gerani(
 def gerani_paper_arrg_to_aht(
         graph: nx.MultiDiGraph,
         max_number_of_nodes: int = 100,
+        weight: str = 'moi'
+) -> nx.Graph:
+    loger.info('Generate Aspect Hierarchical Tree based on ARRG')
+    aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
+    graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank)
+
+    graph_flatten = merge_multiedges(graph)
+    # sorted_nodes = sorted(
+    # list(graph_flatten.degree()), key=lambda node_degree_pair: node_degree_pair[1], reverse=True)
+    sorted_nodes = sorted(
+        list(aspects_weighted_page_rank.items()),
+        key=lambda node_degree_pair: node_degree_pair[1],
+        reverse=True
+    )
+    top_nodes = list(pluck(0, sorted_nodes[:max_number_of_nodes]))
+    sub_graph = graph_flatten.subgraph(top_nodes)
+    maximum_spanning_tree = nx.maximum_spanning_tree(sub_graph, weight=weight)
+    nx.set_node_attributes(maximum_spanning_tree, dict(sub_graph.nodes.items()))
+    return maximum_spanning_tree
+
+
+def our_paper_arrg_to_aht(
+        graph: nx.MultiDiGraph,
+        max_number_of_nodes: int = 100,
         weight: str = 'weight'
 ) -> nx.Graph:
     loger.info('Generate Aspect Hierarchical Tree based on ARRG')
