@@ -6,15 +6,17 @@ from os.path import basename
 from pathlib import Path
 from typing import Callable, Sequence, List, Union
 
+import networkx as nx
 import pandas as pd
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import (
     extend_graph_nodes_with_sentiments_and_weights,
-    gerani_paper_arrg_to_aht
-)
+    gerani_paper_arrg_to_aht,
+    our_paper_arrg_to_aht)
 from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
+from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph, sort_networkx_attibutes
+from aspects.aspects.rule_filters import filter_rules_gerani
 from aspects.data_io.serializer import Serializer
 from aspects.rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
 from aspects.sentiment.simple_textblob import analyze
@@ -38,6 +40,7 @@ class AspectAnalysis:
             self,
             input_path: Union[str, Path],
             output_path: Union[str, Path],
+            experiment_name: str = '',
             jobs: int = None,
             sent_model_path: Union[str, Path] = None,
             batch_size: int = None,
@@ -51,7 +54,8 @@ class AspectAnalysis:
             self.output_path = f'{str(output_path)}-{self.max_docs}-docs'
         else:
             self.output_path = output_path
-        self.paths = ExperimentPaths(input_path, self.output_path)
+        self.experiment_name = experiment_name
+        self.paths = ExperimentPaths(input_path, self.output_path, experiment_name)
         self.sent_model_path = sent_model_path
         self.serializer = Serializer()
 
@@ -173,34 +177,44 @@ class AspectAnalysis:
 
         return df
 
-    def build_aspect_to_aspect_graph(self, df: pd.DataFrame):
-        if self.paths.aspect_to_aspect_graph.exists():
-            return self.serializer.load(self.paths.aspect_to_aspect_graph)
-        else:
-            builder = Aspect2AspectGraph()
-            graph = builder.build(
-                discourse_tree_df=df,
-                conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
-                # TODO: add fn filtering
-                # TODO: update gerani-based filtering using data frame with discourse trees
-                filter_relation_fn=None
-            )
-
-            self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
-            return graph
+    def build_aspect_to_aspect_graph(self, df: pd.DataFrame, filter_relation_fn: Callable = None):
+        builder = Aspect2AspectGraph()
+        graph = builder.build(
+            discourse_tree_df=df,
+            conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
+            filter_relation_fn=filter_relation_fn
+        )
+        self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
+        return graph
 
     def add_sentiments_and_weights_to_nodes(self, graph, discourse_trees_df: pd.DataFrame):
-        # check if we have any attributes in the graph
-        if graph.node[list(graph.nodes)[0]]:
-            graph = self.serializer.load(self.paths.aspect_to_aspect_graph)
-            aspect_sentiments = self.serializer.load(self.paths.aspect_sentiments)
-        else:
-            graph, aspect_sentiments = extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df)
-            self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
-            self.serializer.save(aspect_sentiments, self.paths.aspect_sentiments)
+        graph, aspect_sentiments = extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df)
+        self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
+        self.serializer.save(aspect_sentiments, self.paths.aspect_sentiments)
         return graph, aspect_sentiments
 
     def gerani_pipeline(self):
+        logging.info(f'Experiments for:  {self.paths.experiment_path}')
+
+        discourse_trees_df = (self.extract_discourse_trees()
+                              .pipe(self.extract_discourse_trees_ids_only)
+                              .pipe(self.extract_sentiment)
+                              .pipe(self.extract_aspects)
+                              .pipe(self.extract_edu_rhetorical_rules)
+                              )
+
+        graph = self.build_aspect_to_aspect_graph(discourse_trees_df, filter_rules_gerani)
+        graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
+        aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=50, weight='moi')
+
+        self.serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
+
+        aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
+        aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
+        # draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
+
+    def our_pipeline(self):
+        logging.info(f'Experiments for:  {self.paths.experiment_path}')
 
         discourse_trees_df = (self.extract_discourse_trees()
                               .pipe(self.extract_discourse_trees_ids_only)
@@ -211,6 +225,10 @@ class AspectAnalysis:
 
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
         graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
-        aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=50)
+        aht_graph = our_paper_arrg_to_aht(graph, max_number_of_nodes=50, weight='pagerank')
 
         self.serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
+
+        aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
+        aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
+        # draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
