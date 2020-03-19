@@ -8,7 +8,6 @@ import networkx as nx
 import pandas as pd
 from tqdm import tqdm
 
-tqdm.pandas()
 loger = logging.getLogger(__name__)
 
 
@@ -34,6 +33,7 @@ class Aspect2AspectGraph:
 
         """
         if filter_relation_fn:
+            tqdm.pandas(desc='Rules filtering...')
             discourse_tree_df.rules = discourse_tree_df.rules.progress_apply(filter_relation_fn)
         return self.build_aspects_graph(discourse_tree_df)
 

@@ -2,9 +2,9 @@ import unittest
 from collections import OrderedDict
 
 import networkx as nx
-from edu_dependency_parser.trees.parse_tree import ParseTree
+from nltk.tree import Tree
 
-from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph, AspectsRelation
+from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
 from aspects.data_io.serializer import Serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities import settings
@@ -43,17 +43,17 @@ class AspectGraphBuilderTest(unittest.TestCase):
         self.docs_info = {1: {'sentiment': {513: 1, 514: -1, 515: 1, 517: -1}}}
 
     def _set_parse_tree(self):
-        self.parse_tree = ParseTree('same-unit[N][N]',
-                                    [ParseTree('Elaboration[N][S]',
-                                               [513, 514]),
-                                     ParseTree('Elaboration[N][S]',
-                                               [515,
-                                                ParseTree(
-                                                    'Joint[N][N]',
-                                                    [516,
-                                                     ParseTree(
-                                                         'Elaboration[N][S]',
-                                                         [517, 518])])])])
+        self.parse_tree = Tree('same-unit[N][N]',
+                               [Tree('Elaboration[N][S]',
+                                     [513, 514]),
+                                Tree('Elaboration[N][S]',
+                                     [515,
+                                      Tree(
+                                          'Joint[N][N]',
+                                          [516,
+                                           Tree(
+                                               'Elaboration[N][S]',
+                                               [517, 518])])])])
 
     def test_build_arrg_graph_rst_conceptnnet_io(self):
         self._setup_link_parse_tree_189()
