@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  graph_embeddings:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: graph_embeddings
+    ports:
+      - "8899:8888"
+    volumes:
+      - /home/laugustyniak:/app
+    tty: true
