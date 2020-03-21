@@ -1,74 +1,59 @@
+from pathlib import Path
+
 import torch
-import torch.nn.functional as F
-from torch_geometric.data import ClusterData, ClusterLoader
-from torch_geometric.datasets import Reddit
-from torch_geometric.nn import SAGEConv
+from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.data import DataLoader
+from torch_geometric.nn import Node2Vec
+from tqdm import tqdm
 
-dataset = Reddit('../data/Reddit')
+from aspects.embeddings.rst_trees_data import RSTTreesDataset
+from aspects.utilities.settings import DEFAULT_OUTPUT_PATH
+
+dataset = RSTTreesDataset(
+    root=(DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs' / 'our').as_posix(),
+    spacy_model='en_core_web_lg'
+)
 data = dataset[0]
+loader = DataLoader(torch.arange(data.num_nodes), batch_size=128, shuffle=True)
 
-print('Partioning the graph... (this may take a while)')
-cluster_data = ClusterData(data, num_parts=1500, recursive=False, save_dir=dataset.processed_dir)
-loader = ClusterLoader(cluster_data, batch_size=20, shuffle=True, num_workers=6)
-print('Done!')
-
-
-class Net(torch.nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super(Net, self).__init__()
-        self.conv1 = SAGEConv(in_channels, 128, normalize=False)
-        self.conv2 = SAGEConv(128, out_channels, normalize=False)
-
-    def forward(self, x, edge_index):
-        x = F.dropout(x, p=0.2, training=self.training)
-        x = F.relu(self.conv1(x, edge_index))
-        x = F.dropout(x, p=0.2, training=self.training)
-        x = self.conv2(x, edge_index)
-        return F.log_softmax(x, dim=1)
-
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = Net(dataset.num_features, dataset.num_classes).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model = Node2Vec(data.num_nodes, embedding_dim=128, walk_length=20, context_size=10, walks_per_node=10)
+model, data = model.to(device), data.to(device)
+optimizer = Adam(model.parameters(), lr=0.01)
+scheduler = ReduceLROnPlateau(optimizer, 'min', patience=2)
 
 
 def train():
     model.train()
-    total_loss = total_nodes = 0
-    for data in loader:
-        data = data.to(device)
+    total_loss = 0
+    for subset in loader:
         optimizer.zero_grad()
-        logits = model(data.x, data.edge_index)
-        loss = F.nll_loss(logits[data.train_mask], data.y[data.train_mask])
+        loss = model.loss(data.edge_index, subset.to(device))
         loss.backward()
         optimizer.step()
-
-        nodes = data.train_mask.sum().item()
-        total_loss += loss.item() * nodes
-        total_nodes += nodes
-
-    return total_loss / total_nodes
+        total_loss += loss.item()
+    return total_loss / len(loader)
 
 
-@torch.no_grad()
-def test():
-    model.eval()
-    total_correct, total_nodes = [0, 0, 0], [0, 0, 0]
-    for data in loader:
-        data = data.to(device)
-        logits = model(data.x, data.edge_index)
-        pred = logits.argmax(dim=1)
-
-        masks = [data.train_mask, data.val_mask, data.test_mask]
-        for i, mask in enumerate(masks):
-            total_correct[i] += (pred[mask] == data.y[mask]).sum().item()
-            total_nodes[i] += mask.sum().item()
-
-    return (torch.Tensor(total_correct) / torch.Tensor(total_nodes)).tolist()
+# def test():
+#     model.eval()
+#     with torch.no_grad():
+#         z = model(torch.arange(data.num_nodes, device=device))
+#     acc = model.test(z[data.train_mask], data.y[data.train_mask],
+#                      z[data.test_mask], data.y[data.test_mask], max_iter=150)
+#     return acc
 
 
-for epoch in range(1, 31):
+for epoch in tqdm(list(range(5)), desc='Epochs...'):
     loss = train()
-    accs = test()
-    print('Epoch: {:02d}, Loss: {:.4f}, Train: {:.4f}, Val: {:.4f}, '
-          'Test: {:.4f}'.format(epoch, loss, *accs))
+    scheduler.step(loss)
+    print('Epoch: {:02d}, Loss: {:.4f}'.format(epoch, loss))
+
+model_path = Path(dataset.root) / Path(dataset.processed_file_names[0]).with_suffix(f'.{dataset.spacy_model}.model')
+torch.save(model, )
+print(f'Model saved to: {model_path}')
+
+dataset_path = Path(dataset.root) / Path(dataset.processed_file_names[0]).with_suffix(f'.{dataset.spacy_model}.dataset')
+torch.save(dataset, dataset_path)
+print(f'Dataset saved to: {dataset_path}')
