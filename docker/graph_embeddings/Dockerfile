@@ -148,5 +148,9 @@ RUN pip install torch-scatter==latest+${CUDA} -f https://pytorch-geometric.com/w
     && pip install torch-spline-conv==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-1.4.0.html \
     && pip install torch-geometric
 
+
+RUN pip install tqdm toolz==0.10.0 python-rake==1.4.5 spacy==2.2.0 textblob==0.15.3 nltk==3.4.5 more-itertools==8.0.2
+RUN python -m spacy download en_core_web_sm
+
 # Set the default command to python3.
 CMD ["python3"]
