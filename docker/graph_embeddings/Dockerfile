@@ -153,6 +153,10 @@ RUN pip install tqdm toolz==0.10.0 python-rake==1.4.5 spacy==2.2.0 textblob==0.1
 RUN python -m spacy download en_core_web_sm
 RUN python -m spacy download en_core_web_lg
 RUN python -m spacy download en_trf_bertbaseuncased_lg
+RUN python -m spacy download de_trf_bertbasecased_lg
+RUN python -m spacy download en_trf_distilbertbaseuncased_lg
+RUN python -m spacy download en_trf_robertabase_lg
+RUN python -m spacy download en_trf_xlnetbasecased_lg
 
 RUN pip install jupyter
 
