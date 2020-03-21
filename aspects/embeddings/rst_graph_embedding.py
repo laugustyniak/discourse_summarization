@@ -36,22 +36,13 @@ def train():
     return total_loss / len(loader)
 
 
-# def test():
-#     model.eval()
-#     with torch.no_grad():
-#         z = model(torch.arange(data.num_nodes, device=device))
-#     acc = model.test(z[data.train_mask], data.y[data.train_mask],
-#                      z[data.test_mask], data.y[data.test_mask], max_iter=150)
-#     return acc
-
-
-for epoch in tqdm(list(range(5)), desc='Epochs...'):
+for epoch in tqdm(list(range(100)), desc='Epochs...'):
     loss = train()
     scheduler.step(loss)
     print('Epoch: {:02d}, Loss: {:.4f}'.format(epoch, loss))
 
 model_path = Path(dataset.root) / Path(dataset.processed_file_names[0]).with_suffix(f'.{dataset.spacy_model}.model')
-torch.save(model, )
+torch.save(model, model_path)
 print(f'Model saved to: {model_path}')
 
 dataset_path = Path(dataset.root) / Path(dataset.processed_file_names[0]).with_suffix(f'.{dataset.spacy_model}.dataset')
