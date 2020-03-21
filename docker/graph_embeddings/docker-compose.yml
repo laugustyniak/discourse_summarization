@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: graph_embeddings
+    # It is possible that dataloader's workers are out of shared memory. Please try to raise your shared memory limit.
+    shm_size: '8gb'
     ports:
       - "8899:8888"
     volumes:
