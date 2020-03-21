@@ -1,10 +1,11 @@
 from functools import lru_cache
+
 import RAKE
 import spacy
 
 
 @lru_cache(None)
-def load_spacy(model='en'):
+def load_spacy(model='en_core_web_sm'):
     return spacy.load(model)
 
 
