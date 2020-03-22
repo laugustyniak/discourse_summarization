@@ -4,21 +4,26 @@ import click
 from flair.datasets import ColumnCorpus
 from flair.embeddings import (
     StackedEmbeddings,
-    WordEmbeddings,
-    FlairEmbeddings,
-    CharacterEmbeddings,
-    BertEmbeddings,
-    ELMoEmbeddings
+    WordEmbeddings
 )
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 from flair.visual.training_curves import Plotter
 from tqdm import tqdm
 
+from aspects.utilities.settings import DEFAULT_OUTPUT_PATH, SEMEVAL_DATASETS_2014
+
+# TODO: remove after experiements
+RESULTS_PATH = DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs' / 'our'
+
 
 @click.command()
-@click.option('--input-dir', type=click.Path(), default=Path('semeval/2014/poria/'))
-def run_experiments(input_dir: Path):
+@click.option('--input-dir', type=click.Path(), default=SEMEVAL_DATASETS_2014 / 'poria')
+@click.option('--output-dir', type=click.Path(), default=RESULTS_PATH)
+def run_experiments(input_dir: Path, output_dir: Path):
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     # retrieve corpus using column format, data folder and the names of the train, dev and test files
     corpus = ColumnCorpus(
         input_dir,
@@ -42,25 +47,34 @@ def run_experiments(input_dir: Path):
         'glove': [
             WordEmbeddings('glove'),
         ],
-        'charlmembedding': [
-            FlairEmbeddings('news-forward'),
-            FlairEmbeddings('news-backward'),
-        ],
-        'glove-simple-char': [
+        'glove+aspects': [
             WordEmbeddings('glove'),
-            CharacterEmbeddings(),
+            WordEmbeddings(
+                (output_dir / 'aspect_2_aspect_graph-en_core_web_lg.en_core_web_lg.word2vec_format.bin').as_posix()
+            ),
         ],
-        'bert': [
-            BertEmbeddings('bert-large-cased'),
-        ],
-        'elmo': [
-            ELMoEmbeddings('original')
-        ]
+        # 'charlmembedding': [
+        #     FlairEmbeddings('news-forward'),
+        #     FlairEmbeddings('news-backward'),
+        # ],
+        # 'glove-simple-char': [
+        #     WordEmbeddings('glove'),
+        #     CharacterEmbeddings(),
+        # ],
+        # 'bert': [
+        #     BertEmbeddings('bert-large-cased'),
+        # ],
+        # 'elmo': [
+        #     ELMoEmbeddings('original')
+        # ]
     }
 
     for name, embeddings_to_stack in tqdm(
-            all_embedding_to_test.items(), desc='Different embeddings stacked', total=len(all_embedding_to_test)):
-        RESULTS_FOLDER = Path(f'/efs/laugustyniak/sequence-tagging/aspects/laptops-{name}')
+            all_embedding_to_test.items(),
+            desc='Different embeddings stacked',
+            total=len(all_embedding_to_test)
+    ):
+        results_folder = Path(DEFAULT_OUTPUT_PATH / f'sequence-tagging/aspects/laptops-{name}')
         embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings_to_stack)
 
         # 5. initialize sequence tagger
@@ -76,7 +90,7 @@ def run_experiments(input_dir: Path):
 
         # 7. start training
         trainer.train(
-            RESULTS_FOLDER.as_posix(),
+            results_folder.as_posix(),
             learning_rate=0.1,
             mini_batch_size=32,
             max_epochs=150
@@ -84,8 +98,8 @@ def run_experiments(input_dir: Path):
 
         # 8. plot training curves (optional)
         plotter = Plotter()
-        plotter.plot_training_curves(RESULTS_FOLDER / 'loss.tsv')
-        plotter.plot_weights(RESULTS_FOLDER / 'weights.txt')
+        plotter.plot_training_curves(results_folder / 'loss.tsv')
+        plotter.plot_weights(results_folder / 'weights.txt')
 
 
 if __name__ == '__main__':

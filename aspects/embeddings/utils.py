@@ -99,7 +99,7 @@ def convert_graph_embedding_to_gensim(
     )
     """
     if embedding_path is None:
-        embedding_path = Path(model_path).with_suffix('.word2vec_format')
+        embedding_path = Path(model_path).with_suffix('.word2vec_format.bin')
 
     model = torch.load(model_path)
     dataset = torch.load(dataset_path)
