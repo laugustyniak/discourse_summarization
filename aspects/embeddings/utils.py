@@ -1,11 +1,15 @@
 import pickle
 from functools import lru_cache
 from pathlib import Path
+from typing import Union
 
 import numpy as np
+import torch
+from gensim.models.keyedvectors import Vocab
+from gensim.models.utils_any2vec import _save_word2vec_format
 from tqdm import tqdm
 
-from utilities import settings
+from aspects.utilities import settings
 
 
 def get_word_embedding_vocab(word_embedding_path=None, word_embedding_vocab_path=None):
@@ -78,3 +82,37 @@ def load_word_embeddings(file_path):
         pickle.dump(file_path.with_suffix('.cache').as_posix(), f)
 
     return word_vectors, size
+
+
+def convert_graph_embedding_to_gensim(
+        model_path: Union[str, Path],
+        dataset_path: Union[str, Path],
+        embedding_path: Union[str, Path] = None
+) -> Path:
+    """
+    Example usage
+    convert_graph_embedding_to_gensim(
+        model_path=(
+                DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs' / 'our' / 'aspect_2_aspect_graph-en_core_web_lg.en_core_web_lg.model').as_posix(),
+        dataset_path=(
+                DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs' / 'our' / 'aspect_2_aspect_graph-en_core_web_lg.en_core_web_lg.dataset').as_posix()
+    )
+    """
+    if embedding_path is None:
+        embedding_path = Path(model_path).with_suffix('.word2vec_format')
+
+    model = torch.load(model_path)
+    dataset = torch.load(dataset_path)
+
+    _save_word2vec_format(
+        embedding_path,
+        vocab={
+            word.replace(' ', '_'): Vocab(index=index, count=1)
+            for word, index
+            in dataset[0].nodes_mapping[0].items()
+        },
+        vectors=model.embedding.weight.detach().numpy(),
+        binary=True
+    )
+
+    return embedding_path
