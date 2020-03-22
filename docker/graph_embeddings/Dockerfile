@@ -159,6 +159,10 @@ RUN python -m spacy download en_trf_robertabase_lg
 RUN python -m spacy download en_trf_xlnetbasecased_lg
 
 RUN pip install jupyter
+RUN pip install flair==0.4.5
+
+ENV LC_ALL "C.UTF-8"
+ENV LANG "C.UTF-8"
 
 CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
 
