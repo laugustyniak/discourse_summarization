@@ -5,20 +5,18 @@ import networkx as nx
 from nltk.tree import Tree
 
 from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
-from aspects.data_io.serializer import Serializer
+from aspects.data_io import serializer
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.utilities import settings
 
 
 class AspectGraphBuilderTest(unittest.TestCase):
-    def setUp(self):
-        self.serializer = Serializer()
 
     def _setup_link_parse_tree_177(self):
-        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_177.as_posix())
+        self.link_tree = serializer.load(settings.SAMPLE_TREE_177.as_posix())
 
     def _setup_link_parse_tree_189(self):
-        self.link_tree = self.serializer.load(settings.SAMPLE_TREE_189.as_posix())
+        self.link_tree = serializer.load(settings.SAMPLE_TREE_189.as_posix())
 
     def _set_rst_rules_document_info(self):
         self.rules = {1: [(514, 513, 'Elaboration', 0.25),

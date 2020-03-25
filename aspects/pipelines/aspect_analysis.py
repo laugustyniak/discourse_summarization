@@ -17,7 +17,7 @@ from aspects.analysis.gerani_graph_analysis import (
 from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph, sort_networkx_attibutes
 from aspects.aspects.rule_filters import filter_rules_gerani
-from aspects.data_io.serializer import Serializer
+from aspects.data_io import serializer
 from aspects.rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
 from aspects.sentiment.simple_textblob import analyze
 from aspects.utilities import settings, pandas_utils
@@ -57,7 +57,6 @@ class AspectAnalysis:
         self.experiment_name = experiment_name
         self.paths = ExperimentPaths(input_path, self.output_path, experiment_name)
         self.sent_model_path = sent_model_path
-        self.serializer = Serializer()
 
         # number of all processes
         if jobs is None:
@@ -184,13 +183,13 @@ class AspectAnalysis:
             conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
             filter_relation_fn=filter_relation_fn
         )
-        self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
+        serializer.save(graph, self.paths.aspect_to_aspect_graph)
         return graph
 
     def add_sentiments_and_weights_to_nodes(self, graph, discourse_trees_df: pd.DataFrame):
         graph, aspect_sentiments = extend_graph_nodes_with_sentiments_and_weights(graph, discourse_trees_df)
-        self.serializer.save(graph, self.paths.aspect_to_aspect_graph)
-        self.serializer.save(aspect_sentiments, self.paths.aspect_sentiments)
+        serializer.save(graph, self.paths.aspect_to_aspect_graph)
+        serializer.save(aspect_sentiments, self.paths.aspect_sentiments)
         return graph, aspect_sentiments
 
     def gerani_pipeline(self):
@@ -207,7 +206,7 @@ class AspectAnalysis:
         graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
         aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=50, weight='moi')
 
-        self.serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
+        serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
         aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
         aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
@@ -227,7 +226,7 @@ class AspectAnalysis:
         graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
         aht_graph = our_paper_arrg_to_aht(graph, max_number_of_nodes=50, weight='pagerank')
 
-        self.serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
+        serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
         aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
         aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)

@@ -4,12 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 
 from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph
-from aspects.data_io.serializer import Serializer
+from aspects.data_io import serializer
 from aspects.utilities import settings
 
 REVIEWS_RESULTS = settings.DEFAULT_OUTPUT_PATH.parent.parent / 'results' / 'reviews_Cell_Phones_and_Accessories'
-
-serializer = Serializer()
 
 # aspects_per_edu = serializer.load((REVIEWS_RESULTS / 'aspects_per_edu').as_posix())
 # edus = serializer.load('results/reviews_Cell_Phones_and_Accessories/raw_edu_list')

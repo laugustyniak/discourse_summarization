@@ -6,11 +6,8 @@ import streamlit as st
 
 sys.path.append('/datasets/sentiment/aspects/sentiment-backend/')
 
-from aspects.data_io.serializer import Serializer
+from aspects.data_io import serializer
 from aspects.utilities.data_paths import ExperimentPaths
-
-
-serializer = Serializer()
 
 RESULTS_PATH = Path('/datasets/sentiment/aspects/sentiment-backend/results')
 
