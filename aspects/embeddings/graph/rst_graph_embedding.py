@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torch_geometric.nn import Node2Vec
 from tqdm import tqdm
 
-from aspects.embeddings.rst_trees_data import RSTTreesDataset
+from aspects.embeddings.graph.rst_trees_data import RSTTreesDataset
 from aspects.utilities.settings import DEFAULT_OUTPUT_PATH
 
 dataset = RSTTreesDataset(
