@@ -81,7 +81,9 @@ WORD_EMBEDDING_GLOVE_42B = DATA_PATH / 'embedding' / 'glove.42B.300d.txt'
 WORD_EMBEDDING_GLOVE_42B_VOCAB = DATA_PATH / 'embedding' / 'glove.42B.300d.vocab.pkl'
 
 # --------------------------------------------- CONCEPTNETS ---------------------------------------------------------- #
-CONCEPTNET_IO_PATH_GZ = DATA_PATH / 'conceptnet' / 'conceptnet-assertions-5.5.5.csv.gz'
+CONCEPTNET_CSV_EN_PATH = DATA_PATH / 'conceptnet' / 'conceptnet-5.7.0-assertions.en.csv'
+CONCEPTNET_CSV_PL_PATH = DATA_PATH / 'conceptnet' / 'conceptnet-5.7.0-assertions.pl.csv'
+# FIXME update pkl with 5.7.0 dump of assertions - only polish and english are important
 CONCEPTNET_IO_PKL = DATA_PATH / 'conceptnet' / 'conceptnet_io.pkl'
 
 # sentic net conceptnet
