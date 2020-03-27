@@ -77,4 +77,4 @@ if __name__ == '__main__':
     df.target = df.target.apply(lambda t: str(t).replace('_', ' '))
 
     for lang in tqdm(CONCEPTNET_LANGS, desc='Dumping langs...'):
-        df[df.lang == lang].to_csv(conceptnet_path.with_suffix(f'.{lang}.csv'))
+        df[df.lang == lang][['relation', 'source', 'target']].to_csv(conceptnet_path.with_suffix(f'.{lang}.csv'))
