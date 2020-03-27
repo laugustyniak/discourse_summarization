@@ -27,3 +27,4 @@ notebooks/trees/
 notebooks/aspect_rules_vectors
 notebooks/aspect_rules_model
 notebooks/*.xlsx
+conceptnet-5.7.0-assertions.csv
