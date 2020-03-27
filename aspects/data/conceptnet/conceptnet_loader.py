@@ -72,4 +72,9 @@ if __name__ == '__main__':
         list(parse_conceptnet_dump(conceptnet_path)),
         columns=['relation', 'source', 'target', 'lang']
     )
-    df.to_csv(conceptnet_path.with_suffix('.en-pl.csv'))
+
+    df.source = df.source.apply(lambda t: str(t).replace('_', ' '))
+    df.target = df.target.apply(lambda t: str(t).replace('_', ' '))
+
+    for lang in tqdm(CONCEPTNET_LANGS, desc='Dumping langs...'):
+        df[df.lang == lang].to_csv(conceptnet_path.with_suffix(f'.{lang}.csv'))
