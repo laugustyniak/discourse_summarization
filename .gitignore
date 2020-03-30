@@ -32,3 +32,6 @@ conceptnet-5.7.0-assertions.csv
 /aspects/data/conceptnet/conceptnet-5.7.0-assertions.pl.csv
 /aspects/data/conceptnet/conceptnet-5.7.0-assertions.en.csv
 /docker/prodigy_jupyter_lab/prodigy-*.whl
+/.local/
+/.config/
+/.ipython/
