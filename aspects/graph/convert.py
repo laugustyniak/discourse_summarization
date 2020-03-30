@@ -29,7 +29,7 @@ def get_prop_type(value, key=None):
     return tname, value, key
 
 
-def nx2gt(nxG):
+def networkx_2_graph_tool(nxG):
     """
     Converts a networkx graph to a graph-tool graph.
     """
@@ -136,5 +136,5 @@ if __name__ == '__main__':
     for item in nxG.edges(data=True):
         print(item)
     # Convert to graph-tool graph
-    gtG = nx2gt(nxG)
+    gtG = networkx_2_graph_tool(nxG)
     gtG.list_properties()
