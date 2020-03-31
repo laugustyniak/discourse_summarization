@@ -29,10 +29,10 @@ def get_prop_type(value, key=None):
     return tname, value, key
 
 
-def networkx_2_graph_tool(nxG):
-    """
-    Converts a networkx graph to a graph-tool graph.
-    """
+def networkx_2_graph_tool(nxG, node_name_property: str = None):
+    """ Converts a networkx graph to a graph-tool graph. """
+    node_name_property = node_name_property or 'id'
+
     # Phase 0: Create a directed or undirected graph-tool Graph
     gtG = gt.Graph(directed=nxG.is_directed())
 
@@ -64,10 +64,10 @@ def networkx_2_graph_tool(nxG):
             # Add the key to the already seen properties
             nprops.add(key)
 
-    # Also add the node id: in NetworkX a node can be any hashable type, but
+    # Also add the node node_name_property: in NetworkX a node can be any hashable type, but
     # in graph-tool node are defined as indices. So we capture any strings
-    # in a special PropertyMap called 'id' -- modify as needed!
-    gtG.vertex_properties['id'] = gtG.new_vertex_property('string')
+    # in a special PropertyMap called accorading to node_name_property
+    gtG.vertex_properties[node_name_property] = gtG.new_vertex_property('string')
 
     # Add the edge properties second
     eprops = set()  # cache keys to only add properties once
@@ -96,7 +96,7 @@ def networkx_2_graph_tool(nxG):
         vertices[node] = v
 
         # Set the vertex properties, not forgetting the id property
-        data['id'] = str(node)
+        data[node_name_property] = str(node)
         for key, value in data.items():
             gtG.vp[key][v] = value  # vp is short for vertex_properties
 
@@ -136,5 +136,5 @@ if __name__ == '__main__':
     for item in nxG.edges(data=True):
         print(item)
     # Convert to graph-tool graph
-    gtG = networkx_2_graph_tool(nxG)
+    gtG = networkx_2_graph_tool(nxG, node_name_property='aspect')
     gtG.list_properties()
