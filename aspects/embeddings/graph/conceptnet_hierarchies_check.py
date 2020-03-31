@@ -27,6 +27,8 @@ class AspectNeighborhood(NamedTuple):
 
 SEED_ASPECTS = ['phone', 'battery', 'price']
 
+HIERARCHICAL_RELATIONS = {'LocatedNear', 'HasA', 'MadeOf', 'PartOf', 'IsA'}
+
 
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
     return np.where(shortest_paths > GRAPH_TOOL_SHORTEST_PATHS_0_VALUE, replaced_value, shortest_paths)
@@ -36,6 +38,20 @@ if __name__ == '__main__':
     conceptnet_graph = load_english_graph()
     remove_self_loops(conceptnet_graph)
     vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
+
+    # filter relations
+    e_hierarchical_relation_filter = conceptnet_graph.new_edge_property('bool')
+    relations = list(conceptnet_graph.properties[('e', 'relation')])
+    for edge, edge_relation in tqdm(
+            zip(
+                conceptnet_graph.edges(),
+                relations
+            ),
+            desc='Edge filtering...',
+            total=len(relations)
+    ):
+        e_hierarchical_relation_filter[edge] = edge_relation in HIERARCHICAL_RELATIONS
+    conceptnet_graph.set_edge_filter(e_hierarchical_relation_filter)
 
     experiment_paths = ExperimentPaths(
         input_path='',
