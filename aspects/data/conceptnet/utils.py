@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 import graph_tool as gt
 import pandas as pd
 from tqdm import tqdm
@@ -34,7 +32,6 @@ def generate_english_graph() -> gt.Graph:
     return g
 
 
-@lru_cache(1)
 def load_english_graph() -> gt.Graph:
     if CONCEPTNET_GRAPH_TOOL_EN_PATH.exists():
         return gt.load_graph(CONCEPTNET_GRAPH_TOOL_EN_PATH.as_posix())
