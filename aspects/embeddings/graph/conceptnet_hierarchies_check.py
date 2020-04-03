@@ -37,6 +37,7 @@ def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) ->
 def prepare_conceptnet_graph():
     g = load_english_graph()
     remove_self_loops(g)
+    g.reindex_edges()
 
     # filter relations
     e_hierarchical_relation_filter = g.new_edge_property('bool')
@@ -76,13 +77,11 @@ def intersected_nodes(g1, g2, filter_graphs_to_intersected_vertices: bool = Fals
         for v, v_name in tqdm(zip(g2.vertices(), list(g2.vp[property_name])), desc='Vertices filtering...'):
             v2_intersected[v] = v_name in g1_and_g2
         g2.set_vertex_filter(v2_intersected)
-        g2.reindex_edges()
 
         v1_intersected = g1.new_vertex_property('bool')
         for v, v_name in tqdm(zip(g1.vertices(), list(g1.vp[property_name])), desc='Vertices filtering...'):
             v1_intersected[v] = v_name in g1_and_g2
         g1.set_vertex_filter(v1_intersected)
-        g1.reindex_edges()
 
     return g1, g2
 
@@ -93,7 +92,6 @@ def remove_not_connected_vertices(g):
     for v in g.vertices():
         v_connected[v] = v.in_degree() > 0 or v.out_degree() > 0
     g.set_vertex_filter(v_connected)
-    g.reindex_edges()
     print(f'Post-filter graph stats: {g}')
     return Graph(g, prune=True, directed=g.is_directed())
 
