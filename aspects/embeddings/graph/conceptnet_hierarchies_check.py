@@ -1,13 +1,13 @@
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Set
 
 import numpy as np
-from graph_tool import Vertex, Graph
+from graph_tool import Vertex
 from graph_tool.draw import graph_draw
-from graph_tool.stats import remove_self_loops, linspace
+from graph_tool.stats import remove_self_loops
 from graph_tool.topology import shortest_distance
 from tqdm import tqdm
 
-from aspects.data.conceptnet.utils import load_english_graph
+from aspects.data.conceptnet.utils import load_english_hierarchical_graph
 from aspects.data_io import serializer
 from aspects.graph.convert import networkx_2_graph_tool
 from aspects.utilities import settings
@@ -27,15 +27,13 @@ class AspectNeighborhood(NamedTuple):
 
 SEED_ASPECTS = ['phone', 'battery', 'price']
 
-HIERARCHICAL_RELATIONS = {'LocatedNear', 'HasA', 'MadeOf', 'PartOf', 'IsA'}
-
 
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
     return np.where(shortest_paths > GRAPH_TOOL_SHORTEST_PATHS_0_VALUE, replaced_value, shortest_paths)
 
 
-def prepare_conceptnet_graph():
-    g = load_english_graph()
+def prepare_conceptnet_graph(relation_types: Set[str]):
+    g = load_english_hierarchical_graph()
     remove_self_loops(g)
     g.reindex_edges()
 
@@ -50,7 +48,7 @@ def prepare_conceptnet_graph():
             desc='Edge filtering...',
             total=len(relations)
     ):
-        e_hierarchical_relation_filter[edge] = edge_relation in HIERARCHICAL_RELATIONS
+        e_hierarchical_relation_filter[edge] = edge_relation in relation_types
     g.set_edge_filter(e_hierarchical_relation_filter)
 
     vertices = dict(zip(g.vertex_properties['aspect_name'], g.vertices()))
@@ -87,13 +85,18 @@ def intersected_nodes(g1, g2, filter_graphs_to_intersected_vertices: bool = Fals
 
 
 def remove_not_connected_vertices(g):
+    print(f'Pre-edge-purge graph stats: {g}')
+    g.purge_edges()
+    print(f'Pre-vertices-purge graph stats: {g}')
+    g.purge_vertices(in_place=True)
     print(f'Pre-filter graph stats: {g}')
     v_connected = g.new_vertex_property('bool')
-    for v in g.vertices():
-        v_connected[v] = v.in_degree() > 0 or v.out_degree() > 0
+    for v in tqdm(g.vertices(), desc='Vertices filtering...', total=g.num_vertices()):
+        v_connected[v] = bool(v.in_degree() or v.out_degree())
     g.set_vertex_filter(v_connected)
+    g.purge_vertices(in_place=False)
     print(f'Post-filter graph stats: {g}')
-    return Graph(g, prune=True, directed=g.is_directed())
+    return g
 
 
 if __name__ == '__main__':
@@ -163,10 +166,6 @@ if __name__ == '__main__':
             )
 
     serializer.save(shortest_paths, experiment_paths.conceptnet_hierarchy_neighborhood)
-
-    d = g.degree_property_map("out", weight)  # weight is an edge property map
-    bins = linspace(d.a.min(), d.a.max(), 40)  # linear bins
-    h = vertex_hist(g, d, bins)
 
     # shortest_paths = shortest_distance(aspect_graph)
     # shortest_paths = np.array(list(shortest_paths))
