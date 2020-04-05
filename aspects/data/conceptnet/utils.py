@@ -46,7 +46,10 @@ def generate_english_graph(graph_path: Union[str, Path], relation_types: Set[str
     g.vertex_properties['aspect_name'] = v_aspect_name
 
     for row in tqdm(df.itertuples(), desc='Edges adding to the graph...', total=len(df)):
-        e = g.add_edge(vertices[row.source], vertices[row.target])
+        if row.relation in NUCLEUS_SATELLITE_RELATIONS:
+            e = g.add_edge(vertices[row.source], vertices[row.target])
+        else:
+            e = g.add_edge(vertices[row.target], vertices[row.source])
         e_relation[e] = row.relation
 
     g.edge_properties['relation'] = e_relation
