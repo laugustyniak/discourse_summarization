@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import NamedTuple, List, Set
 
 import numpy as np
-from graph_tool import Vertex, GraphView
+from graph_tool import GraphView
 from graph_tool.stats import remove_self_loops
 from graph_tool.topology import shortest_distance
 from more_itertools import flatten
@@ -18,7 +18,6 @@ GRAPH_TOOL_SHORTEST_PATHS_0_VALUE = 2 * 10 ^ 6
 
 
 class AspectNeighborhood(NamedTuple):
-    vertex: Vertex
     name: str
     rank: int
     neighbors_names: List[str]
@@ -141,61 +140,82 @@ if __name__ == '__main__':
     vertices_aspect_vertex_to_name = dict(zip(aspect_graph.vertices(), aspect_graph.vertex_properties['aspect_name']))
     vertices_name_to_aspect_vertex = dict(zip(aspect_graph.vertex_properties['aspect_name'], aspect_graph.vertices()))
 
-    shortest_paths = defaultdict(dict)
     # TODO: param
     max_rank = 3
+
+    if experiment_paths.conceptnet_hierarchy_neighborhood.exists():
+        shortest_paths = serializer.load(experiment_paths.conceptnet_hierarchy_neighborhood)
+    else:
+        shortest_paths = defaultdict(dict)
 
     # TODO: param
     u = GraphView(aspect_graph, vfilt=lambda v: v.out_degree() > 10)
     for v_aspect_name in tqdm(list(u.vertex_properties['aspect_name'])[:20], desc='Iterate over seed aspects...'):
-        v_aspect = vertices_name_to_aspect_vertex[v_aspect_name]
-        for rank in range(1, max_rank + 1):
-            if rank == 1:
-                neighbors = list(set(v_aspect.out_neighbors()))
-            else:
-                old_neighbors = set(neighbors)
-                neighbors = list(set(flatten(v.out_neighbors() for v in old_neighbors)).difference(old_neighbors))
+        if v_aspect_name in shortest_paths:
+            print(f'Neighborhood already calculated for: {v_aspect_name}')
+        else:
+            v_aspect = vertices_name_to_aspect_vertex[v_aspect_name]
+            for rank in range(1, max_rank + 1):
+                if rank == 1:
+                    neighbors = list(set(v_aspect.out_neighbors()))
+                else:
+                    old_neighbors = set(neighbors)
+                    neighbors = list(set(flatten(v.out_neighbors() for v in old_neighbors)).difference(old_neighbors))
 
-            neighbors_names = [vertices_aspect_vertex_to_name[neighbor] for neighbor in neighbors]
-            shortest_paths_conceptnet = []
-            shortest_paths_aspects = []
-            aspects_not_in_conceptnet = []
-            cn_hierarchy_confirmed = []
-            for neighbor_name in neighbors_names:
-                try:
-                    if neighbor_name in vertices_conceptnet:
-                        sh_dist = shortest_distance(
-                            g=conceptnet_graph,
-                            source=vertices_conceptnet[v_aspect_name],
-                            target=vertices_conceptnet[neighbor_name],
-                            directed=True,
-                        )
-                        sh_dist_reversed = shortest_distance(
-                            g=conceptnet_graph,
-                            source=vertices_conceptnet[neighbor_name],
-                            target=vertices_conceptnet[v_aspect_name],
-                            directed=True,
-                        )
-                        shortest_paths_conceptnet.append(sh_dist)
-                        cn_hierarchy_confirmed.append(sh_dist < sh_dist_reversed)
-                        shortest_paths_aspects.append(rank)
-                    else:
-                        aspects_not_in_conceptnet.append(neighbor_name)
-                except KeyError:
-                    pass
+                neighbors_names = [vertices_aspect_vertex_to_name[neighbor] for neighbor in neighbors]
+                shortest_paths_conceptnet = []
+                shortest_paths_aspects = []
+                aspects_not_in_conceptnet = []
+                cn_hierarchy_confirmed = []
+                for neighbor_name in neighbors_names:
+                    try:
+                        if neighbor_name in vertices_conceptnet:
+                            sh_dist = shortest_distance(
+                                g=conceptnet_graph,
+                                source=vertices_conceptnet[v_aspect_name],
+                                target=vertices_conceptnet[neighbor_name],
+                                directed=True,
+                            )
+                            sh_dist_reversed = shortest_distance(
+                                g=conceptnet_graph,
+                                source=vertices_conceptnet[neighbor_name],
+                                target=vertices_conceptnet[v_aspect_name],
+                                directed=True,
+                            )
+                            shortest_paths_conceptnet.append(sh_dist)
+                            cn_hierarchy_confirmed.append(sh_dist < sh_dist_reversed)
+                            shortest_paths_aspects.append(rank)
+                        else:
+                            aspects_not_in_conceptnet.append(neighbor_name)
+                    except KeyError:
+                        pass
 
-            shortest_paths[v_aspect_name][str(rank)] = AspectNeighborhood(
-                vertex=v_aspect,
-                name=v_aspect_name,
-                rank=rank,
-                neighbors_names=neighbors_names,
-                neighbors_path_lens=shortest_paths_aspects,
-                neighbors_cn_path_lens=list(replace_zero_len_paths(np.array(shortest_paths_conceptnet))),
-                aspects_not_in_conceptnet=aspects_not_in_conceptnet,
-                cn_hierarchy_confirmed=cn_hierarchy_confirmed
-            )
+                n = AspectNeighborhood(
+                    name=v_aspect_name,
+                    rank=rank,
+                    neighbors_names=neighbors_names,
+                    neighbors_path_lens=shortest_paths_aspects,
+                    neighbors_cn_path_lens=list(replace_zero_len_paths(np.array(shortest_paths_conceptnet))),
+                    aspects_not_in_conceptnet=aspects_not_in_conceptnet,
+                    cn_hierarchy_confirmed=cn_hierarchy_confirmed
+                )
+                shortest_paths[v_aspect_name][str(rank)] = n
 
-    serializer.save(shortest_paths, experiment_paths.conceptnet_hierarchy_neighborhood)
+                print(f'{v_aspect_name}-{rank}')
+                print(sum(n.cn_hierarchy_confirmed) / len(n.cn_hierarchy_confirmed))
+
+            serializer.save(shortest_paths, experiment_paths.conceptnet_hierarchy_neighborhood)
+
+    for aspect in shortest_paths:
+        print()
+        print(aspect)
+        print(
+            {
+                rank: sum(sh.cn_hierarchy_confirmed) / len(sh.cn_hierarchy_confirmed)
+                for rank, sh
+                in shortest_paths[aspect].items()
+            }
+        )
 
     # shortest_paths = shortest_distance(aspect_graph)
     # shortest_paths = np.array(list(shortest_paths))
