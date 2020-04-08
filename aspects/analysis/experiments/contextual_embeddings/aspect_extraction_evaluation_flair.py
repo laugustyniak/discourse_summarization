@@ -4,8 +4,8 @@ import click
 from flair.datasets import ColumnCorpus
 from flair.embeddings import (
     StackedEmbeddings,
-    WordEmbeddings
-)
+    WordEmbeddings,
+    BertEmbeddings)
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 from flair.visual.training_curves import Plotter
@@ -44,15 +44,15 @@ def run_experiments(input_dir: Path, output_dir: Path):
     print(tag_dictionary.idx2item)
 
     all_embedding_to_test = {
-        'glove': [
-            WordEmbeddings('glove'),
-        ],
-        'glove+aspects': [
-            WordEmbeddings('glove'),
-            WordEmbeddings(
-                (output_dir / 'aspect_2_aspect_graph-en_core_web_lg.en_core_web_lg.word2vec_format.bin').as_posix()
-            ),
-        ],
+        # 'glove+aspects': [
+        #     WordEmbeddings('glove'),
+        #     WordEmbeddings(
+        #         (output_dir / 'aspect_2_aspect_graph-en_core_web_lg.en_core_web_lg.word2vec_format.bin').as_posix()
+        #     ),
+        # ],
+        # 'glove': [
+        #     WordEmbeddings('glove'),
+        # ],
         # 'charlmembedding': [
         #     FlairEmbeddings('news-forward'),
         #     FlairEmbeddings('news-backward'),
@@ -61,9 +61,15 @@ def run_experiments(input_dir: Path, output_dir: Path):
         #     WordEmbeddings('glove'),
         #     CharacterEmbeddings(),
         # ],
-        # 'bert': [
-        #     BertEmbeddings('bert-large-cased'),
-        # ],
+        'bert+aspects': [
+            BertEmbeddings('bert-large-cased'),
+            WordEmbeddings(
+                (output_dir / 'aspect_2_aspect_graph-en_core_web_lg.en_core_web_lg.word2vec_format.bin').as_posix()
+            )
+        ],
+        'bert': [
+            BertEmbeddings('bert-large-cased'),
+        ],
         # 'elmo': [
         #     ELMoEmbeddings('original')
         # ]
