@@ -12,4 +12,7 @@ services:
       - "8899:8888"
     volumes:
       - /home/laugustyniak:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix
     tty: true
+    environment:
+      - DISPLAY=$DISPLAY
