@@ -149,8 +149,8 @@ if __name__ == '__main__':
         shortest_paths = defaultdict(dict)
 
     # TODO: param
-    u = GraphView(aspect_graph, vfilt=lambda v: v.out_degree() > 10)
-    for v_aspect_name in tqdm(list(u.vertex_properties['aspect_name'])[:20], desc='Iterate over seed aspects...'):
+    u = GraphView(aspect_graph, vfilt=lambda v: v.in_degree() > 10)
+    for v_aspect_name in tqdm(list(u.vertex_properties['aspect_name']), desc='Iterate over seed aspects...'):
         if v_aspect_name in shortest_paths:
             print(f'Neighborhood already calculated for: {v_aspect_name}')
         else:
@@ -187,8 +187,8 @@ if __name__ == '__main__':
                             shortest_paths_aspects.append(rank)
                         else:
                             aspects_not_in_conceptnet.append(neighbor_name)
-                    except KeyError:
-                        pass
+                    except KeyError as e:
+                        print(str(e))
 
                 n = AspectNeighborhood(
                     name=v_aspect_name,
@@ -202,7 +202,7 @@ if __name__ == '__main__':
                 shortest_paths[v_aspect_name][str(rank)] = n
 
                 print(f'{v_aspect_name}-{rank}')
-                print(sum(n.cn_hierarchy_confirmed) / len(n.cn_hierarchy_confirmed))
+                print(sum(n.cn_hierarchy_confirmed) / (len(n.cn_hierarchy_confirmed) or 0.01))
 
             serializer.save(shortest_paths, experiment_paths.conceptnet_hierarchy_neighborhood)
 
@@ -211,7 +211,7 @@ if __name__ == '__main__':
         print(aspect)
         print(
             {
-                rank: sum(sh.cn_hierarchy_confirmed) / len(sh.cn_hierarchy_confirmed)
+                rank: sum(sh.cn_hierarchy_confirmed) / (len(sh.cn_hierarchy_confirmed) or 0.01)
                 for rank, sh
                 in shortest_paths[aspect].items()
             }
