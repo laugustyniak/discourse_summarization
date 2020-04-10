@@ -13,17 +13,17 @@ NUCLEUS_SATELLITE_RELATIONS = {
     'UsedFor',
     'CapableOf',
     'MadeOf',
-    'HasSubevent',
-    'CreatedBy',
-    'DefinedAs',
+    # 'HasSubevent',
+    # 'CreatedBy',
+    # 'DefinedAs',
 }
 SATELLITE_NUCLEUS_RELATIONS = {
     'PartOf',
     'IsA',
-    'MannerOf',
-    'AtLocation',
-    'Causes',
-    'DerivedFrom',
+    # 'MannerOf',
+    # 'AtLocation',
+    # 'Causes',
+    # 'DerivedFrom',
 }
 
 
