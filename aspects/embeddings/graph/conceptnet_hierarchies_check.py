@@ -111,6 +111,8 @@ if __name__ == '__main__':
     experiment_paths = ExperimentPaths(
         input_path='',
         output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs',
+        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Apps_for_Android',
+        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Amazon_Instant_Video',
         experiment_name='our'
     )
     aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
