@@ -24,7 +24,7 @@ LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
 #    && pip install torch-geometric
 
 
-RUN pip install tqdm more-itertools==8.0.2 nltk==3.4.5
+RUN pip install tqdm more-itertools==8.0.2 nltk==3.4.5 hdbscan==0.8.26
 
 #RUN pip install https://storage.googleapis.com/spacy-pl-public-models/pl_model-1.0.0.tar.gz
 #RUN python -m spacy download en_core_web_sm
