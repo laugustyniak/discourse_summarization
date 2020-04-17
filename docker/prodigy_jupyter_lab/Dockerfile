@@ -26,7 +26,6 @@ LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
 
 RUN pip install tqdm more-itertools==8.0.2 nltk==3.4.5 hdbscan==0.8.26
 
-#RUN pip install https://storage.googleapis.com/spacy-pl-public-models/pl_model-1.0.0.tar.gz
 #RUN python -m spacy download en_core_web_sm
 #RUN python -m spacy download en
 
@@ -35,6 +34,7 @@ ENV WORK_DIR ${HOME}/work
 USER jovyan
 COPY prodigy-1.9.9-cp36.cp37.cp38-cp36m.cp37m.cp38-linux_x86_64.whl ${WORK_DIR}
 RUN pip install ${WORK_DIR}/prodigy-1.9.9-cp36.cp37.cp38-cp36m.cp37m.cp38-linux_x86_64.whl
+RUN pip install https://storage.googleapis.com/spacy-pl-public-models/pl_model-1.0.0.tar.gz
 
 # setup volume to this location in docker run command
 ENV PRODIGY_HOME ${WORK_DIR}
