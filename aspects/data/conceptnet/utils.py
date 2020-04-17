@@ -14,16 +14,16 @@ NUCLEUS_SATELLITE_RELATIONS = {
     'CapableOf',
     'MadeOf',
     # 'HasSubevent',
-    # 'CreatedBy',
-    # 'DefinedAs',
+    'CreatedBy',
+    'DefinedAs',
 }
 SATELLITE_NUCLEUS_RELATIONS = {
     'PartOf',
     'IsA',
-    # 'MannerOf',
-    # 'AtLocation',
-    # 'Causes',
-    # 'DerivedFrom',
+    'MannerOf',
+    'AtLocation',
+    'Causes',
+    'DerivedFrom',
 }
 
 
