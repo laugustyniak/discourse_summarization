@@ -184,9 +184,10 @@ if __name__ == '__main__':
                                 target=vertices_conceptnet[v_aspect_name],
                                 directed=True,
                             )
-                            shortest_paths_conceptnet.append(sh_dist)
-                            cn_hierarchy_confirmed.append(sh_dist < sh_dist_reversed)
-                            shortest_paths_aspects.append(rank)
+                            if sh_dist:
+                                shortest_paths_conceptnet.append(sh_dist)
+                                cn_hierarchy_confirmed.append(sh_dist < sh_dist_reversed)
+                                shortest_paths_aspects.append(rank)
                         else:
                             aspects_not_in_conceptnet.append(neighbor_name)
                     except KeyError as e:
