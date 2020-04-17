@@ -16,7 +16,7 @@ class ExperimentPaths:
 
         self.aspect_sentiments = self.experiment_path / 'aspect_sentiments.pkl'
         self.aspect_to_aspect_graph = self.experiment_path / 'aspect_2_aspect_graph.pkl'
-        self.conceptnet_hierarchy_neighborhood = self.experiment_path / 'conceptnet_hierarchy_neighborhood-less-relations.pkl'
+        self.conceptnet_hierarchy_neighborhood = self.experiment_path / 'conceptnet_hierarchy_neighborhood.pkl'
         self.aspect_hierarchical_tree = self.experiment_path / 'aspect_hierarchical_tree.pkl'
         self.aspect_hierarchical_tree_netwulf_config = (
                 self.experiment_path / 'aspect_hierarchical_tree_netwulf_config.pkl')
