@@ -2,7 +2,6 @@ from collections import defaultdict
 from typing import NamedTuple, List, Set
 
 import numpy as np
-from graph_tool import GraphView
 from graph_tool.stats import remove_self_loops
 from graph_tool.topology import shortest_distance
 from more_itertools import flatten
@@ -102,26 +101,10 @@ def remove_not_connected_vertices(g):
     return g
 
 
-if __name__ == '__main__':
-    conceptnet_graph = load_english_hierarchical_graph()
-    remove_self_loops(conceptnet_graph)
-    conceptnet_graph.reindex_edges()
-    vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
-
-    experiment_paths = ExperimentPaths(
-        input_path='',
-        output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs',
-        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Apps_for_Android',
-        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Amazon_Instant_Video',
-        experiment_name='our'
-    )
-    aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
-    aspect_graph = networkx_2_graph_tool(aspect_graph, node_name_property='aspect_name')
-    remove_self_loops(aspect_graph)
-    aspect_graph.reindex_edges()
-
-    # revert edges fomr S->N to N-> S
-    aspect_graph.set_reversed(is_reversed=True)
+# TODO: add click
+def main(max_rank: int):
+    conceptnet_graph, vertices_conceptnet = prepare_conceptnet()
+    aspect_graph, experiment_paths = prepare_aspect_graph()
 
     aspect_graph, conceptnet_graph = intersected_nodes(
         g1=aspect_graph,
@@ -130,29 +113,18 @@ if __name__ == '__main__':
         property_name='aspect_name'
     )
 
-    # graph_draw(
-    #     conceptnet_graph,
-    #     vertex_font_size=12,
-    #     output_size=(2000, 2000),
-    #     output="conceptnet-intersected-aspects.png",
-    #     bg_color='white',
-    #     vertex_text=conceptnet_graph.vp.aspect_name
-    # )
-
     vertices_aspect_vertex_to_name = dict(zip(aspect_graph.vertices(), aspect_graph.vertex_properties['aspect_name']))
     vertices_name_to_aspect_vertex = dict(zip(aspect_graph.vertex_properties['aspect_name'], aspect_graph.vertices()))
-
-    # TODO: param
-    max_rank = 3
 
     if experiment_paths.conceptnet_hierarchy_neighborhood.exists():
         shortest_paths = serializer.load(experiment_paths.conceptnet_hierarchy_neighborhood)
     else:
-        shortest_paths = defaultdict(dict)
+        shortest_paths = defaultdict(list)
 
-    # TODO: param
-    u = GraphView(aspect_graph, vfilt=lambda v: v.in_degree() > 10)
-    for v_aspect_name in tqdm(list(u.vertex_properties['aspect_name']), desc='Iterate over seed aspects...'):
+    for v_aspect_name in tqdm(list(aspect_graph.vertex_properties['aspect_name']), desc='Iterate over seed aspects...'):
+        if v_aspect_name not in vertices_conceptnet:
+            print(f'Aspect :{v_aspect_name} not in ConceptNet')
+            continue
         if v_aspect_name in shortest_paths:
             print(f'Neighborhood already calculated for: {v_aspect_name}')
         else:
@@ -164,62 +136,74 @@ if __name__ == '__main__':
                     old_neighbors = set(neighbors)
                     neighbors = list(set(flatten(v.out_neighbors() for v in old_neighbors)).difference(old_neighbors))
 
-                neighbors_names = [vertices_aspect_vertex_to_name[neighbor] for neighbor in neighbors]
-                shortest_paths_conceptnet = []
-                shortest_paths_aspects = []
-                aspects_not_in_conceptnet = []
-                cn_hierarchy_confirmed = []
-                for neighbor_name in neighbors_names:
-                    try:
-                        if neighbor_name in vertices_conceptnet:
-                            sh_dist = shortest_distance(
-                                g=conceptnet_graph,
-                                source=vertices_conceptnet[v_aspect_name],
-                                target=vertices_conceptnet[neighbor_name],
-                                directed=True,
-                            )
-                            sh_dist_reversed = shortest_distance(
-                                g=conceptnet_graph,
-                                source=vertices_conceptnet[neighbor_name],
-                                target=vertices_conceptnet[v_aspect_name],
-                                directed=True,
-                            )
-                            if sh_dist:
-                                shortest_paths_conceptnet.append(sh_dist)
-                                cn_hierarchy_confirmed.append(sh_dist < sh_dist_reversed)
-                                shortest_paths_aspects.append(rank)
-                        else:
-                            aspects_not_in_conceptnet.append(neighbor_name)
-                    except KeyError as e:
-                        print(str(e))
+                all_neighbors_names = [vertices_aspect_vertex_to_name[neighbor] for neighbor in neighbors]
 
-                n = AspectNeighborhood(
+                # filter out aspects not present in concepnet
+                neighbors_names = [
+                    neighbor_name
+                    for neighbor_name in all_neighbors_names
+                    if neighbor_name in vertices_conceptnet
+                ]
+
+                vertices_cn_neighbors_from_aspect_graph = [
+                    vertices_conceptnet[neighbor_name]
+                    for neighbor_name in neighbors_names
+                ]
+
+                shortest_distances = list(shortest_distance(
+                    g=conceptnet_graph,
+                    source=vertices_conceptnet[v_aspect_name],
+                    target=vertices_cn_neighbors_from_aspect_graph,
+                    directed=True,
+                ))
+
+                neighbors_names = [
+                    n
+                    for idx, n
+                    in enumerate(neighbors_names)
+                    if shortest_distances[idx] < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
+                ]
+                shortest_distances = [sd for sd in shortest_distances if sd < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE]
+
+                shortest_paths[v_aspect_name].append(AspectNeighborhood(
                     name=v_aspect_name,
                     rank=rank,
                     neighbors_names=neighbors_names,
-                    neighbors_path_lens=shortest_paths_aspects,
-                    neighbors_cn_path_lens=list(replace_zero_len_paths(np.array(shortest_paths_conceptnet))),
-                    aspects_not_in_conceptnet=aspects_not_in_conceptnet,
-                    cn_hierarchy_confirmed=cn_hierarchy_confirmed
-                )
-                shortest_paths[v_aspect_name][str(rank)] = n
+                    neighbors_path_lens=[rank for _ in neighbors_names],
+                    neighbors_cn_path_lens=shortest_distances,
+                    aspects_not_in_conceptnet=[aspect for aspect in all_neighbors_names if aspect in neighbors_names],
+                    cn_hierarchy_confirmed=[]
+                ))
 
-                print(f'{v_aspect_name}-{rank}')
-                print(sum(n.cn_hierarchy_confirmed) / (len(n.cn_hierarchy_confirmed) or 0.01))
+                print(f'Aspect: {v_aspect_name} processed!')
 
             serializer.save(shortest_paths, experiment_paths.conceptnet_hierarchy_neighborhood)
 
-    for aspect in shortest_paths:
-        print()
-        print(aspect)
-        print(
-            {
-                rank: sum(sh.cn_hierarchy_confirmed) / (len(sh.cn_hierarchy_confirmed) or 0.01)
-                for rank, sh
-                in shortest_paths[aspect].items()
-            }
-        )
 
-    # shortest_paths = shortest_distance(aspect_graph)
-    # shortest_paths = np.array(list(shortest_paths))
-    # shortest_paths = np.where(shortest_paths > GRAPH_TOOL_SHORTEST_PATHS_0_VALUE, 0, shortest_paths)
+def prepare_aspect_graph():
+    experiment_paths = ExperimentPaths(
+        input_path='',
+        output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs',
+        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Apps_for_Android',
+        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Amazon_Instant_Video',
+        experiment_name='our'
+    )
+    aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
+    aspect_graph = networkx_2_graph_tool(aspect_graph, node_name_property='aspect_name')
+    remove_self_loops(aspect_graph)
+    aspect_graph.reindex_edges()
+    # revert edges from S -> N to N -> S
+    aspect_graph.set_reversed(is_reversed=True)
+    return aspect_graph, experiment_paths
+
+
+def prepare_conceptnet():
+    conceptnet_graph = load_english_hierarchical_graph()
+    remove_self_loops(conceptnet_graph)
+    conceptnet_graph.reindex_edges()
+    vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
+    return conceptnet_graph, vertices_conceptnet
+
+
+if __name__ == '__main__':
+    main(3)
