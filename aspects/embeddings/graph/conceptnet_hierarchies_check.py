@@ -119,7 +119,6 @@ def main(max_rank: int):
 
     for v_aspect_name in tqdm(list(aspect_graph.vertex_properties['aspect_name']), desc='Iterate over seed aspects...'):
         if v_aspect_name not in vertices_conceptnet:
-            print(f'Aspect :{v_aspect_name} not in ConceptNet')
             continue
         if v_aspect_name in shortest_paths:
             print(f'Neighborhood already calculated for: {v_aspect_name}')
@@ -146,32 +145,36 @@ def main(max_rank: int):
                     for neighbor_name in neighbors_names
                 ]
 
-                shortest_distances = list(shortest_distance(
-                    g=conceptnet_graph,
-                    source=vertices_conceptnet[v_aspect_name],
-                    target=vertices_cn_neighbors_from_aspect_graph,
-                    directed=True,
-                ))
+                # IMPORTANT! passing empty list will cause calculation of shortest paths from source vertex
+                # to any other vertex in the graph
+                if vertices_cn_neighbors_from_aspect_graph:
+                    shortest_distances = list(shortest_distance(
+                        g=conceptnet_graph,
+                        source=vertices_conceptnet[v_aspect_name],
+                        target=vertices_cn_neighbors_from_aspect_graph,
+                        directed=True,
+                    ))
 
-                neighbors_names = [
-                    n
-                    for idx, n
-                    in enumerate(neighbors_names)
-                    if shortest_distances[idx] < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
-                ]
-                shortest_distances = [sd for sd in shortest_distances if sd < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE]
+                    neighbors_names = [
+                        n
+                        for idx, n
+                        in enumerate(neighbors_names)
+                        if shortest_distances[idx] < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
+                    ]
+                    shortest_distances = [sd for sd in shortest_distances if sd < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE]
+                else:
+                    shortest_distances = []
+                    neighbors_names = []
 
                 shortest_paths[v_aspect_name].append(AspectNeighborhood(
                     name=v_aspect_name,
                     rank=rank,
                     neighbors_names=neighbors_names,
-                    neighbors_path_lens=[rank for _ in neighbors_names],
+                    neighbors_path_lens=[rank for _ in shortest_distances],
                     neighbors_cn_path_lens=shortest_distances,
                     aspects_not_in_conceptnet=[aspect for aspect in all_neighbors_names if aspect in neighbors_names],
                     cn_hierarchy_confirmed=[]
                 ))
-
-                print(f'Aspect: {v_aspect_name} processed!')
 
             serializer.save(shortest_paths, experiment_paths.conceptnet_hierarchy_neighborhood)
 
