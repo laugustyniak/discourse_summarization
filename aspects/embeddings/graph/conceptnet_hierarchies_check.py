@@ -26,10 +26,6 @@ class AspectNeighborhood(NamedTuple):
     cn_hierarchy_confirmed: List[bool]
 
 
-# TODO: param
-SEED_ASPECTS = ['bluetooth', 'phone', 'battery', 'price']
-
-
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
     return np.where(shortest_paths > GRAPH_TOOL_SHORTEST_PATHS_0_VALUE, replaced_value, shortest_paths)
 
