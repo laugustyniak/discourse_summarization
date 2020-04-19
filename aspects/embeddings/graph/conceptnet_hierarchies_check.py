@@ -159,9 +159,9 @@ def main(max_rank: int):
                         n
                         for idx, n
                         in enumerate(neighbors_names)
-                        if shortest_distances[idx] < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
+                        if GRAPH_TOOL_SHORTEST_PATHS_0_VALUE > shortest_distances[idx] > 0
                     ]
-                    shortest_distances = [sd for sd in shortest_distances if sd < GRAPH_TOOL_SHORTEST_PATHS_0_VALUE]
+                    shortest_distances = [sd for sd in shortest_distances if GRAPH_TOOL_SHORTEST_PATHS_0_VALUE > sd > 0]
                 else:
                     shortest_distances = []
                     neighbors_names = []
