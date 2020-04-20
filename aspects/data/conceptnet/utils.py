@@ -5,6 +5,7 @@ from typing import Union, Set, List
 
 import graph_tool as gt
 import pandas as pd
+from graph_tool.stats import remove_self_loops
 from tqdm import tqdm
 
 from aspects.utilities.settings import CONCEPTNET_CSV_EN_PATH, CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_EN_PATH
@@ -99,6 +100,30 @@ def generate_english_graph(
     g.save(str(graph_path))
 
     return g
+
+
+def prepare_conceptnet_graph(relation_types: Set[str]):
+    g = load_english_hierarchical_graph()
+    remove_self_loops(g)
+    g.reindex_edges()
+
+    # filter relations
+    e_hierarchical_relation_filter = g.new_edge_property('bool')
+    relations = list(g.properties[('e', 'relation')])
+    for edge, edge_relation in tqdm(
+            zip(
+                g.edges(),
+                relations
+            ),
+            desc='Edge filtering...',
+            total=len(relations)
+    ):
+        e_hierarchical_relation_filter[edge] = edge_relation in relation_types
+    g.set_edge_filter(e_hierarchical_relation_filter)
+
+    vertices = dict(zip(g.vertex_properties['aspect_name'], g.vertices()))
+
+    return g, vertices
 
 
 def load_english_hierarchical_graph() -> gt.Graph:
