@@ -1,8 +1,10 @@
 import logging
-from itertools import product
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 import pandas as pd
+from graph_tool import Graph
 from graph_tool.stats import remove_self_loops
 from graph_tool.topology import shortest_distance
 from tqdm import tqdm
@@ -21,9 +23,6 @@ loger.setLevel(logging.DEBUG)
 
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
     return np.where(shortest_paths > GRAPH_TOOL_SHORTEST_PATHS_0_VALUE, replaced_value, shortest_paths)
-
-
-
 
 
 def intersected_nodes(g1, g2, filter_graphs_to_intersected_vertices: bool = False, property_name: str = 'aspect_name'):
@@ -75,41 +74,39 @@ def main():
     conceptnet_graph, vertices_conceptnet = prepare_conceptnet()
     aspect_graph, experiment_paths = prepare_aspect_graph()
 
-    # some graphs stats
-    aspect_graph, conceptnet_graph = intersected_nodes(
-        g1=aspect_graph,
-        g2=conceptnet_graph,
-        filter_graphs_to_intersected_vertices=False,
+    aspect_graph_intersected = Graph(aspect_graph)
+    conceptnet_graph_intersected = Graph(conceptnet_graph)
+
+    aspect_graph_intersected, conceptnet_graph_intersected = intersected_nodes(
+        g1=aspect_graph_intersected,
+        g2=conceptnet_graph_intersected,
+        filter_graphs_to_intersected_vertices=True,
         property_name='aspect_name'
     )
+    aspect_names_intersected = list(aspect_graph_intersected.vertex_properties['aspect_name'])
 
     vertices_name_to_aspect_vertex = dict(zip(aspect_graph.vertex_properties['aspect_name'], aspect_graph.vertices()))
+    aspect_graph_vertices_intersected = [vertices_name_to_aspect_vertex[a] for a in aspect_names_intersected]
+    shortest_distances_aspect_graph = np.array([
+        shortest_distance(g=aspect_graph, source=v, target=aspect_graph_vertices_intersected, directed=True)
+        for v in tqdm(aspect_graph_vertices_intersected, desc='Aspect graph shortest paths...')
+    ])
 
-    loger.info('Calculate shortest paths: aspect graph')
-    shortest_distances_aspect_graph = shortest_distance(g=aspect_graph, directed=True)
-    loger.info('Calculate shortest paths: conceptnet graph')
-    shortest_distances_conceptnet = shortest_distance(g=conceptnet_graph, directed=True)
-    loger.info('Calculate shortest paths: done')
-
-    aspect_graph_vertices = list(aspect_graph.vertex_properties['aspect_name'])
+    conceptnet_vertices_intersected = [vertices_conceptnet[a] for a in aspect_names_intersected]
+    shortest_distances_conceptnet = np.array([
+        shortest_distance(g=conceptnet_graph, source=v, target=conceptnet_vertices_intersected, directed=True)
+        for v in tqdm(conceptnet_vertices_intersected, desc='Conceptnet shortest paths...')
+    ])
 
     pairs = []
-    for aspect_1, aspect_2 in tqdm(
-            product(aspect_graph_vertices, aspect_graph_vertices),
-            total=(aspect_graph.num_vertices() * aspect_graph.num_vertices())
-    ):
-        pairs.append((
-            aspect_1,
-            aspect_2,
-            shortest_distances_aspect_graph[
-                int(vertices_name_to_aspect_vertex[aspect_1])][
-                int(vertices_name_to_aspect_vertex[aspect_2])
-            ],
-            shortest_distances_aspect_graph[
-                int(shortest_distances_conceptnet[aspect_1])][
-                int(shortest_distances_conceptnet[aspect_2])
-            ],
-        ))
+    for aspect_1_idx, aspect_1 in tqdm(enumerate(aspect_names_intersected), desc='Pairs distances...'):
+        for aspect_2_idx, aspect_2 in enumerate(aspect_names_intersected):
+            pairs.append((
+                aspect_1,
+                aspect_2,
+                shortest_distances_aspect_graph[aspect_1_idx][aspect_2_idx],
+                shortest_distances_conceptnet[aspect_1_idx][aspect_2_idx],
+            ))
 
     pairs_df = pd.DataFrame(
         pairs,
@@ -121,10 +118,12 @@ def main():
     loger.info('DataFrame with pairs dumped')
 
 
-def prepare_aspect_graph():
+def prepare_aspect_graph(
+        reviews_path: Union[str, Path] = settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs'
+):
     experiment_paths = ExperimentPaths(
         input_path='',
-        output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs',
+        output_path=reviews_path,
         # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Apps_for_Android',
         # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Amazon_Instant_Video',
         experiment_name='our'
@@ -147,4 +146,4 @@ def prepare_conceptnet():
 
 
 if __name__ == '__main__':
-    main(3)
+    main()
