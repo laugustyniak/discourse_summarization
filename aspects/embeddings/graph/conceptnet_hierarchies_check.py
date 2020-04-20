@@ -1,10 +1,10 @@
-from collections import defaultdict
-from typing import NamedTuple, List, Set
+import logging
+from itertools import product
 
 import numpy as np
+import pandas as pd
 from graph_tool.stats import remove_self_loops
 from graph_tool.topology import shortest_distance
-from more_itertools import flatten
 from tqdm import tqdm
 
 from aspects.data.conceptnet.utils import load_english_hierarchical_graph
@@ -15,43 +15,15 @@ from aspects.utilities.data_paths import ExperimentPaths
 
 GRAPH_TOOL_SHORTEST_PATHS_0_VALUE = 2 * 10 ^ 6
 
-
-class AspectNeighborhood(NamedTuple):
-    name: str
-    rank: int
-    neighbors_names: List[str]
-    neighbors_path_lens: List[int]
-    neighbors_cn_path_lens: List[int]
-    aspects_not_in_conceptnet: List[int]
-    cn_hierarchy_confirmed: List[bool]
+loger = logging.getLogger()
+loger.setLevel(logging.DEBUG)
 
 
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
     return np.where(shortest_paths > GRAPH_TOOL_SHORTEST_PATHS_0_VALUE, replaced_value, shortest_paths)
 
 
-def prepare_conceptnet_graph(relation_types: Set[str]):
-    g = load_english_hierarchical_graph()
-    remove_self_loops(g)
-    g.reindex_edges()
 
-    # filter relations
-    e_hierarchical_relation_filter = g.new_edge_property('bool')
-    relations = list(g.properties[('e', 'relation')])
-    for edge, edge_relation in tqdm(
-            zip(
-                g.edges(),
-                relations
-            ),
-            desc='Edge filtering...',
-            total=len(relations)
-    ):
-        e_hierarchical_relation_filter[edge] = edge_relation in relation_types
-    g.set_edge_filter(e_hierarchical_relation_filter)
-
-    vertices = dict(zip(g.vertex_properties['aspect_name'], g.vertices()))
-
-    return g, vertices
 
 
 def intersected_nodes(g1, g2, filter_graphs_to_intersected_vertices: bool = False, property_name: str = 'aspect_name'):
@@ -98,10 +70,12 @@ def remove_not_connected_vertices(g):
 
 
 # TODO: add click
-def main(max_rank: int):
+def main():
+    loger.info('Prepare graphs')
     conceptnet_graph, vertices_conceptnet = prepare_conceptnet()
     aspect_graph, experiment_paths = prepare_aspect_graph()
 
+    # some graphs stats
     aspect_graph, conceptnet_graph = intersected_nodes(
         g1=aspect_graph,
         g2=conceptnet_graph,
@@ -109,74 +83,42 @@ def main(max_rank: int):
         property_name='aspect_name'
     )
 
-    vertices_aspect_vertex_to_name = dict(zip(aspect_graph.vertices(), aspect_graph.vertex_properties['aspect_name']))
     vertices_name_to_aspect_vertex = dict(zip(aspect_graph.vertex_properties['aspect_name'], aspect_graph.vertices()))
 
-    if experiment_paths.conceptnet_hierarchy_neighborhood.exists():
-        shortest_paths = serializer.load(experiment_paths.conceptnet_hierarchy_neighborhood)
-    else:
-        shortest_paths = defaultdict(list)
+    loger.info('Calculate shortest paths: aspect graph')
+    shortest_distances_aspect_graph = shortest_distance(g=aspect_graph, directed=True)
+    loger.info('Calculate shortest paths: conceptnet graph')
+    shortest_distances_conceptnet = shortest_distance(g=conceptnet_graph, directed=True)
+    loger.info('Calculate shortest paths: done')
 
-    for v_aspect_name in tqdm(list(aspect_graph.vertex_properties['aspect_name']), desc='Iterate over seed aspects...'):
-        if v_aspect_name not in vertices_conceptnet:
-            continue
-        if v_aspect_name in shortest_paths:
-            print(f'Neighborhood already calculated for: {v_aspect_name}')
-        else:
-            v_aspect = vertices_name_to_aspect_vertex[v_aspect_name]
-            for rank in range(1, max_rank + 1):
-                if rank == 1:
-                    neighbors = list(set(v_aspect.out_neighbors()))
-                else:
-                    old_neighbors = set(neighbors)
-                    neighbors = list(set(flatten(v.out_neighbors() for v in old_neighbors)).difference(old_neighbors))
+    aspect_graph_vertices = list(aspect_graph.vertex_properties['aspect_name'])
 
-                all_neighbors_names = [vertices_aspect_vertex_to_name[neighbor] for neighbor in neighbors]
+    pairs = []
+    for aspect_1, aspect_2 in tqdm(
+            product(aspect_graph_vertices, aspect_graph_vertices),
+            total=(aspect_graph.num_vertices() * aspect_graph.num_vertices())
+    ):
+        pairs.append((
+            aspect_1,
+            aspect_2,
+            shortest_distances_aspect_graph[
+                int(vertices_name_to_aspect_vertex[aspect_1])][
+                int(vertices_name_to_aspect_vertex[aspect_2])
+            ],
+            shortest_distances_aspect_graph[
+                int(shortest_distances_conceptnet[aspect_1])][
+                int(shortest_distances_conceptnet[aspect_2])
+            ],
+        ))
 
-                # filter out aspects not present in concepnet
-                neighbors_names = [
-                    neighbor_name
-                    for neighbor_name in all_neighbors_names
-                    if neighbor_name in vertices_conceptnet
-                ]
+    pairs_df = pd.DataFrame(
+        pairs,
+        columns=['aspect_1', 'aspect_2', 'shortest_distance_aspect_graph', 'shortest_distance_conceptnet']
+    )
 
-                vertices_cn_neighbors_from_aspect_graph = [
-                    vertices_conceptnet[neighbor_name]
-                    for neighbor_name in neighbors_names
-                ]
-
-                # IMPORTANT! passing empty list will cause calculation of shortest paths from source vertex
-                # to any other vertex in the graph
-                if vertices_cn_neighbors_from_aspect_graph:
-                    shortest_distances = list(shortest_distance(
-                        g=conceptnet_graph,
-                        source=vertices_conceptnet[v_aspect_name],
-                        target=vertices_cn_neighbors_from_aspect_graph,
-                        directed=True,
-                    ))
-
-                    neighbors_names = [
-                        n
-                        for idx, n
-                        in enumerate(neighbors_names)
-                        if GRAPH_TOOL_SHORTEST_PATHS_0_VALUE > shortest_distances[idx] > 0
-                    ]
-                    shortest_distances = [sd for sd in shortest_distances if GRAPH_TOOL_SHORTEST_PATHS_0_VALUE > sd > 0]
-                else:
-                    shortest_distances = []
-                    neighbors_names = []
-
-                shortest_paths[v_aspect_name].append(AspectNeighborhood(
-                    name=v_aspect_name,
-                    rank=rank,
-                    neighbors_names=neighbors_names,
-                    neighbors_path_lens=[rank for _ in shortest_distances],
-                    neighbors_cn_path_lens=shortest_distances,
-                    aspects_not_in_conceptnet=[aspect for aspect in all_neighbors_names if aspect in neighbors_names],
-                    cn_hierarchy_confirmed=[]
-                ))
-
-            serializer.save(shortest_paths, experiment_paths.conceptnet_hierarchy_neighborhood)
+    loger.info('Dump DataFrame with pairs')
+    pairs_df.to_pickle(experiment_paths.conceptnet_hierarchy_neighborhood)
+    loger.info('DataFrame with pairs dumped')
 
 
 def prepare_aspect_graph():
