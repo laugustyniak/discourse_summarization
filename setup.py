@@ -6,8 +6,8 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="sentiment-aspects-analyzer",
     version="0.0.1",
-    author="Lukasz Augustyniak",
-    author_email="lukasz.augustyniak@pwr.edu.pl",
+    author="Lukasz Augustyniak, Krzysztof Rajda",
+    author_email="lukasz.augustyniak@pwr.edu.pl, krzysztof.rajda@pwr.edu.pl",
     description="The repository with source code devoted to aspect-based sentiment analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
