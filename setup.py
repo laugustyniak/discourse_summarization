@@ -11,7 +11,7 @@ setuptools.setup(
     description="The repository with source code devoted to aspect-based sentiment analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/laugustyniak/sentiment-aspect-analyzer",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
