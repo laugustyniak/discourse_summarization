@@ -18,6 +18,18 @@ source activate aspects
 pip install -r requirements.txt
 ```
 
+You can also add this repo to conda env using pip install trick 
+
+```
+pip install -e .
+```
+
+Afterwards you can import packages using aspect naming such as 
+
+```python
+import aspects
+```
+
 ## Run dockers with API for sentiment, RST parsing and aspect extraction
 
 ```
