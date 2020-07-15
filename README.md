@@ -12,7 +12,7 @@ conda create -n aspects python=3.7 anaconda
 source activate aspects
 ```
 
-## Requirements.txt installation
+## Package installation
 
 ```
 pip install -r requirements.txt
@@ -28,6 +28,12 @@ Afterwards you can import packages using aspect naming such as
 
 ```python
 import aspects
+```
+
+## Jupyter Notebook usage
+
+```
+jupyter notebook
 ```
 
 ## Run dockers with API for sentiment, RST parsing and aspect extraction
