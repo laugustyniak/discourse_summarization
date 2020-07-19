@@ -17,8 +17,8 @@ from aspects.utilities.data_paths import ExperimentPaths
 
 GRAPH_TOOL_SHORTEST_PATHS_0_VALUE = 2 * 10 ^ 6
 
-loger = logging.getLogger()
-loger.setLevel(logging.DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
@@ -70,7 +70,7 @@ def remove_not_connected_vertices(g):
 
 # TODO: add click
 def main():
-    loger.info('Prepare graphs')
+    logger.info('Prepare graphs')
     conceptnet_graph, vertices_conceptnet = prepare_conceptnet()
     aspect_graph, experiment_paths = prepare_aspect_graph()
 
@@ -113,9 +113,9 @@ def main():
         columns=['aspect_1', 'aspect_2', 'shortest_distance_aspect_graph', 'shortest_distance_conceptnet']
     )
 
-    loger.info('Dump DataFrame with pairs')
+    logger.info('Dump DataFrame with pairs')
     pairs_df.to_pickle(experiment_paths.conceptnet_hierarchy_neighborhood)
-    loger.info('DataFrame with pairs dumped')
+    logger.info('DataFrame with pairs dumped')
 
 
 def prepare_aspect_graph(
