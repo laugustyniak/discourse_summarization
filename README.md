@@ -1,4 +1,4 @@
-# Aspect-based Sentiment Analysis using Rhetorical Structure Analysis (RST) 
+# Discourse Summartization
 
 ## Installation with conda virtualenv
 
