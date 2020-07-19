@@ -28,6 +28,13 @@ Afterwards you can import packages using aspect naming such as
 
 ```python
 import aspects
+...
+```
+
+## Download all necessary resources via DVC 
+
+```
+dvc pull
 ```
 
 ## Jupyter Notebook usage
@@ -43,7 +50,16 @@ cd docker
 ./restart.sh
 ```
 
-## Prapare conceptnet.io pickle and amazon reviews
+## Build and run discourse summarization docker
+
+```
+./build.sh
+./start.sh
+```
+
+If you are using VS Code or PyCharm you can setup docker `discourse-summarization` image as your python interpreter  
+
+## Prepare conceptnet.io pickle and amazon reviews
 ```
 python aspects/io.parser.py
 ```
