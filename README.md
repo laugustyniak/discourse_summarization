@@ -1,4 +1,4 @@
-# Discourse Summartization
+# Discourse Summarization
 
 ## Installation with conda virtualenv
 
