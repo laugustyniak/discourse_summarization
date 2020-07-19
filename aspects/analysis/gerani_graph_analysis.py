@@ -13,7 +13,7 @@ from aspects.aspects.aspects_graph_builder import (
     merge_multiedges,
 )
 
-loger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 ASPECT_IMPORTANCE = 'importance'
 
@@ -33,17 +33,17 @@ def extend_graph_nodes_with_sentiments_and_weights(
 
     for aspect, sentiments in tqdm(aspect_sentiments.items(), desc='Adding attributes to the graph nodes'):
         try:
-            graph.node[aspect]['count'] = len(sentiments)
-            graph.node[aspect]['sentiment_avg'] = float(np.average(sentiments))
-            graph.node[aspect]['sentiment_sum'] = float(np.sum(sentiments))
-            graph.node[aspect][ASPECT_IMPORTANCE] = float(np.sum([x ** 2 for x in sentiments]))
+            graph.nodes[aspect]['count'] = len(sentiments)
+            graph.nodes[aspect]['sentiment_avg'] = float(np.average(sentiments))
+            graph.nodes[aspect]['sentiment_sum'] = float(np.sum(sentiments))
+            graph.nodes[aspect][ASPECT_IMPORTANCE] = float(np.sum([x ** 2 for x in sentiments]))
             n_aspects_updated += 1
         except KeyError as err:
             n_aspects_not_in_graph += 1
-            loger.info('There is not aspect: {} in graph'.format(str(err)))
+            logger.info('There is not aspect: {} in graph'.format(str(err)))
 
-    loger.info('#{} aspects not in graph'.format(n_aspects_not_in_graph))
-    loger.info('#{} aspects updated in graph'.format(n_aspects_updated))
+    logger.info('#{} aspects not in graph'.format(n_aspects_not_in_graph))
+    logger.info('#{} aspects updated in graph'.format(n_aspects_updated))
 
     return graph, aspect_sentiments
 
@@ -61,8 +61,8 @@ def calculate_moi_by_gerani(
         else:
             dir_moi = 0
 
-        graph.node[aspect]['moi'] = alpha_coefficient * dir_moi + (1 - alpha_coefficient) * weighted_page_rank_element
-        graph.node[aspect]['pagerank'] = weighted_page_rank_element
+        graph.nodes[aspect]['moi'] = alpha_coefficient * dir_moi + (1 - alpha_coefficient) * weighted_page_rank_element
+        graph.nodes[aspect]['pagerank'] = weighted_page_rank_element
 
     return graph
 
@@ -72,7 +72,7 @@ def gerani_paper_arrg_to_aht(
         max_number_of_nodes: int = 100,
         weight: str = 'moi'
 ) -> nx.Graph:
-    loger.info('Generate Aspect Hierarchical Tree based on ARRG')
+    logger.info('Generate Aspect Hierarchical Tree based on ARRG')
     aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
     graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank)
 
@@ -96,7 +96,7 @@ def our_paper_arrg_to_aht(
         max_number_of_nodes: int = 100,
         weight: str = 'weight'
 ) -> nx.Graph:
-    loger.info('Generate Aspect Hierarchical Tree based on ARRG')
+    logger.info('Generate Aspect Hierarchical Tree based on ARRG')
     aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
     graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank)
 
