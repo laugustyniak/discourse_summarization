@@ -1,4 +1,4 @@
-from aspects.embeddings.graph.conceptnet_hierarchies_check import prepare_hierarchies_neighborhood
+from aspects.graph.graph_tool.conceptnet_hierarchies_check import prepare_hierarchies_neighborhood
 from aspects.pipelines.aspect_analysis import AspectAnalysis
 from aspects.utilities import settings
 

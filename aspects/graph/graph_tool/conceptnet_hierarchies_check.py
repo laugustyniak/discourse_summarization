@@ -12,10 +12,10 @@ from tqdm import tqdm
 from aspects.data.conceptnet.utils import load_english_hierarchical_graph
 from aspects.data_io import serializer
 from aspects.graph.convert import networkx_2_graph_tool
+from aspects.graph.graph_tool.utils import GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
 from aspects.utilities import settings
 from aspects.utilities.data_paths import ExperimentPaths
 
-GRAPH_TOOL_SHORTEST_PATHS_0_VALUE = 2 * 10 ^ 6
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
