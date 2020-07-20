@@ -35,3 +35,5 @@ conceptnet-5.7.0-assertions.csv
 /.local/
 /.config/
 /.ipython/
+
+.jupyter/
