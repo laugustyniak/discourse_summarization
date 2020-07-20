@@ -8,7 +8,7 @@ import networkx as nx
 import pandas as pd
 from tqdm import tqdm
 
-loger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Aspect2AspectGraph:
@@ -49,9 +49,10 @@ class Aspect2AspectGraph:
                     graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, weight)
         return graph
 
-    def add_aspects_to_graph(self, graph, aspect_left, aspect_right, relation, weight):
+    @staticmethod
+    def add_aspects_to_graph(graph, aspect_left, aspect_right, relation, weight):
         if aspect_left != aspect_right:
-            loger.info(f'Add rule: {(aspect_left, aspect_right, relation, weight)}')
+            logger.debug(f'Add rule: {(aspect_left, aspect_right, relation, weight)}')
             graph.add_edge(aspect_left, aspect_right, relation_type=relation, weight=weight)
         return graph
 
@@ -76,8 +77,11 @@ def merge_multiedges(graph: object, node_attrib_name: object = 'weight', default
     graph_new : networkx.Graph()
         Aspect-aspect graph with maximum single relation between each pair of nodes.
 
+    Args:
+        default_node_weight:
+
     """
-    loger.info('Create a new graph without multiple edges between nodes.')
+    logger.info('Create a new graph without multiple edges between nodes.')
     graph_new = nx.Graph()
     for u, v, data in graph.edges(data=True):
         w = data[node_attrib_name] if node_attrib_name in data else default_node_weight
@@ -86,7 +90,7 @@ def merge_multiedges(graph: object, node_attrib_name: object = 'weight', default
         else:
             graph_new.add_edge(u, v, weight=w)
 
-    loger.info('Copy nodes attributes from multi edge graph to flattened one.')
+    logger.info('Copy nodes attributes from multi edge graph to flattened one.')
     nx.set_node_attributes(graph_new, dict(graph.nodes.items()))
 
     return graph_new
@@ -114,9 +118,9 @@ def calculate_weighted_page_rank(
         Page Rank values for ARRG.
 
     """
-    loger.info('Weighted Page Rank calculation starts.')
+    logger.info('Weighted Page Rank calculation starts.')
     page_ranks = nx.pagerank_scipy(graph, weight=weight)
-    loger.info('Weighted Page Rank calculation ended.')
+    logger.info('Weighted Page Rank calculation ended.')
     return OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
 
 
