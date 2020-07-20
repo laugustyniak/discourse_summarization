@@ -68,10 +68,11 @@ def remove_not_connected_vertices(g):
 
 
 def prepare_hierarchies_neighborhood(
-        reviews_path: Union[str, Path] = settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs'
+        reviews_path: Union[str, Path] = settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs',
+        conceptnet_graph_path: Union[str, Path] = settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH
 ):
     logger.info('Prepare graphs')
-    conceptnet_graph, vertices_conceptnet = prepare_conceptnet()
+    conceptnet_graph, vertices_conceptnet = prepare_conceptnet(conceptnet_graph_path)
     aspect_graph, experiment_paths = prepare_aspect_graph(reviews_path=reviews_path)
 
     aspect_graph_intersected = Graph(aspect_graph)
@@ -133,8 +134,8 @@ def prepare_aspect_graph(reviews_path: Union[str, Path]):
     return aspect_graph, experiment_paths
 
 
-def prepare_conceptnet():
-    conceptnet_graph = gt.load_graph(CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_EN_PATH.as_posix())
+def prepare_conceptnet(graph_path: Union[str, Path]):
+    conceptnet_graph = gt.load_graph(str(graph_path))
     remove_self_loops(conceptnet_graph)
     conceptnet_graph.reindex_edges()
     vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
