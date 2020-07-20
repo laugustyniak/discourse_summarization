@@ -37,3 +37,5 @@ conceptnet-5.7.0-assertions.csv
 /.ipython/
 
 .jupyter/
+
+*.egg-info/
