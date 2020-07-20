@@ -8,7 +8,7 @@ import pandas as pd
 from graph_tool.stats import remove_self_loops
 from tqdm import tqdm
 
-from aspects.utilities.settings import CONCEPTNET_CSV_EN_PATH, CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_EN_PATH
+from aspects.utilities import settings
 
 NUCLEUS_SATELLITE_RELATIONS = {
     'ReceivesAction',
@@ -34,7 +34,7 @@ def generate_english_graph(
         graph_path: Union[str, Path],
         relation_types: Set[str] = None,
 ) -> gt.Graph:
-    df = pd.read_csv(CONCEPTNET_CSV_EN_PATH, index_col=0)
+    df = pd.read_csv(settings.CONCEPTNET_CSV_EN_PATH, index_col=0)
 
     synonyms_df = df[df.relation == 'Synonym']
     all_synonyms = list(set(synonyms_df.target.tolist() + synonyms_df.source.tolist()))
@@ -82,6 +82,7 @@ def generate_english_graph(
         source = row.source
         target = row.target
 
+        # TODO: add other possible hierarchical relations from conceptnet
         if row.relation in SATELLITE_NUCLEUS_RELATIONS:
             source, target = target, source
 
@@ -102,8 +103,8 @@ def generate_english_graph(
     return g
 
 
-def prepare_conceptnet_graph(relation_types: Set[str]):
-    g = load_english_hierarchical_graph()
+def prepare_conceptnet_graph(graph_path: str, relation_types: Set[str]):
+    g = gt.load_graph(graph_path)
     remove_self_loops(g)
     g.reindex_edges()
 
@@ -126,15 +127,20 @@ def prepare_conceptnet_graph(relation_types: Set[str]):
     return g, vertices
 
 
-def load_english_hierarchical_graph() -> gt.Graph:
-    if CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_EN_PATH.exists():
-        return gt.load_graph(CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_EN_PATH.as_posix())
-    else:
-        return generate_english_graph(
-            graph_path=CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_EN_PATH,
-            relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS)
-        )
-
-
 if __name__ == '__main__':
-    load_english_hierarchical_graph()
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
+        relation_types=None
+    )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
+        relation_types=None
+    )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
+        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS)
+    )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITHOUT_SYNONYMS_EN_PATH,
+        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS)
+    )

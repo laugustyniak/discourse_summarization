@@ -1,0 +1,7 @@
+md5: f53fb9af9e1a9de6277c36316777d71a
+outs:
+- md5: c3853e64f8ad85359378d2e6f8c45fbf
+  path: 5.7.0-all-relations.without.synonyms.en.gt
+  cache: true
+  metric: false
+  persist: false

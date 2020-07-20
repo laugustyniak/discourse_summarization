@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import Union
 
+import graph_tool as gt
 import numpy as np
 import pandas as pd
 from graph_tool import Graph
@@ -9,16 +10,14 @@ from graph_tool.stats import remove_self_loops
 from graph_tool.topology import shortest_distance
 from tqdm import tqdm
 
-from aspects.data.conceptnet.utils import load_english_hierarchical_graph
 from aspects.data_io import serializer
 from aspects.graph.convert import networkx_2_graph_tool
 from aspects.graph.graph_tool.utils import GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
 from aspects.utilities import settings
 from aspects.utilities.data_paths import ExperimentPaths
 
-
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
@@ -135,7 +134,7 @@ def prepare_aspect_graph(reviews_path: Union[str, Path]):
 
 
 def prepare_conceptnet():
-    conceptnet_graph = load_english_hierarchical_graph()
+    conceptnet_graph = gt.load_graph(CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_EN_PATH.as_posix())
     remove_self_loops(conceptnet_graph)
     conceptnet_graph.reindex_edges()
     vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
