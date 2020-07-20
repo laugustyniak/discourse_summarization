@@ -93,7 +93,7 @@ def gerani_paper_arrg_to_aht(
 
 def our_paper_arrg_to_aht(
         graph: nx.MultiDiGraph,
-        max_number_of_nodes: int = 100,
+        max_number_of_nodes: int,
         weight: str = 'weight'
 ) -> nx.Graph:
     logger.info('Generate Aspect Hierarchical Tree based on ARRG')

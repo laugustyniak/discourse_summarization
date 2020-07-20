@@ -46,6 +46,7 @@ class AspectAnalysis:
             batch_size: int = None,
             max_docs: int = None,
             alpha_coefficient: float = 0.5,
+            aht_max_number_of_nodes: int = 50,
     ):
         self.max_docs = max_docs
         self.batch_size = batch_size
@@ -64,6 +65,7 @@ class AspectAnalysis:
         else:
             self.jobs = jobs
         self.alpha_coefficient = alpha_coefficient
+        self.aht_max_number_of_nodes = aht_max_number_of_nodes
 
     def parallelized_extraction(
             self,
@@ -177,6 +179,10 @@ class AspectAnalysis:
         return df
 
     def build_aspect_to_aspect_graph(self, df: pd.DataFrame, filter_relation_fn: Callable = None):
+        if self.paths.aspect_to_aspect_graph.exists():
+            logging.info('Aspect to aspect graph has been already built, loading and passing to the next stage')
+            return serializer.load(self.paths.aspect_to_aspect_graph)
+
         builder = Aspect2AspectGraph()
         graph = builder.build(
             discourse_tree_df=df,
@@ -204,7 +210,7 @@ class AspectAnalysis:
 
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df, filter_rules_gerani)
         graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
-        aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=50, weight='moi')
+        aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=self.aht_max_number_of_nodes, weight='moi')
 
         serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
@@ -224,7 +230,7 @@ class AspectAnalysis:
 
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
         graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
-        aht_graph = our_paper_arrg_to_aht(graph, max_number_of_nodes=50, weight='pagerank')
+        aht_graph = our_paper_arrg_to_aht(graph, max_number_of_nodes=self.aht_max_number_of_nodes, weight='pagerank')
 
         serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
