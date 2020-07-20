@@ -68,11 +68,12 @@ def remove_not_connected_vertices(g):
     return g
 
 
-# TODO: add click
-def main():
+def prepare_hierarchies_neighborhood(
+        reviews_path: Union[str, Path] = settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs'
+):
     logger.info('Prepare graphs')
     conceptnet_graph, vertices_conceptnet = prepare_conceptnet()
-    aspect_graph, experiment_paths = prepare_aspect_graph()
+    aspect_graph, experiment_paths = prepare_aspect_graph(reviews_path=reviews_path)
 
     aspect_graph_intersected = Graph(aspect_graph)
     conceptnet_graph_intersected = Graph(conceptnet_graph)
@@ -118,14 +119,10 @@ def main():
     logger.info('DataFrame with pairs dumped')
 
 
-def prepare_aspect_graph(
-        reviews_path: Union[str, Path] = settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs'
-):
+def prepare_aspect_graph(reviews_path: Union[str, Path]):
     experiment_paths = ExperimentPaths(
         input_path='',
         output_path=reviews_path,
-        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Apps_for_Android',
-        # output_path=settings.DEFAULT_OUTPUT_PATH / 'reviews_Amazon_Instant_Video',
         experiment_name='our'
     )
     aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
@@ -143,7 +140,3 @@ def prepare_conceptnet():
     conceptnet_graph.reindex_edges()
     vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
     return conceptnet_graph, vertices_conceptnet
-
-
-if __name__ == '__main__':
-    main()
