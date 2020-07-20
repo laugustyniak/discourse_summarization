@@ -1,7 +1,7 @@
 import torch
 
 from aspects.data_io import serializer
-from aspects.embeddings.graph.calculate_shortest_paths import calculate_shortest_paths_lengths
+from aspects.graph.networkx.calculate_shortest_paths import calculate_shortest_paths_lengths
 from aspects.embeddings.graph.utils import preprocess_data, calculate_reconstruction_metrics
 from aspects.utilities.settings import DEFAULT_OUTPUT_PATH
 
