@@ -1,0 +1,7 @@
+md5: ebf1944d6e47d669c64ec9ecb12c2a4a
+outs:
+- md5: 5dd763c22de9fcf3bb45e5688c5d4797
+  path: conceptnet-5.7.0-assertions.pl.csv
+  cache: true
+  metric: false
+  persist: false
