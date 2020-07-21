@@ -46,4 +46,6 @@ for conceptnet_graph_path in tqdm(CONCEPTNET_GRAPH_TOOL_GRAPHS, desc='Conceptnet
     df['shortest_paths_differences'] = df.shortest_distance_conceptnet - df.shortest_distance_aspect_graph
     df.drop_duplicates(subset=['aspect_1', 'aspect_2'])
     sns_plot = sns.lineplot(x=df.shortest_distance_aspect_graph, y=df.shortest_distance_conceptnet)
-    sns_plot.savefig(str(aspect_analysis_our / f"shortest_paths_correlation_{conceptnet_graph_path.stem}.png"))
+    sns_plot.figure.savefig(
+        str(aspect_analysis_our.output_path / f"shortest_paths_correlation_{conceptnet_graph_path.stem}.png")
+    )
