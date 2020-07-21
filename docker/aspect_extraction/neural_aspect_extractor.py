@@ -13,6 +13,7 @@ from util import http_get
 
 nlp = spacy.load('en_core_web_sm')
 
+# TODO: add to DVC
 MODEL_NAME = 'model-72eb2ef'
 
 ASPECT_EXTRACTION_NEURAL_MODEL_PATH = Path('models/aspects')
