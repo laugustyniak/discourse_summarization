@@ -65,7 +65,7 @@ SENTIMENT_DOCKER_URL = 'http://localhost:5002/api/sentiment'
 
 # --------------------------------------------- RST  ----------------------------------------------------------------- #
 
-RST_PARSER_DOCKER_URL = 'http://localhost:5000/api/rst/parse'
+RST_PARSER_DOCKER_URL = 'http://oxygen.engine.kdm.wcss.pl:5000/api/rst/parse'
 RETRIES_LIMIT = 100
 
 # --------------------------------------------- ASPECT MODELS -------------------------------------------------------- #
