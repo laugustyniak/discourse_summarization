@@ -2,32 +2,17 @@ import pickle
 from pathlib import Path
 
 import spacy
-
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras_contrib.layers import CRF
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_accuracy
 
-from util import http_get
-
 nlp = spacy.load('en_core_web_sm')
 
-# TODO: add to DVC
 MODEL_NAME = 'model-72eb2ef'
-
-ASPECT_EXTRACTION_NEURAL_MODEL_PATH = Path('models/aspects')
-ASPECT_EXTRACTION_NEURAL_MODEL = (
-    ASPECT_EXTRACTION_NEURAL_MODEL_PATH /
-    f'{MODEL_NAME}.h5'
-)
-ASPECT_EXTRACTION_NEURAL_MODEL_HTTP = f'http://oxygen.engine.kdm.wcss.pl:8001/aspects/{MODEL_NAME}.h5'
-
-ASPECT_EXTRACTION_NEURAL_MODEL_INFO = (
-    ASPECT_EXTRACTION_NEURAL_MODEL_PATH /
-    f'{MODEL_NAME}.info'
-)
-ASPECT_EXTRACTION_NEURAL_MODEL_INFO_HTTP = f'http://oxygen.engine.kdm.wcss.pl:8001/aspects/{MODEL_NAME}.info'
+ASPECT_EXTRACTION_NEURAL_MODEL = Path('models') / f'{MODEL_NAME}.h5'
+ASPECT_EXTRACTION_NEURAL_MODEL_INFO = Path('models') / f'{MODEL_NAME}.info'
 
 
 class NeuralAspectExtractor:
@@ -43,24 +28,9 @@ class NeuralAspectExtractor:
         # uncomment after adding char embeddings
         # self.char_embedding_vocab = self.model_info['char_vocab']
 
-    def _load_model(self):
+    @staticmethod
+    def _load_model():
         # check of models are downloaded, if not download them
-        if not ASPECT_EXTRACTION_NEURAL_MODEL.exists():
-            ASPECT_EXTRACTION_NEURAL_MODEL_PATH.mkdir(
-                parents=True, exist_ok=True)
-            http_get(
-                ASPECT_EXTRACTION_NEURAL_MODEL_HTTP,
-                ASPECT_EXTRACTION_NEURAL_MODEL_PATH / ASPECT_EXTRACTION_NEURAL_MODEL.name
-            )
-
-        if not ASPECT_EXTRACTION_NEURAL_MODEL_INFO.exists():
-            ASPECT_EXTRACTION_NEURAL_MODEL_PATH.mkdir(
-                parents=True, exist_ok=True)
-            http_get(
-                ASPECT_EXTRACTION_NEURAL_MODEL_INFO_HTTP,
-                ASPECT_EXTRACTION_NEURAL_MODEL_PATH / ASPECT_EXTRACTION_NEURAL_MODEL_INFO.name
-            )
-
         with open(ASPECT_EXTRACTION_NEURAL_MODEL_INFO.as_posix(), 'rb') as f:
             model_info = pickle.load(f)
         model = load_model(
