@@ -77,13 +77,16 @@ def prepare_hierarchies_neighborhood(
     conceptnet_graph, vertices_conceptnet = prepare_conceptnet(conceptnet_graph_path)
     aspect_graph, experiment_paths = prepare_aspect_graph(reviews_path=reviews_path)
 
-    aspect_graph, conceptnet_graph = intersected_nodes(
-        g1=aspect_graph,
-        g2=conceptnet_graph,
-        filter_graphs_to_intersected_vertices=filter_graphs_to_intersected_vertices,
+    aspect_graph_intersected = Graph(aspect_graph)
+    conceptnet_graph_intersected = Graph(conceptnet_graph)
+
+    aspect_graph_intersected, conceptnet_graph_intersected = intersected_nodes(
+        g1=aspect_graph_intersected,
+        g2=conceptnet_graph_intersected,
+        filter_graphs_to_intersected_vertices=True,
         property_name='aspect_name'
     )
-    aspect_names_intersected = list(aspect_graph.vertex_properties['aspect_name'])
+    aspect_names_intersected = list(aspect_graph_intersected.vertex_properties['aspect_name'])
 
     vertices_name_to_aspect_vertex = dict(zip(aspect_graph.vertex_properties['aspect_name'], aspect_graph.vertices()))
     aspect_graph_vertices_intersected = [vertices_name_to_aspect_vertex[a] for a in aspect_names_intersected]
