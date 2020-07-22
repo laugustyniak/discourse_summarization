@@ -98,6 +98,9 @@ def generate_english_graph(
                     e_relation[e] = row.relation
                 except KeyError:
                     edge_adding_errors += 1
+        else:
+            e = g.add_edge(vertices[source], vertices[target])
+            e_relation[e] = row.relation
 
     print(f'{edge_adding_errors} edges with errors skipped')
 
