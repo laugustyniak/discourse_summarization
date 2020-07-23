@@ -16,15 +16,16 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 datasets = [
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50000),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 5000),
     (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, None),
     (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, None),
     (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50000),
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50000),
 ]
 
 for dataset_path, max_reviews in tqdm(datasets, desc='Amazon datasets processing...'):
     for experiment_name in ['our', 'gerani']:
-        aspect_analysis_our = AspectAnalysis(
+        aspect_analysis = AspectAnalysis(
             input_path=dataset_path.as_posix(),
             output_path=settings.DEFAULT_OUTPUT_PATH / dataset_path.stem,
             experiment_name=experiment_name,
@@ -33,19 +34,19 @@ for dataset_path, max_reviews in tqdm(datasets, desc='Amazon datasets processing
             max_docs=max_reviews
         )
         if experiment_name in ['our']:
-            aspect_analysis_our.our_pipeline()
-        elif experiment_name in ['our']:
-            aspect_analysis_our.gerani_pipeline()
+            aspect_analysis.our_pipeline()
+        elif experiment_name in ['gerani']:
+            aspect_analysis.gerani_pipeline()
         else:
             raise Exception('Wrong experiment type')
 
         for conceptnet_graph_path in tqdm(CONCEPTNET_GRAPH_TOOL_GRAPHS, desc='Conceptnet graph analysis...'):
             prepare_hierarchies_neighborhood(
-                experiments_path=aspect_analysis_our.paths,
+                experiments_path=aspect_analysis.paths,
                 conceptnet_graph_path=conceptnet_graph_path
             )
 
-            df = pd.read_pickle(aspect_analysis_our.paths.conceptnet_hierarchy_neighborhood)
+            df = pd.read_pickle(aspect_analysis.paths.conceptnet_hierarchy_neighborhood)
             logger.info(f'Shortest Paths pairs - data frame: {len(df)}')
             df = df[~(
                     (df.shortest_distance_aspect_graph.isin(VALUES_TO_SKIP)) |
@@ -56,7 +57,7 @@ for dataset_path, max_reviews in tqdm(datasets, desc='Amazon datasets processing
 
             sns_plot = sns.lineplot(x=df.shortest_distance_aspect_graph, y=df.shortest_distance_conceptnet)
             png_file_path = (
-                    aspect_analysis_our.paths.experiment_path /
+                    aspect_analysis.paths.experiment_path /
                     f"shortest_paths_correlation_{conceptnet_graph_path.stem}.png"
             ).as_posix()
             logger.info(f'Shortest Paths correlation figure will be saved in {png_file_path}')
