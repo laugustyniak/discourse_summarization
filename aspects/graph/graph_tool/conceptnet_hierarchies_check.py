@@ -91,7 +91,9 @@ def prepare_hierarchies_neighborhood(experiments_path: ExperimentPaths, conceptn
 
     conceptnet_vertices_intersected = [vertices_conceptnet[a] for a in aspect_names_intersected]
 
-    assert conceptnet_vertices_intersected == aspect_graph_vertices_intersected, 'Wrong sequence of vertices in both graphs'
+    logger.info(f'conceptnet_vertices_intersected len = {len(conceptnet_vertices_intersected)}')
+    logger.info(f'aspect_graph_vertices_intersected len = {len(aspect_graph_vertices_intersected)}')
+    assert len(conceptnet_vertices_intersected) == len(aspect_graph_vertices_intersected), 'Wrong sequence of vertices in both graphs'
 
     shortest_distances_conceptnet = np.array([
         shortest_distance(g=conceptnet_graph, source=v, target=conceptnet_vertices_intersected, directed=True)
