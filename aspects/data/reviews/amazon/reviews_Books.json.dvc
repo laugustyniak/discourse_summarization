@@ -1,0 +1,7 @@
+md5: b5543ada66930409f8d5e642eeb133f1
+outs:
+- md5: 1459898acf5ad1ddb72a0f737f8d1911
+  path: reviews_Books.json
+  cache: true
+  metric: false
+  persist: false
