@@ -1,0 +1,7 @@
+md5: 514a1ea949a6338518c645e389eb267b
+outs:
+- md5: 7ae62942fb2b0a31f9a5e8b46648f190
+  path: reviews_Automotive.json
+  cache: true
+  metric: false
+  persist: false

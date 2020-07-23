@@ -8,14 +8,12 @@ DEFAULT_INPUT_FILE_PATH = ROOT_PATH / pathlib.Path('data/reviews/amazon/reviews_
 
 # --------------------------------------------- AMAZON DATASETS PATHS -------------------------------------------------#
 AMAZON_REVIEWS_DATASETS_PATH = DATA_PATH / 'reviews' / 'amazon'
-AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ = AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Apps_for_Android.json.gz'
+AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON = AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Automotive.json'
 AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON = AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Apps_for_Android.json'
-AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_GZ = AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Amazon_Instant_Video.json.gz'
 AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON = AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Amazon_Instant_Video.json'
-AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_GZ = \
-    AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Cell_Phones_and_Accessories.json.gz'
-AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON = \
-    AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Cell_Phones_and_Accessories.json'
+AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON = (
+        AMAZON_REVIEWS_DATASETS_PATH / 'reviews_Cell_Phones_and_Accessories.json'
+)
 
 # --------------------------------------------- BING LIU REVIEWS ASPECT-BASED DATASETS-------------------------------- #
 BING_LIU_DATASETS_PATH = DATA_PATH / 'aspects' / 'bing_liu' / 'json'
