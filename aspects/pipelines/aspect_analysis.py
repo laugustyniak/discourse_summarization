@@ -24,14 +24,13 @@ from aspects.utilities import settings, pandas_utils
 from aspects.utilities.data_paths import ExperimentPaths
 
 
-def setup_logger(loger_path: str):
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s;%(filename)s:%(lineno)s;'
-               '%(funcName)s();%(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        filename=loger_path,
-    )
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s;%(filename)s:%(lineno)s;'
+           '%(funcName)s();%(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    filename='analyzer.log'
+)
 
 
 class AspectAnalysis:
