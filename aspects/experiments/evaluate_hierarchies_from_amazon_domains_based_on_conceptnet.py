@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 import seaborn as sns
 from tqdm import tqdm
@@ -9,41 +11,55 @@ from aspects.pipelines.aspect_analysis import AspectAnalysis
 from aspects.utilities import settings
 
 sns.set(color_codes=True)
-DATASET_PATH = settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON
 
-# TODO: better parametrization for experiments and domain's evaluation
-# TODO: params: amazon domain, set of conceptnet relations, our vs gerani arrg generation
-# aspect_analysis_gerani = AspectAnalysis(
-#     input_path=DATASET_PATH.as_posix(),
-#     output_path=settings.DEFAULT_OUTPUT_PATH / DATASET_PATH.stem,
-#     experiment_name='gerani',
-#     jobs=2,
-#     batch_size=100,
-# )
-# aspect_analysis_gerani.gerani_pipeline()
-# prepare_hierarchies_neighborhood(reviews_path=aspect_analysis_gerani.output_path)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-# TODO: generate graph for each variation of params, use notebook's code
-aspect_analysis_our = AspectAnalysis(
-    input_path=DATASET_PATH.as_posix(),
-    output_path=settings.DEFAULT_OUTPUT_PATH / DATASET_PATH.stem,
-    experiment_name='our',
-    jobs=2,
-    batch_size=100,
-)
-aspect_analysis_our.our_pipeline()
+datasets = [
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 500),
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50000),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 5000),
+    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, None),
+    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, None),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50000),
+]
 
-for conceptnet_graph_path in tqdm(CONCEPTNET_GRAPH_TOOL_GRAPHS, desc='Conceptnet graph analysis...'):
-    prepare_hierarchies_neighborhood(
-        reviews_path=aspect_analysis_our.output_path,
-        conceptnet_graph_path=conceptnet_graph_path
-    )
-    df = pd.read_pickle(aspect_analysis_our.paths.conceptnet_hierarchy_neighborhood)
-    df = df[~(
-            (df.shortest_distance_aspect_graph.isin(VALUES_TO_SKIP)) |
-            (df.shortest_distance_conceptnet.isin(VALUES_TO_SKIP))
-    )]
-    df['shortest_paths_differences'] = df.shortest_distance_conceptnet - df.shortest_distance_aspect_graph
-    df.drop_duplicates(subset=['aspect_1', 'aspect_2'])
-    sns_plot = sns.lineplot(x=df.shortest_distance_aspect_graph, y=df.shortest_distance_conceptnet)
-    sns_plot.savefig(str(aspect_analysis_our / f"shortest_paths_correlation_{conceptnet_graph_path.stem}.png"))
+for dataset_path, max_reviews in tqdm(datasets, desc='Amazon datasets processing...'):
+    for experiment_name in ['our', 'gerani']:
+        aspect_analysis = AspectAnalysis(
+            input_path=dataset_path.as_posix(),
+            output_path=settings.DEFAULT_OUTPUT_PATH / dataset_path.stem,
+            experiment_name=experiment_name,
+            jobs=16,
+            batch_size=500,
+            max_docs=max_reviews
+        )
+        if experiment_name in ['our']:
+            aspect_analysis.our_pipeline()
+        elif experiment_name in ['gerani']:
+            aspect_analysis.gerani_pipeline()
+        else:
+            raise Exception('Wrong experiment type')
+
+        for conceptnet_graph_path in tqdm(CONCEPTNET_GRAPH_TOOL_GRAPHS, desc='Conceptnet graph analysis...'):
+            prepare_hierarchies_neighborhood(
+                experiments_path=aspect_analysis.paths,
+                conceptnet_graph_path=conceptnet_graph_path
+            )
+
+            df = pd.read_pickle(aspect_analysis.paths.conceptnet_hierarchy_neighborhood)
+            logger.info(f'Shortest Paths pairs - data frame: {len(df)}')
+            df = df[~(
+                    (df.shortest_distance_aspect_graph.isin(VALUES_TO_SKIP)) |
+                    (df.shortest_distance_conceptnet.isin(VALUES_TO_SKIP))
+            )]
+            df.drop_duplicates(subset=['aspect_1', 'aspect_2'])
+            logger.info(f'Shortest Paths pairs - data frame, without no paths and duplicates: {len(df)}')
+
+            sns_plot = sns.lineplot(x=df.shortest_distance_aspect_graph, y=df.shortest_distance_conceptnet)
+            png_file_path = (
+                    aspect_analysis.paths.experiment_path /
+                    f"shortest_paths_correlation_{conceptnet_graph_path.stem}.png"
+            ).as_posix()
+            logger.info(f'Shortest Paths correlation figure will be saved in {png_file_path}')
+            sns_plot.figure.savefig(png_file_path)
