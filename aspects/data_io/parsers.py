@@ -44,7 +44,7 @@ def conceptnet_io_parse(langs: Set[str] = None):
                     'start-lang': start_lang,
                     'end': concept_end,
                     'end-lang': end_lang,
-                    'weight': float(simplejson.loads(relation_elements[4])['weight']),
+                    'weight': float(json.loads(relation_elements[4])['weight']),
                     'relation': relation_elements[1].split('/')[2]
                 }
                 # it will be easier to look up by aspects

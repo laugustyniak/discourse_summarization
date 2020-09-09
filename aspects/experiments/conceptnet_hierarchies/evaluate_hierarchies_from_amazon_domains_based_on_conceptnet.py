@@ -16,6 +16,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 datasets = [
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 500),
     (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50000),
     (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 5000),
     (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, None),
