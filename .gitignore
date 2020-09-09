@@ -5,10 +5,12 @@ __pycache__/
 # ignore this folders
 texts/*
 logs/*
+*.log
 results/
 backups/*
 
 .idea/
+.bash_history
 .ipynb_checkpoints/
 .vscode/
 .cache/
