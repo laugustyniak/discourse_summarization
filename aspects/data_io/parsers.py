@@ -2,9 +2,9 @@ import gzip
 import json
 import pickle
 from collections import defaultdict
+from typing import Set
 
 import pandas as pd
-import simplejson
 import srsly
 from more_itertools import flatten
 from tqdm import tqdm
@@ -18,20 +18,7 @@ def parse_gzip(path):
             yield eval(line)
 
 
-def amazon_dataset_parse(dataset_path, column='reviewText', n_reviews=100000):
-    i = 0
-    reviews = {}
-    for d in tqdm(parse_gzip(dataset_path)):
-        reviews[i] = d[column]
-        i += 1
-        if i > n_reviews:
-            break
-    with open(dataset_path.replace('.gz', ''), 'wb') as j:
-        json.dump(reviews, j)
-
-
 def amazon_dataset_to_spacy_pretrain(dataset_path):
-    reviews = []
     with open(dataset_path, 'r') as f:
         reviews = [
             {'text': text}
@@ -40,7 +27,9 @@ def amazon_dataset_to_spacy_pretrain(dataset_path):
     srsly.write_jsonl(dataset_path.replace('.json', '.jsonl'), reviews)
 
 
-def conceptnet_io_parse(langs={u'en'}):
+def conceptnet_io_parse(langs: Set[str] = None):
+    if langs is None:
+        langs = {u'en'}
     with gzip.open(settings.CONCEPTNET_IO_PATH_GZ.as_posix(), 'rt') as conceptnet_io_file:
         conceptnet_relations = defaultdict(list)
         for line in tqdm(conceptnet_io_file):
@@ -74,11 +63,3 @@ def conceptnet_dump_to_df():
             for concept, concepts_relations
             in conceptnetio.items()
         ]))).drop_duplicates()
-
-
-if __name__ == '__main__':
-    # df = conceptnet_dump_to_df()
-    # conceptnet_io_parse()
-    # amazon_dataset_parse(settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_GZ.as_posix())
-    amazon_dataset_to_spacy_pretrain(settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON.as_posix())
-    # amazon_dataset_parse(settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_GZ.as_posix())

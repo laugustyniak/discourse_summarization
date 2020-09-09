@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple, Dict
 
 import graph_tool as gt
 import numpy as np
@@ -13,7 +13,6 @@ from tqdm import tqdm
 from aspects.data_io import serializer
 from aspects.graph.convert import networkx_2_graph_tool
 from aspects.graph.graph_tool.utils import GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
-from aspects.utilities import settings
 from aspects.utilities.data_paths import ExperimentPaths
 
 logger = logging.getLogger()
@@ -25,13 +24,13 @@ def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) ->
 
 
 def intersected_nodes(g1, g2, filter_graphs_to_intersected_vertices: bool = False, property_name: str = 'aspect_name'):
-    print(f'g1: {g1}')
-    print(f'g2: {g2}')
+    logger.info(f'g1: {g1}')
+    logger.info(f'g2: {g2}')
     g1_nodes = set(g1.vp[property_name])
     g2_nodes = set(g2.vp[property_name])
     g1_and_g2 = g1_nodes.intersection(g2_nodes)
     g1_not_in_g2 = g1_nodes.difference(g2_nodes)
-    print(
+    logger.info(
         f'g1 nodes: #{len(g1_nodes)}\n'
         f'g2 nodes: #{len(g2_nodes)}\n'
         f'g1 and g2 nodes: #{len(g1_and_g2)}\n'
@@ -53,27 +52,24 @@ def intersected_nodes(g1, g2, filter_graphs_to_intersected_vertices: bool = Fals
 
 
 def remove_not_connected_vertices(g):
-    print(f'Pre-edge-purge graph stats: {g}')
+    logger.info(f'Pre-edge-purge graph stats: {g}')
     g.purge_edges()
-    print(f'Pre-vertices-purge graph stats: {g}')
+    logger.info(f'Pre-vertices-purge graph stats: {g}')
     g.purge_vertices(in_place=True)
-    print(f'Pre-filter graph stats: {g}')
+    logger.info(f'Pre-filter graph stats: {g}')
     v_connected = g.new_vertex_property('bool')
     for v in tqdm(g.vertices(), desc='Vertices filtering...', total=g.num_vertices()):
         v_connected[v] = bool(v.in_degree() or v.out_degree())
     g.set_vertex_filter(v_connected)
     g.purge_vertices(in_place=False)
-    print(f'Post-filter graph stats: {g}')
+    logger.info(f'Post-filter graph stats: {g}')
     return g
 
 
-def prepare_hierarchies_neighborhood(
-        reviews_path: Union[str, Path] = settings.DEFAULT_OUTPUT_PATH / 'reviews_Cell_Phones_and_Accessories-50000-docs',
-        conceptnet_graph_path: Union[str, Path] = settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH
-):
+def prepare_hierarchies_neighborhood(experiments_path: ExperimentPaths, conceptnet_graph_path: Union[str, Path]):
     logger.info('Prepare graphs')
     conceptnet_graph, vertices_conceptnet = prepare_conceptnet(conceptnet_graph_path)
-    aspect_graph, experiment_paths = prepare_aspect_graph(reviews_path=reviews_path)
+    aspect_graph, experiment_paths = prepare_aspect_graph(experiments_path)
 
     aspect_graph_intersected = Graph(aspect_graph)
     conceptnet_graph_intersected = Graph(conceptnet_graph)
@@ -94,6 +90,11 @@ def prepare_hierarchies_neighborhood(
     ])
 
     conceptnet_vertices_intersected = [vertices_conceptnet[a] for a in aspect_names_intersected]
+
+    logger.info(f'conceptnet_vertices_intersected len = {len(conceptnet_vertices_intersected)}')
+    logger.info(f'aspect_graph_vertices_intersected len = {len(aspect_graph_vertices_intersected)}')
+    assert len(conceptnet_vertices_intersected) == len(aspect_graph_vertices_intersected), 'Wrong sequence of vertices in both graphs'
+
     shortest_distances_conceptnet = np.array([
         shortest_distance(g=conceptnet_graph, source=v, target=conceptnet_vertices_intersected, directed=True)
         for v in tqdm(conceptnet_vertices_intersected, desc='Conceptnet shortest paths...')
@@ -116,27 +117,22 @@ def prepare_hierarchies_neighborhood(
 
     logger.info('Dump DataFrame with pairs')
     pairs_df.to_pickle(experiment_paths.conceptnet_hierarchy_neighborhood)
-    logger.info('DataFrame with pairs dumped')
+    logger.info(f'DataFrame with pairs dumped in: {experiment_paths.conceptnet_hierarchy_neighborhood.as_posix()}')
 
 
-def prepare_aspect_graph(reviews_path: Union[str, Path]):
-    experiment_paths = ExperimentPaths(
-        input_path='',
-        output_path=reviews_path,
-        experiment_name='our'
-    )
+def prepare_aspect_graph(experiment_paths: ExperimentPaths) -> Tuple[Graph, ExperimentPaths]:
     aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
     aspect_graph = networkx_2_graph_tool(aspect_graph, node_name_property='aspect_name')
     remove_self_loops(aspect_graph)
     aspect_graph.reindex_edges()
     # revert edges from S -> N to N -> S
     aspect_graph.set_reversed(is_reversed=True)
-    return aspect_graph, experiment_paths
+    return Graph(aspect_graph), experiment_paths
 
 
-def prepare_conceptnet(graph_path: Union[str, Path]):
+def prepare_conceptnet(graph_path: Union[str, Path]) -> Tuple[Graph, Dict[str, gt.Vertex]]:
     conceptnet_graph = gt.load_graph(str(graph_path))
     remove_self_loops(conceptnet_graph)
     conceptnet_graph.reindex_edges()
     vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
-    return conceptnet_graph, vertices_conceptnet
+    return Graph(conceptnet_graph), vertices_conceptnet
