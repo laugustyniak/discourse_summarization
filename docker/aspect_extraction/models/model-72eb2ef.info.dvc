@@ -1,0 +1,7 @@
+md5: 5f375f3d3f6e379991dd2b72225e9fa0
+outs:
+- md5: aaa05496e9b8e0184a1f1964d0032eb6
+  path: model-72eb2ef.info
+  cache: true
+  metric: false
+  persist: false
