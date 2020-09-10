@@ -77,6 +77,7 @@ def prepare_hierarchies_neighborhood(experiments_path: ExperimentPaths, conceptn
     aspect_graph_intersected, conceptnet_graph_intersected = intersected_nodes(
         g1=aspect_graph_intersected,
         g2=conceptnet_graph_intersected,
+        # TODO: check, czy usuwajac wierzcholki nie usuwam tez krawedzi z nimi powiazanych? wtedy mam rzadszy graf i calkiem inne relacje niz na calym grafie
         filter_graphs_to_intersected_vertices=True,
         property_name='aspect_name'
     )
@@ -121,18 +122,23 @@ def prepare_hierarchies_neighborhood(experiments_path: ExperimentPaths, conceptn
 
 
 def prepare_aspect_graph(experiment_paths: ExperimentPaths) -> Tuple[Graph, ExperimentPaths]:
+    logger.info(f'Load aspect 2 aspect graph - {str(experiment_paths.aspect_to_aspect_graph)}')
     aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
     aspect_graph = networkx_2_graph_tool(aspect_graph, node_name_property='aspect_name')
     remove_self_loops(aspect_graph)
     aspect_graph.reindex_edges()
+    # TODO: check if the direction is correct
     # revert edges from S -> N to N -> S
     aspect_graph.set_reversed(is_reversed=True)
     return Graph(aspect_graph), experiment_paths
 
 
 def prepare_conceptnet(graph_path: Union[str, Path]) -> Tuple[Graph, Dict[str, gt.Vertex]]:
+    logger.info(f'Load conceptnet graph - {str(graph_path)}')
     conceptnet_graph = gt.load_graph(str(graph_path))
+    logger.info(f'Loaded conceptnet graph - {str(graph_path)}')
     remove_self_loops(conceptnet_graph)
     conceptnet_graph.reindex_edges()
+    logger.info(f'Generate aspect name to vertex mapping  - {str(graph_path)}')
     vertices_conceptnet = dict(zip(conceptnet_graph.vertex_properties['aspect_name'], conceptnet_graph.vertices()))
     return Graph(conceptnet_graph), vertices_conceptnet
