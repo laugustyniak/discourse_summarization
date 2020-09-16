@@ -49,6 +49,7 @@ class AspectAnalysis:
             aht_max_number_of_nodes: int = 50,
     ):
         self.max_docs = max_docs
+        mlflow.log_param('max_docs', max_docs)
         self.batch_size = batch_size
         self.input_file_path = input_path
         if self.max_docs is not None:
@@ -58,14 +59,18 @@ class AspectAnalysis:
         self.experiment_name = experiment_name
         self.paths = ExperimentPaths(input_path, self.output_path, experiment_name)
         self.sent_model_path = sent_model_path
+        mlflow.log_param('sent_model_path', sent_model_path)
 
         # number of all processes
         if jobs is None:
             self.jobs = multiprocessing.cpu_count()
         else:
             self.jobs = jobs
+
         self.alpha_coefficient = alpha_coefficient
+        mlflow.log_param('alpha_coefficient', alpha_coefficient)
         self.aht_max_number_of_nodes = aht_max_number_of_nodes
+        mlflow.log_param('aht_max_number_of_nodes', aht_max_number_of_nodes)
 
     def parallelized_extraction(
             self,
