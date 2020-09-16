@@ -55,7 +55,7 @@ def calculate_moi_by_gerani(
 ) -> nx.MultiDiGraph:
     aspect_importance = nx.get_node_attributes(graph, ASPECT_IMPORTANCE)
 
-    for aspect, weighted_page_rank_element in tqdm(weighted_page_rank.items()):
+    for aspect, weighted_page_rank_element in tqdm(weighted_page_rank.items(), desc='Calculating moi by Gerani...'):
         if aspect in aspect_importance:
             dir_moi = aspect_importance[aspect]
         else:

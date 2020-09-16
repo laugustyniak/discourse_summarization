@@ -1,8 +1,10 @@
 import logging
+from functools import lru_cache
 from pathlib import Path
 from typing import Union, Tuple, Dict
 
 import graph_tool as gt
+import mlflow
 import numpy as np
 import pandas as pd
 from graph_tool import Graph
@@ -23,32 +25,45 @@ def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) ->
     return np.where(shortest_paths > GRAPH_TOOL_SHORTEST_PATHS_0_VALUE, replaced_value, shortest_paths)
 
 
-def intersected_nodes(g1, g2, filter_graphs_to_intersected_vertices: bool = False, property_name: str = 'aspect_name'):
-    logger.info(f'g1: {g1}')
-    logger.info(f'g2: {g2}')
-    g1_nodes = set(g1.vp[property_name])
-    g2_nodes = set(g2.vp[property_name])
+def intersected_nodes(
+        aspect_graph,
+        conceptnet_graph,
+        filter_graphs_to_intersected_vertices: bool = False,
+        property_name: str = 'aspect_name'
+):
+    logger.info(f'aspect_graph: {aspect_graph}')
+    logger.info(f'conceptnet_graph: {conceptnet_graph}')
+    g1_nodes = set(aspect_graph.vp[property_name])
+    g2_nodes = set(conceptnet_graph.vp[property_name])
     g1_and_g2 = g1_nodes.intersection(g2_nodes)
+    mlflow.log_metric('graphs_intersected_nodes', len(g1_and_g2))
     g1_not_in_g2 = g1_nodes.difference(g2_nodes)
+    mlflow.log_metric('only_in_aspect_graph_nodes', len(g1_not_in_g2))
     logger.info(
-        f'g1 nodes: #{len(g1_nodes)}\n'
-        f'g2 nodes: #{len(g2_nodes)}\n'
-        f'g1 and g2 nodes: #{len(g1_and_g2)}\n'
-        f'g1 not in g2 nodes: #{len(g1_not_in_g2)}\n'
+        f'aspect_graph nodes: #{len(g1_nodes)}\n'
+        f'conceptnet_graph nodes: #{len(g2_nodes)}\n'
+        f'aspect_graph and conceptnet_graph nodes: #{len(g1_and_g2)}\n'
+        f'aspect_graph not in conceptnet_graph nodes: #{len(g1_not_in_g2)}\n'
     )
 
     if filter_graphs_to_intersected_vertices:
-        v2_intersected = g2.new_vertex_property('bool')
-        for v, v_name in tqdm(zip(g2.vertices(), list(g2.vp[property_name])), desc='Vertices filtering...'):
+        v2_intersected = conceptnet_graph.new_vertex_property('bool')
+        for v, v_name in tqdm(zip(
+                conceptnet_graph.vertices(),
+                list(conceptnet_graph.vp[property_name])
+        ), desc='Vertices filtering...'):
             v2_intersected[v] = v_name in g1_and_g2
-        g2.set_vertex_filter(v2_intersected)
+        conceptnet_graph.set_vertex_filter(v2_intersected)
 
-        v1_intersected = g1.new_vertex_property('bool')
-        for v, v_name in tqdm(zip(g1.vertices(), list(g1.vp[property_name])), desc='Vertices filtering...'):
+        v1_intersected = aspect_graph.new_vertex_property('bool')
+        for v, v_name in tqdm(zip(
+                aspect_graph.vertices(),
+                list(aspect_graph.vp[property_name])
+        ), desc='Vertices filtering...'):
             v1_intersected[v] = v_name in g1_and_g2
-        g1.set_vertex_filter(v1_intersected)
+        aspect_graph.set_vertex_filter(v1_intersected)
 
-    return g1, g2
+    return aspect_graph, conceptnet_graph
 
 
 def remove_not_connected_vertices(g):
@@ -66,21 +81,43 @@ def remove_not_connected_vertices(g):
     return g
 
 
-def prepare_hierarchies_neighborhood(experiments_path: ExperimentPaths, conceptnet_graph_path: Union[str, Path]):
+def prepare_hierarchies_neighborhood(
+        experiments_path: ExperimentPaths, conceptnet_graph_path: Union[str, Path]
+) -> pd.DataFrame:
+
+    conceptnet_hierarchy_neighborhood_df_path = (
+            experiments_path.experiment_path / f'shortest-paths-pairs-{conceptnet_graph_path.stem}-df.pkl')
+
+    if conceptnet_hierarchy_neighborhood_df_path.exists():
+        return pd.read_pickle(conceptnet_hierarchy_neighborhood_df_path.as_posix())
+
     logger.info('Prepare graphs')
+
     conceptnet_graph, vertices_conceptnet = prepare_conceptnet(conceptnet_graph_path)
+    mlflow.log_metric('conceptnet_graph_nodes', conceptnet_graph.num_vertices())
+    mlflow.log_metric('conceptnet_graph_edges', conceptnet_graph.num_edges())
+
     aspect_graph, experiment_paths = prepare_aspect_graph(experiments_path)
+    mlflow.log_metric('aspect_graph_nodes', aspect_graph.num_vertices())
+    mlflow.log_metric('aspect_graph_edges', aspect_graph.num_edges())
 
     aspect_graph_intersected = Graph(aspect_graph)
     conceptnet_graph_intersected = Graph(conceptnet_graph)
 
     aspect_graph_intersected, conceptnet_graph_intersected = intersected_nodes(
-        g1=aspect_graph_intersected,
-        g2=conceptnet_graph_intersected,
+        aspect_graph=aspect_graph_intersected,
+        conceptnet_graph=conceptnet_graph_intersected,
         # TODO: check, czy usuwajac wierzcholki nie usuwam tez krawedzi z nimi powiazanych? wtedy mam rzadszy graf i calkiem inne relacje niz na calym grafie
         filter_graphs_to_intersected_vertices=True,
         property_name='aspect_name'
     )
+
+    mlflow.log_metric('conceptnet_graph_intersected_nodes', conceptnet_graph_intersected.num_vertices())
+    mlflow.log_metric('aspect_graph_intersected_nodes', aspect_graph_intersected.num_vertices())
+
+    mlflow.log_metric('conceptnet_graph_intersected_edges', conceptnet_graph_intersected.num_edges())
+    mlflow.log_metric('aspect_graph_intersected_edges', aspect_graph_intersected.num_edges())
+
     aspect_names_intersected = list(aspect_graph_intersected.vertex_properties['aspect_name'])
 
     vertices_name_to_aspect_vertex = dict(zip(aspect_graph.vertex_properties['aspect_name'], aspect_graph.vertices()))
@@ -117,10 +154,15 @@ def prepare_hierarchies_neighborhood(experiments_path: ExperimentPaths, conceptn
     )
 
     logger.info('Dump DataFrame with pairs')
-    pairs_df.to_pickle(experiment_paths.conceptnet_hierarchy_neighborhood)
+    pairs_df.to_pickle(conceptnet_hierarchy_neighborhood_df_path.as_posix())
+    mlflow.log_artifact(experiment_paths.conceptnet_hierarchy_neighborhood)
+    mlflow.log_metric('conceptnet_hierarchy_neighborhood_df_len', len(pairs_df))
     logger.info(f'DataFrame with pairs dumped in: {experiment_paths.conceptnet_hierarchy_neighborhood.as_posix()}')
 
+    return pairs_df
 
+
+@lru_cache(maxsize=1)
 def prepare_aspect_graph(experiment_paths: ExperimentPaths) -> Tuple[Graph, ExperimentPaths]:
     logger.info(f'Load aspect 2 aspect graph - {str(experiment_paths.aspect_to_aspect_graph)}')
     aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
@@ -133,6 +175,7 @@ def prepare_aspect_graph(experiment_paths: ExperimentPaths) -> Tuple[Graph, Expe
     return Graph(aspect_graph), experiment_paths
 
 
+@lru_cache(maxsize=1)
 def prepare_conceptnet(graph_path: Union[str, Path]) -> Tuple[Graph, Dict[str, gt.Vertex]]:
     logger.info(f'Load conceptnet graph - {str(graph_path)}')
     conceptnet_graph = gt.load_graph(str(graph_path))
