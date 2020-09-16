@@ -16,6 +16,7 @@ PyHamcrest==2.0.2
 protobuf==3.11.2
 py2cytoscape==.0.7.1
 pydot==1.4.1
+pygraphviz==1.6
 pytest==5.3.2
 python-rake==1.4.5
 pyvis==0.1.7.0
