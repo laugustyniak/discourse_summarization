@@ -155,7 +155,7 @@ def prepare_hierarchies_neighborhood(
 
     logger.info('Dump DataFrame with pairs')
     pairs_df.to_pickle(conceptnet_hierarchy_neighborhood_df_path.as_posix())
-    mlflow.log_artifact(experiment_paths.conceptnet_hierarchy_neighborhood)
+    mlflow.log_artifact(conceptnet_hierarchy_neighborhood_df_path.as_posix())
     mlflow.log_metric('conceptnet_hierarchy_neighborhood_df_len', len(pairs_df))
     logger.info(f'DataFrame with pairs dumped in: {experiment_paths.conceptnet_hierarchy_neighborhood.as_posix()}')
 
