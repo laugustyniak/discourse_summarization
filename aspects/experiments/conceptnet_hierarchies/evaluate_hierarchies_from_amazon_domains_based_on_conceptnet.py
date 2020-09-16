@@ -58,13 +58,6 @@ def main(n_jobs: int, batch_size: int, experiment_id: Union[str, int], overwrite
                     max_docs=max_reviews
                 )
 
-                mlflow.log_param("dataset_path", dataset_path)
-                mlflow.log_param("dataset_name", dataset_path.stem)
-                mlflow.log_param("method", experiment_name)
-                mlflow.log_param("max_docs", max_reviews)
-                mlflow.log_param("batch_size", batch_size)
-                mlflow.log_param("n_jobs", n_jobs)
-
                 if experiment_name in ['our']:
                     aspect_analysis.our_pipeline()
                 elif experiment_name in ['gerani']:
@@ -80,6 +73,13 @@ def main(n_jobs: int, batch_size: int, experiment_id: Union[str, int], overwrite
                             nested=True,
                             # run_id=f'{experiment_id}-{conceptnet_graph_path.stem}'
                     ) as run_conceptnet:
+
+                        mlflow.log_param("dataset_path", dataset_path)
+                        mlflow.log_param("dataset_name", dataset_path.stem)
+                        mlflow.log_param("method", experiment_name)
+                        mlflow.log_param("max_docs", max_reviews)
+                        mlflow.log_param("batch_size", batch_size)
+                        mlflow.log_param("n_jobs", n_jobs)
                         mlflow.log_param("conceptnet_graph_path", conceptnet_graph_path)
                         mlflow.log_param("conceptnet_graph_name", conceptnet_graph_path.stem)
 
@@ -103,7 +103,7 @@ def main(n_jobs: int, batch_size: int, experiment_id: Union[str, int], overwrite
                                     (df.shortest_distance_conceptnet.isin(VALUES_TO_SKIP))
                             )]
                             df.drop_duplicates(subset=['aspect_1', 'aspect_2'])
-                            mlflow.log_metric('Number of shortest paths', len(df))
+                            mlflow.log_metric('number_of_shortest_paths', len(df))
                             logger.info(
                                 f'Shortest Paths pairs - data frame, without no paths and duplicates: {len(df)}')
 
