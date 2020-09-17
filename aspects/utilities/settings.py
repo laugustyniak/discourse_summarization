@@ -84,6 +84,7 @@ CONCEPTNET_CSV_PL_PATH = DATA_PATH / 'conceptnet' / 'conceptnet-5.7.0-assertions
 CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_NO_SYNONYMS_EN_PATH = (
         DATA_PATH / 'conceptnet' / 'conceptnet-5.7.0-assertions.en.v3.gt')
 CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH = DATA_PATH / 'conceptnet' / '5.7.0-hierarchical.with.synonyms.en.gt'
+CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_AND_RELATED_TO_EN_PATH = DATA_PATH / 'conceptnet' / '5.7.0-hierarchical.with.synonyms.and.related.to.en.gt'
 CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITHOUT_SYNONYMS_EN_PATH = DATA_PATH / 'conceptnet' / '5.7.0-hierarchical.without.synonyms.en.gt'
 CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH = DATA_PATH / 'conceptnet' / '5.7.0-all-relations.with.synonyms.en.gt'
 CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH = DATA_PATH / 'conceptnet' / '5.7.0-all-relations.without.synonyms.en.gt'

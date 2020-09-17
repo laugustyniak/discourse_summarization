@@ -1,7 +1,7 @@
 from collections import defaultdict
 from itertools import product
 from pathlib import Path
-from typing import Union, Set, List
+from typing import Union, Set, List, Optional
 
 import graph_tool as gt
 import pandas as pd
@@ -81,7 +81,7 @@ SATELLITE_NUCLEUS_RELATIONS = {
     'HasContext',
 }
 
-SYNONIMIC_RELATIONS = [
+SYNONYMOUS_RELATIONS = [
     'Synonym',
     'SimilarTo',
     'FormOf'  # grammatical forms, plurals. i.e., floatages	and floatage - second most common conceptnet relation
@@ -92,12 +92,12 @@ SYNONIMIC_RELATIONS = [
 def generate_english_graph(
         graph_path: Union[str, Path],
         relation_types: Set[str] = None,
-        with_synonyms: bool = True
+        synonymous_relations: Optional[List[str]] = None
 ) -> gt.Graph:
     df = pd.read_csv(settings.CONCEPTNET_CSV_EN_PATH, index_col=0)
 
-    if with_synonyms:
-        synonyms_df = df[df.relation.isin(SYNONIMIC_RELATIONS)]
+    if synonymous_relations:
+        synonyms_df = df[df.relation.isin(synonymous_relations)]
         all_synonyms = list(set(synonyms_df.target.tolist() + synonyms_df.source.tolist()))
 
         synonyms = defaultdict(list)
@@ -119,13 +119,11 @@ def generate_english_graph(
     if relation_types is not None:
         df = df[df.relation.isin(relation_types)]
 
-    # extend relation with synonyms hierarchical types
-
     g = gt.Graph()
     e_relation = g.new_edge_property('string')
     v_aspect_name = g.new_vertex_property('string')
 
-    if with_synonyms:
+    if synonymous_relations:
         all_vertices_names = set(df.source.tolist() + df.target.tolist() + all_synonyms)
     else:
         all_vertices_names = set(df.source.tolist() + df.target.tolist())
@@ -146,11 +144,10 @@ def generate_english_graph(
         source = row.source
         target = row.target
 
-        # TODO: add other possible hierarchical relations from conceptnet
         if row.relation in SATELLITE_NUCLEUS_RELATIONS:
             source, target = target, source
 
-        if with_synonyms:
+        if synonymous_relations:
             for s, t in product(get_synonyms(source), get_synonyms(target)):
                 try:
                     e = g.add_edge(vertices[s], vertices[t])
@@ -162,10 +159,7 @@ def generate_english_graph(
             e_relation[e] = row.relation
 
     print(f'{edge_adding_errors} edges with errors skipped')
-
     g.edge_properties['relation'] = e_relation
-
-    # serialize
     g.save(str(graph_path))
 
     return g
@@ -199,20 +193,25 @@ if __name__ == '__main__':
     generate_english_graph(
         graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
         relation_types=None,
-        with_synonyms=True
+        synonymous_relations=SYNONYMOUS_RELATIONS
     )
     generate_english_graph(
         graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
         relation_types=None,
-        with_synonyms=False
+        synonymous_relations=None
     )
     generate_english_graph(
         graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
         relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-        with_synonyms=True
+        synonymous_relations=SYNONYMOUS_RELATIONS
+    )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_AND_RELATED_TO_EN_PATH,
+        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
+        synonymous_relations=SYNONYMOUS_RELATIONS + ['RelatedTo']
     )
     generate_english_graph(
         graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITHOUT_SYNONYMS_EN_PATH,
         relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-        with_synonyms=False
+        synonymous_relations=None
     )
