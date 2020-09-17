@@ -10,6 +10,57 @@ from tqdm import tqdm
 
 from aspects.utilities import settings
 
+"""
+ConceptNet Relation Stats
+RelatedTo                    1658056
+FormOf                        376467 
+DerivedFrom                   312305
+HasContext                    213983
+Synonym                       149378
+IsA                           139281
+UsedFor                        39401
+EtymologicallyRelatedTo        32186
+AtLocation                     27290
+HasSubevent                    25238
+HasPrerequisite                22710
+CapableOf                      22677
+Antonym                        18450
+Causes                         16568
+MotivatedByGoal                 9489
+SimilarTo                       8741
+HasProperty                     8433
+ReceivesAction                  6037
+HasA                            5545
+CausesDesire                    4688
+PartOf                          3590
+HasFirstSubevent                3347
+DistinctFrom                    3315
+Desires                         3170
+NotDesires                      2886
+HasLastSubevent                 2874
+dbpedia_genus                   2643
+dbpedia_genre                   2261
+DefinedAs                       2173
+dbpedia_influencedBy            1080
+InstanceOf                      1070
+dbpedia_language                 669
+dbpedia_occupation               633
+dbpedia_field                    580
+dbpedia_knownFor                 552
+MadeOf                           545
+dbpedia_capital                  407
+dbpedia_product                  329
+NotCapableOf                     329
+NotHasProperty                   327
+CreatedBy                        261
+EtymologicallyDerivedFrom        175
+dbpedia_leader                    70
+LocatedNear                       49
+MannerOf                           6
+SymbolOf                           4
+"""
+
+
 NUCLEUS_SATELLITE_RELATIONS = {
     'ReceivesAction',
     'HasA',
@@ -27,7 +78,15 @@ SATELLITE_NUCLEUS_RELATIONS = {
     'AtLocation',
     'Causes',
     'DerivedFrom',
+    'HasContext',
 }
+
+SYNONIMIC_RELATIONS = [
+    'Synonym',
+    'SimilarTo',
+    'FormOf'  # grammatical forms, plurals. i.e., floatages	and floatage - second most common conceptnet relation
+    # 'RelatedTo'  # sometime they are not so similar in the understainding os synonimity, but this is the most common relation in Conceptnet
+]
 
 
 def generate_english_graph(
@@ -38,7 +97,7 @@ def generate_english_graph(
     df = pd.read_csv(settings.CONCEPTNET_CSV_EN_PATH, index_col=0)
 
     if with_synonyms:
-        synonyms_df = df[df.relation == 'Synonym']
+        synonyms_df = df[df.relation.isin(SYNONIMIC_RELATIONS)]
         all_synonyms = list(set(synonyms_df.target.tolist() + synonyms_df.source.tolist()))
 
         synonyms = defaultdict(list)
