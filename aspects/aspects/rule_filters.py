@@ -7,7 +7,7 @@ from aspects.rst.edu_tree_rules_extractor import EDURelation
 
 def filter_rules_gerani(rules: List[EDURelation], aggregation_fn: Callable = None) -> List[EDURelation]:
     """
-    Filter rules by its weight
+    Filter rules by its weight for each Discourse Tree. We can have many rules per tree.
 
     Parameters
     ----------
