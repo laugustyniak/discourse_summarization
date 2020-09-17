@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class Aspect2AspectGraph:
 
-    def build(self, discourse_tree_df: pd.DataFrame, conceptnet_io: bool = False, filter_relation_fn: Callable = None):
+    def build(self, discourse_tree_df: pd.DataFrame, filter_relation_fn: Callable = None):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet relation.
 
@@ -22,9 +22,6 @@ class Aspect2AspectGraph:
         discourse_tree_df: pd.DataFrame
 
         filter_relation_fn:
-
-        conceptnet_io: bool
-            Do we use ConceptNet.io relation in graph?
 
         Returns
         -------
