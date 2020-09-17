@@ -191,7 +191,6 @@ class AspectAnalysis:
         builder = Aspect2AspectGraph()
         graph = builder.build(
             discourse_tree_df=df,
-            conceptnet_io=settings.CONCEPTNET_IO_ASPECTS,
             filter_relation_fn=filter_relation_fn
         )
         serializer.save(graph, self.paths.aspect_to_aspect_graph)
@@ -215,17 +214,17 @@ class AspectAnalysis:
 
         mlflow.log_metric('discourse_tree_df_len', len(discourse_trees_df))
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df, filter_rules_gerani)
-        mlflow.log_metric('asspect_2_aspect_graph_edges', graph.number_of_edges())
-        mlflow.log_metric('asspect_2_aspect_graph_nodes', graph.number_of_nodes())
+        mlflow.log_metric('aspect_2_aspect_graph_edges', graph.number_of_edges())
+        mlflow.log_metric('aspect_2_aspect_graph_nodes', graph.number_of_nodes())
         graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
         aht_graph = gerani_paper_arrg_to_aht(graph, max_number_of_nodes=self.aht_max_number_of_nodes, weight='moi')
 
         serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
         aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
-        aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
         mlflow.log_param('aspect_with_max_pagerank', aspect_with_max_pagerank)
-        # draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
+        aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
+        draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
 
     def our_pipeline(self):
         logging.info(f'Experiments for:  {self.paths.experiment_path}')
@@ -239,8 +238,8 @@ class AspectAnalysis:
 
         mlflow.log_metric('discourse_tree_df_len', len(discourse_trees_df))
         graph = self.build_aspect_to_aspect_graph(discourse_trees_df)
-        mlflow.log_metric('asspect_2_aspect_graph_nodes', graph.number_of_nodes())
-        mlflow.log_metric('asspect_2_aspect_graph_edges', graph.number_of_edges())
+        mlflow.log_metric('aspect_2_aspect_graph_nodes', graph.number_of_nodes())
+        mlflow.log_metric('aspect_2_aspect_graph_edges', graph.number_of_edges())
         graph, aspect_sentiments = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
         aht_graph = our_paper_arrg_to_aht(graph, max_number_of_nodes=self.aht_max_number_of_nodes, weight='pagerank')
 
@@ -249,4 +248,4 @@ class AspectAnalysis:
         aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
         mlflow.log_param('aspect_with_max_pagerank', aspect_with_max_pagerank)
         aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
-        # draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
+        draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
