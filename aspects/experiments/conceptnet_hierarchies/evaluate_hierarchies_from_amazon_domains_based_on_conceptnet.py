@@ -22,12 +22,14 @@ datasets = [
     # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50),
     # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 500),
     # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 5001),
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50001),
-    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50001),
-    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, 50001),
+    # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50001),
+    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50001),
+    # (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, 50001),
     # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, 50001),
-    # (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, None),
-    # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, None),
+    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, None),
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, None),
+    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, None),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, None),
     # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50000),
 ]
 REMOTE_SERVER_URI = 'http://localhost:5005'
@@ -37,13 +39,22 @@ mlflow.set_tracking_uri(REMOTE_SERVER_URI)
 @click.command()
 @click.option('--n-jobs', default=1, help='Number of concurrent job for parts of pipeline.')
 @click.option('--batch-size', default=100, help='Number of examples that could we process by one process')
-@click.option('--experiment-id', default=0, help='name of experiment for mlflow')
+@click.option('--aht_max_number_of_nodes', default=50, help='Max nodes for AHT')
+@click.option('--alpha_coefficient', default=0.5, help='Alpha coefficient for moi calculation')
+@click.option('--experiment-id', default=2, help='name of experiment for mlflow')
 @click.option(
     '--overwrite-neighborhood/--no-overwrite-neighborhood',
     default=True,
     help='Calculate neighborhoods once again'
 )
-def main(n_jobs: int, batch_size: int, experiment_id: Union[str, int], overwrite_neighborhood: bool):
+def main(
+        n_jobs: int,
+        batch_size: int,
+        aht_max_number_of_nodes: int,
+        alpha_coefficient: float,
+        experiment_id: Union[str, int],
+        overwrite_neighborhood: bool
+):
     for dataset_path, max_reviews in tqdm(datasets, desc='Amazon datasets processing...'):
         for experiment_name in ['our', 'gerani']:
 
@@ -55,7 +66,9 @@ def main(n_jobs: int, batch_size: int, experiment_id: Union[str, int], overwrite
                     experiment_name=experiment_name,
                     jobs=n_jobs,
                     batch_size=batch_size,
-                    max_docs=max_reviews
+                    max_docs=max_reviews,
+                    aht_max_number_of_nodes=aht_max_number_of_nodes,
+                    alpha_coefficient=alpha_coefficient
                 )
 
                 if experiment_name in ['our']:
@@ -82,6 +95,8 @@ def main(n_jobs: int, batch_size: int, experiment_id: Union[str, int], overwrite
                         mlflow.log_param("n_jobs", n_jobs)
                         mlflow.log_param("conceptnet_graph_path", conceptnet_graph_path)
                         mlflow.log_param("conceptnet_graph_name", conceptnet_graph_path.stem)
+                        mlflow.log_param("aht_max_number_of_nodes", aht_max_number_of_nodes)
+                        mlflow.log_param("alpha_coefficient", alpha_coefficient)
 
                         png_file_path = (
                                 aspect_analysis.paths.experiment_path /
