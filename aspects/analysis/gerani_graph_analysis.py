@@ -26,7 +26,11 @@ def extend_graph_nodes_with_sentiments_and_weights(
     n_aspects_updated = 0
     aspect_sentiments = defaultdict(list)
 
-    for _, row in tqdm(discourse_trees_df.iterrows(), total=len(discourse_trees_df), desc='Aspects and sentiment'):
+    for _, row in tqdm(
+            discourse_trees_df.iterrows(),
+            total=len(discourse_trees_df),
+            desc='Adding aspects and sentiment to the graph'
+    ):
         for aspects, sentiment in zip(row.aspects, row.sentiment):
             for aspect in aspects:
                 aspect_sentiments[aspect].append(sentiment)
@@ -70,11 +74,16 @@ def calculate_moi_by_gerani(
 def gerani_paper_arrg_to_aht(
         graph: nx.MultiDiGraph,
         max_number_of_nodes: int = 100,
-        weight: str = 'moi'
+        weight: str = 'moi',
+        alpha_coefficient: float = 0.5
 ) -> nx.Graph:
     logger.info('Generate Aspect Hierarchical Tree based on ARRG')
     aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
-    graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank)
+    graph = calculate_moi_by_gerani(
+        graph=graph,
+        weighted_page_rank=aspects_weighted_page_rank,
+        alpha_coefficient=alpha_coefficient
+    )
 
     graph_flatten = merge_multiedges(graph)
     # sorted_nodes = sorted(
@@ -94,11 +103,16 @@ def gerani_paper_arrg_to_aht(
 def our_paper_arrg_to_aht(
         graph: nx.MultiDiGraph,
         max_number_of_nodes: int,
-        weight: str = 'weight'
+        weight: str = 'weight',
+        alpha_coefficient: float = 0.5
 ) -> nx.Graph:
     logger.info('Generate Aspect Hierarchical Tree based on ARRG')
     aspects_weighted_page_rank = calculate_weighted_page_rank(graph, 'weight')
-    graph = calculate_moi_by_gerani(graph, aspects_weighted_page_rank)
+    graph = calculate_moi_by_gerani(
+        graph=graph,
+        weighted_page_rank=aspects_weighted_page_rank,
+        alpha_coefficient=alpha_coefficient
+    )
 
     graph_flatten = merge_multiedges(graph)
     sorted_nodes = sorted(list(graph_flatten.degree()), key=lambda node_degree_pair: node_degree_pair[1], reverse=True)
