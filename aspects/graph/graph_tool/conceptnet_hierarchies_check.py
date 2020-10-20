@@ -1,5 +1,4 @@
 import logging
-from functools import lru_cache
 from pathlib import Path
 from typing import Union, Tuple, Dict
 
@@ -221,7 +220,6 @@ def prepare_hierarchies_neighborhood(
     return pairs_df
 
 
-@lru_cache(maxsize=1)
 def prepare_aspect_graph(
     experiment_paths: ExperimentPaths,
 ) -> Tuple[Graph, ExperimentPaths]:
@@ -238,7 +236,6 @@ def prepare_aspect_graph(
     return Graph(aspect_graph), experiment_paths
 
 
-@lru_cache(maxsize=1)
 def prepare_conceptnet(
     graph_path: Union[str, Path]
 ) -> Tuple[Graph, Dict[str, gt.Vertex]]:
