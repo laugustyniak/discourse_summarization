@@ -16,12 +16,12 @@ from aspects.analysis.gerani_graph_analysis import (
     gerani_paper_arrg_to_aht,
     our_paper_arrg_to_aht)
 from aspects.aspects.aspect_extractor import AspectExtractor
-from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph, sort_networkx_attibutes
+from aspects.aspects.aspects_graph_builder import Aspect2AspectGraph, sort_networkx_attributes
 from aspects.aspects.rule_filters import filter_rules_gerani
 from aspects.data_io import serializer
 from aspects.rst.extractors import extract_discourse_tree, extract_discourse_tree_with_ids_only, extract_rules
 from aspects.sentiment.simple_textblob import analyze
-from aspects.utilities import settings, pandas_utils
+from aspects.utilities import pandas_utils
 from aspects.utilities.data_paths import ExperimentPaths
 from aspects.visualization.drawing import draw_tree
 
@@ -221,7 +221,7 @@ class AspectAnalysis:
 
         serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
-        aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
+        aspect_with_max_pagerank = sort_networkx_attributes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
         mlflow.log_param('aspect_with_max_pagerank', aspect_with_max_pagerank)
         aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
         draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
@@ -245,7 +245,7 @@ class AspectAnalysis:
 
         serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
-        aspect_with_max_pagerank = sort_networkx_attibutes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
+        aspect_with_max_pagerank = sort_networkx_attributes(nx.get_node_attributes(aht_graph, 'pagerank'))[0]
         mlflow.log_param('aspect_with_max_pagerank', aspect_with_max_pagerank)
         aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_pagerank)
         draw_tree(aht_graph_directed, self.paths.experiment_path / 'aht_gerani_based_root_node_highest_wpr')
