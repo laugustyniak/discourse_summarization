@@ -1,3 +1,4 @@
+from aspects.experiments.experiment_name import GERANI, OUR, OUR_TOP_1_RULES
 import logging
 from typing import Union
 
@@ -68,7 +69,7 @@ def main(
     for dataset_path, max_reviews in tqdm(
         datasets, desc="Amazon datasets processing..."
     ):
-        for experiment_name in ["our", "gerani"]:
+        for experiment_name in [OUR, OUR_TOP_1_RULES, GERANI]:
 
             with mlflow.start_run(
                 experiment_id=experiment_id, run_name=dataset_path.stem
@@ -85,9 +86,11 @@ def main(
                     alpha_coefficient=alpha_coefficient,
                 )
 
-                if experiment_name in ["our"]:
+                if experiment_name in [OUR]:
                     aspect_analysis.our_pipeline()
-                elif experiment_name in ["gerani"]:
+                elif experiment_name in [OUR_TOP_1_RULES]:
+                    aspect_analysis.gerani_pipeline()
+                elif experiment_name in [GERANI]:
                     aspect_analysis.gerani_pipeline()
                 else:
                     raise Exception("Wrong experiment type")
