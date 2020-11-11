@@ -255,7 +255,7 @@ class AspectAnalysis:
         aht_graph_directed = nx.bfs_tree(aht_graph, aspect_with_max_weight)
         draw_tree(
             aht_graph_directed,
-            self.paths.experiment_path / f"aht_for_{self.paths.experiment_name}-{}",
+            self.paths.experiment_path / f"aht_for_{self.paths.experiment_name}",
         )
 
     def gerani_pipeline(self):
