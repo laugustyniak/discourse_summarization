@@ -1,4 +1,6 @@
 [core]
-    remote = oxygenssh
+    remote = oxygen_local
 ['remote "oxygenssh"']
     url = ssh://laugustyniak@oxygen.engine.kdm.wcss.pl/datasets/dvc/discourse-summarization
+['remote "oxygen_local"']
+    url = /datasets/dvc/discourse-summarization

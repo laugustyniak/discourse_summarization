@@ -12,8 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class Aspect2AspectGraph:
-
-    def build(self, discourse_tree_df: pd.DataFrame, filter_relation_fn: Callable = None):
+    def build(
+        self, discourse_tree_df: pd.DataFrame, filter_relation_fn: Callable = None
+    ):
         """
         Build aspect(EDU)-aspect(EDU) network based on RST and ConceptNet relation.
 
@@ -30,31 +31,41 @@ class Aspect2AspectGraph:
 
         """
         if filter_relation_fn:
-            tqdm.pandas(desc='Rules filtering...')
-            discourse_tree_df.rules = discourse_tree_df.rules.progress_apply(filter_relation_fn)
+            tqdm.pandas(desc="Rules filtering...")
+            discourse_tree_df.rules = discourse_tree_df.rules.progress_apply(
+                filter_relation_fn
+            )
         return self.build_aspects_graph(discourse_tree_df)
 
     def build_aspects_graph(self, discourse_tree_df: pd.DataFrame) -> nx.MultiDiGraph:
         graph = nx.MultiDiGraph()
-        for row_id, row in tqdm(
-                discourse_tree_df.iterrows(),
-                total=len(discourse_tree_df),
-                desc='Generating aspect-aspect graph based on rules'
+        for _, row in tqdm(
+            discourse_tree_df.iterrows(),
+            total=len(discourse_tree_df),
+            desc="Generating aspect-aspect graph based on rules",
         ):
             for edu_left, edu_right, relation, weight in row.rules:
-                for aspect_left, aspect_right in product(row.aspects[edu_left], row.aspects[edu_right]):
-                    graph = self.add_aspects_to_graph(graph, aspect_left, aspect_right, relation, weight)
+                for aspect_left, aspect_right in product(
+                    row.aspects[edu_left], row.aspects[edu_right]
+                ):
+                    graph = self.add_aspects_to_graph(
+                        graph, aspect_left, aspect_right, relation, weight
+                    )
         return graph
 
     @staticmethod
     def add_aspects_to_graph(graph, aspect_left, aspect_right, relation, weight):
         if aspect_left != aspect_right:
-            logger.debug(f'Add rule: {(aspect_left, aspect_right, relation, weight)}')
-            graph.add_edge(aspect_left, aspect_right, relation_type=relation, weight=weight)
+            logger.debug(f"Add rule: {(aspect_left, aspect_right, relation, weight)}")
+            graph.add_edge(
+                aspect_left, aspect_right, relation_type=relation, weight=weight
+            )
         return graph
 
 
-def merge_multiedges(graph: object, node_attrib_name: object = 'weight', default_node_weight: float = 1) -> nx.Graph:
+def merge_multiedges(
+    graph: object, node_attrib_name: object = "weight", default_node_weight: float = 1
+) -> nx.Graph:
     """
     Merge multiple edges between nodes into one relation and sum attribute weight.
 
@@ -78,7 +89,7 @@ def merge_multiedges(graph: object, node_attrib_name: object = 'weight', default
         default_node_weight:
 
     """
-    logger.info('Create a new graph without multiple edges between nodes.')
+    logger.info("Create a new graph without multiple edges between nodes.")
     graph_new = nx.Graph()
     for u, v, data in graph.edges(data=True):
         w = data[node_attrib_name] if node_attrib_name in data else default_node_weight
@@ -87,15 +98,14 @@ def merge_multiedges(graph: object, node_attrib_name: object = 'weight', default
         else:
             graph_new.add_edge(u, v, weight=w)
 
-    logger.info('Copy nodes attributes from multi edge graph to flattened one.')
+    logger.info("Copy nodes attributes from multi edge graph to flattened one.")
     nx.set_node_attributes(graph_new, dict(graph.nodes.items()))
 
     return graph_new
 
 
 def calculate_weighted_page_rank(
-        graph: Union[nx.MultiDiGraph, nx.MultiGraph, nx.Graph, nx.DiGraph],
-        weight='weight'
+    graph: Union[nx.MultiDiGraph, nx.MultiGraph, nx.Graph, nx.DiGraph], weight="weight"
 ) -> OrderedDict:
     """
     Calculate Page Rank for ARRG.
@@ -115,11 +125,15 @@ def calculate_weighted_page_rank(
         Page Rank values for ARRG.
 
     """
-    logger.info('Weighted Page Rank calculation starts.')
+    logger.info("Weighted Page Rank calculation starts.")
     page_ranks = nx.pagerank_scipy(graph, weight=weight)
-    logger.info('Weighted Page Rank calculation ended.')
+    logger.info("Weighted Page Rank calculation ended.")
     return OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
 
 
-def sort_networkx_attibutes(graph_attribs_tuples):
-    return sorted(list(graph_attribs_tuples), key=lambda node_attrib_pair: node_attrib_pair[1], reverse=True)
+def sort_networkx_attributes(graph_attribs_tuples):
+    return sorted(
+        list(graph_attribs_tuples),
+        key=lambda node_attrib_pair: node_attrib_pair[1],
+        reverse=True,
+    )

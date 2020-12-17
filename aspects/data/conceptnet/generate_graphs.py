@@ -84,7 +84,8 @@ SYNONYMOUS_RELATIONS = [
     'Synonym',
     'SimilarTo',
     'FormOf'  # grammatical forms, plurals. i.e., floatages	and floatage - second most common conceptnet relation
-    # 'RelatedTo'  # sometime they are not so similar in the understainding os synonimity, but this is the most common relation in Conceptnet
+    # the graph with related to are just too big 50GB on disc, even more in RAM
+    # 'RelatedTo'  # sometime they are not so similar in the understainding os synonymity, but this is the most common relation in Conceptnet
 ]
 
 
@@ -190,26 +191,26 @@ def prepare_conceptnet_graph(graph_path: str, relation_types: Set[str]):
 
 
 if __name__ == '__main__':
-    # generate_english_graph(
-    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
-    #     relation_types=None,
-    #     synonymous_relations=SYNONYMOUS_RELATIONS
-    # )
-    # generate_english_graph(
-    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
-    #     relation_types=None,
-    #     synonymous_relations=None
-    # )
-    # generate_english_graph(
-    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
-    #     relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-    #     synonymous_relations=SYNONYMOUS_RELATIONS
-    # )
-    # generate_english_graph(
-    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_AND_RELATED_TO_EN_PATH,
-    #     relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-    #     synonymous_relations=SYNONYMOUS_RELATIONS + ['RelatedTo']
-    # )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
+        relation_types=None,
+        synonymous_relations=SYNONYMOUS_RELATIONS
+    )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
+        relation_types=None,
+        synonymous_relations=None
+    )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
+        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
+        synonymous_relations=SYNONYMOUS_RELATIONS
+    )
+    generate_english_graph(
+        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_AND_RELATED_TO_EN_PATH,
+        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
+        synonymous_relations=SYNONYMOUS_RELATIONS + ['RelatedTo']
+    )
     generate_english_graph(
         graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITHOUT_SYNONYMS_EN_PATH,
         relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
