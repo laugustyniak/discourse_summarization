@@ -11,7 +11,7 @@ from more_itertools import flatten
 from more_itertools.more import chunked
 from tqdm import tqdm
 
-from utilities import settings
+from aspects.utilities import settings
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class GuseEmbedder:
         :param embedding_model_path: URL of the TensorflowHub model
         """
         if embedding_model_path is None:
-            embedding_model_path = settings.ML_GUSE_MODEL_2_LITE_PATH
+            embedding_model_path = settings.ML_GUSE_MODEL_PATH
 
         self.embed = hub.Module(embedding_model_path)
         self.input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])

@@ -60,7 +60,6 @@ MannerOf                           6
 SymbolOf                           4
 """
 
-
 NUCLEUS_SATELLITE_RELATIONS = {
     'ReceivesAction',
     'HasA',
@@ -141,10 +140,11 @@ def generate_english_graph(
 
     edge_adding_errors = 0
     for row in tqdm(df.itertuples(), desc='Edges adding to the graph...', total=len(df)):
-        source = row.source
-        target = row.target
+        source = row.source  # satellite
+        target = row.target  # nucleus
 
-        if row.relation in SATELLITE_NUCLEUS_RELATIONS:
+        # if N->S the reverse
+        if row.relation in NUCLEUS_SATELLITE_RELATIONS:
             source, target = target, source
 
         if synonymous_relations:
@@ -190,26 +190,26 @@ def prepare_conceptnet_graph(graph_path: str, relation_types: Set[str]):
 
 
 if __name__ == '__main__':
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
-        relation_types=None,
-        synonymous_relations=SYNONYMOUS_RELATIONS
-    )
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
-        relation_types=None,
-        synonymous_relations=None
-    )
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
-        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-        synonymous_relations=SYNONYMOUS_RELATIONS
-    )
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_AND_RELATED_TO_EN_PATH,
-        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-        synonymous_relations=SYNONYMOUS_RELATIONS + ['RelatedTo']
-    )
+    # generate_english_graph(
+    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
+    #     relation_types=None,
+    #     synonymous_relations=SYNONYMOUS_RELATIONS
+    # )
+    # generate_english_graph(
+    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
+    #     relation_types=None,
+    #     synonymous_relations=None
+    # )
+    # generate_english_graph(
+    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
+    #     relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
+    #     synonymous_relations=SYNONYMOUS_RELATIONS
+    # )
+    # generate_english_graph(
+    #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_AND_RELATED_TO_EN_PATH,
+    #     relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
+    #     synonymous_relations=SYNONYMOUS_RELATIONS + ['RelatedTo']
+    # )
     generate_english_graph(
         graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITHOUT_SYNONYMS_EN_PATH,
         relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),

@@ -12,8 +12,10 @@ from aspects.graph.graph_tool.conceptnet_hierarchies_check import prepare_hierar
 from aspects.graph.graph_tool.utils import VALUES_TO_SKIP
 from aspects.pipelines.aspect_analysis import AspectAnalysis
 from aspects.utilities import settings
+from aspects.utilities.settings import setup_mlflow
 
 sns.set(color_codes=True)
+setup_mlflow()
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -32,8 +34,6 @@ datasets = [
     (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, None),
     # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50000),
 ]
-REMOTE_SERVER_URI = 'http://localhost:5005'
-mlflow.set_tracking_uri(REMOTE_SERVER_URI)
 
 
 @click.command()
@@ -47,18 +47,32 @@ mlflow.set_tracking_uri(REMOTE_SERVER_URI)
     default=True,
     help='Calculate neighborhoods once again'
 )
+@click.option(
+    '--filter-graphs-to-intersected-vertices/--no-filter-graphs-to-intersected-vertices',
+    default=True,
+    type=bool
+)
 def main(
         n_jobs: int,
         batch_size: int,
         aht_max_number_of_nodes: int,
         alpha_coefficient: float,
         experiment_id: Union[str, int],
-        overwrite_neighborhood: bool
+        overwrite_neighborhood: bool,
+        filter_graphs_to_intersected_vertices: bool
 ):
+    filter_graphs_to_intersected_vertices = bool(filter_graphs_to_intersected_vertices)
     for dataset_path, max_reviews in tqdm(datasets, desc='Amazon datasets processing...'):
-        for experiment_name in ['our', 'gerani']:
+        for experiment_name in [
+            'our',
+            'gerani'
+        ]:
 
-            with mlflow.start_run(experiment_id=experiment_id, run_name=dataset_path.stem) as run_dataset:
+            with mlflow.start_run(
+                    experiment_id=experiment_id,
+                    run_name=f'{experiment_name}-{dataset_path.stem}-{max_reviews}'
+            ):
+                mlflow.log_param("experiment_name", experiment_name)
 
                 aspect_analysis = AspectAnalysis(
                     input_path=dataset_path.as_posix(),
@@ -109,7 +123,8 @@ def main(
                         else:
                             df = prepare_hierarchies_neighborhood(
                                 experiments_path=aspect_analysis.paths,
-                                conceptnet_graph_path=conceptnet_graph_path
+                                conceptnet_graph_path=conceptnet_graph_path,
+                                filter_graphs_to_intersected_vertices=filter_graphs_to_intersected_vertices
                             )
 
                             logger.info(f'Shortest Paths pairs - data frame: {len(df)}')

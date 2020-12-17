@@ -1,5 +1,7 @@
 import pathlib
 
+import mlflow
+
 ROOT_PATH = pathlib.Path(__file__).absolute().parent.parent
 DATA_PATH = ROOT_PATH / 'data'
 EDU_DEPENDENCY_PARSER_PATH = ROOT_PATH.parent / 'edu_dependency_parser'
@@ -115,6 +117,12 @@ SAMPLE_TREE_1 = DATA_PATH / 'sample_trees' / '1.tree'
 SAMPLE_TREE_177 = DATA_PATH / 'sample_trees' / '177.tree'
 SAMPLE_TREE_189 = DATA_PATH / 'sample_trees' / '189.tree'
 
-ML_GUSE_MODEL_2_LITE_PATH = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
+ML_GUSE_MODEL_PATH = 'https://tfhub.dev/google/universal-sentence-encoder/4'
 
 DISCOURSE_TREE_LEAF_PATTERN = '(?<=_!).*(?=!_)'
+
+REMOTE_SERVER_URI = 'http://localhost:5005'
+
+
+def setup_mlflow():
+    mlflow.set_tracking_uri(REMOTE_SERVER_URI)

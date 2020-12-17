@@ -16,9 +16,12 @@ from aspects.data_io import serializer
 from aspects.graph.convert import networkx_2_graph_tool
 from aspects.graph.graph_tool.utils import GRAPH_TOOL_SHORTEST_PATHS_0_VALUE
 from aspects.utilities.data_paths import ExperimentPaths
+from aspects.utilities.settings import setup_mlflow
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+setup_mlflow()
 
 
 def replace_zero_len_paths(shortest_paths: np.array, replaced_value: int = 0) -> np.array:
@@ -82,9 +85,10 @@ def remove_not_connected_vertices(g):
 
 
 def prepare_hierarchies_neighborhood(
-        experiments_path: ExperimentPaths, conceptnet_graph_path: Union[str, Path]
+        experiments_path: ExperimentPaths,
+        conceptnet_graph_path: Union[str, Path],
+        filter_graphs_to_intersected_vertices: bool = True
 ) -> pd.DataFrame:
-
     conceptnet_hierarchy_neighborhood_df_path = (
             experiments_path.experiment_path / f'shortest-paths-pairs-{conceptnet_graph_path.stem}-df.pkl')
 
@@ -107,10 +111,11 @@ def prepare_hierarchies_neighborhood(
     aspect_graph_intersected, conceptnet_graph_intersected = intersected_nodes(
         aspect_graph=aspect_graph_intersected,
         conceptnet_graph=conceptnet_graph_intersected,
-        # TODO: check, czy usuwajac wierzcholki nie usuwam tez krawedzi z nimi powiazanych? wtedy mam rzadszy graf i calkiem inne relacje niz na calym grafie
-        filter_graphs_to_intersected_vertices=True,
+        filter_graphs_to_intersected_vertices=filter_graphs_to_intersected_vertices,
         property_name='aspect_name'
     )
+
+    mlflow.log_param('filter_graphs_to_intersected_vertices', filter_graphs_to_intersected_vertices)
 
     mlflow.log_metric('conceptnet_graph_intersected_nodes', conceptnet_graph_intersected.num_vertices())
     mlflow.log_metric('aspect_graph_intersected_nodes', aspect_graph_intersected.num_vertices())
@@ -131,7 +136,8 @@ def prepare_hierarchies_neighborhood(
 
     logger.info(f'conceptnet_vertices_intersected len = {len(conceptnet_vertices_intersected)}')
     logger.info(f'aspect_graph_vertices_intersected len = {len(aspect_graph_vertices_intersected)}')
-    assert len(conceptnet_vertices_intersected) == len(aspect_graph_vertices_intersected), 'Wrong sequence of vertices in both graphs'
+    assert len(conceptnet_vertices_intersected) == len(
+        aspect_graph_vertices_intersected), 'Wrong sequence of vertices in both graphs'
 
     shortest_distances_conceptnet = np.array([
         shortest_distance(g=conceptnet_graph, source=v, target=conceptnet_vertices_intersected, directed=True)
@@ -169,9 +175,6 @@ def prepare_aspect_graph(experiment_paths: ExperimentPaths) -> Tuple[Graph, Expe
     aspect_graph = networkx_2_graph_tool(aspect_graph, node_name_property='aspect_name')
     remove_self_loops(aspect_graph)
     aspect_graph.reindex_edges()
-    # TODO: check if the direction is correct
-    # revert edges from S -> N to N -> S
-    aspect_graph.set_reversed(is_reversed=True)
     return Graph(aspect_graph), experiment_paths
 
 
