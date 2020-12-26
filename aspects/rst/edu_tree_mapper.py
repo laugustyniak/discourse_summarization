@@ -2,7 +2,6 @@ from nltk import Tree
 
 
 class EDUTreeMapper:
-
     def __init__(self):
         self.edus = []
 

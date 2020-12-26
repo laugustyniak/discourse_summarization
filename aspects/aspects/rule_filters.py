@@ -10,23 +10,29 @@ def filter_rules_gerani(
     rules: List[EDURelation], aggregation_fn: Callable = None
 ) -> List[EDURelation]:
     """
-    Filter rules by its weight for each Discourse Tree. We can have many rules per tree.
+    Filter rules by its weight for each Discourse Tree.
+    We can have many rules per tree.
 
     Parameters
     ----------
         :param rules: List of relation tuples
-        :param aggregation_fn: Function to aggregate repeated tuple's weight. By default it is max weight.
+        :param aggregation_fn: Function to aggregate repeated tuple's weight.
+        By default it is max weight.
 
     Returns
     -------
     rules_filtered : list
-        List of rules/relations between aspects with their maximum gerani weights.
+        List of rules/relations between aspects with their maximum
+        gerani weights.
 
         Examples
         [
-            EDURelation(edu1=u'screen', edu2=u'phone', relation_type='Elaboration', weight=1.38),
-            EDURelation(edu1=u'speaker', edu2=u'sound', relation_type='Elaboration', weight=0.29),
-            EDURelation(edu1=u'speaker', edu2=u'sound', relation_type='Elaboration', weight=0.21)
+            EDURelation(edu1=u'screen', edu2=u'phone',
+                relation_type='Elaboration', weight=1.38),
+            EDURelation(edu1=u'speaker', edu2=u'sound',
+                relation_type='Elaboration', weight=0.29),
+            EDURelation(edu1=u'speaker', edu2=u'sound',
+                relation_type='Elaboration', weight=0.21)
         ]
     """
     if aggregation_fn is None:

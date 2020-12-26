@@ -16,14 +16,16 @@ def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
         return nltk.tree.Tree.fromstring(
             parser.parse(document),
             leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN,
-            remove_empty_top_bracketing=True
+            remove_empty_top_bracketing=True,
         )
     except (ValueError, JSONDecodeError) as e:
-        logging.info(f'Document with errors: {document}. Error: {str(e)}')
+        logging.info(f"Document with errors: {document}. Error: {str(e)}")
         return None
 
 
-def extract_discourse_tree_with_ids_only(discourse_tree: nltk.Tree) -> Tuple[nltk.Tree, List[str]]:
+def extract_discourse_tree_with_ids_only(
+    discourse_tree: nltk.Tree,
+) -> Tuple[nltk.Tree, List[str]]:
     edu_tree_preprocessor = EDUTreeMapper()
     edu_tree_preprocessor.process_tree(discourse_tree)
     return discourse_tree, edu_tree_preprocessor.edus

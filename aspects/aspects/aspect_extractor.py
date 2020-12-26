@@ -3,7 +3,11 @@ from collections import defaultdict
 from typing import List, Sequence, Dict
 
 from aspects.aspects.neural_aspect_extractor_client import NeuralAspectExtractorClient
-from aspects.enrichments.conceptnets import load_sentic, load_conceptnet_io, get_semantic_concept_by_concept
+from aspects.enrichments.conceptnets import (
+    load_sentic,
+    load_conceptnet_io,
+    get_semantic_concept_by_concept,
+)
 from aspects.utilities import common_nlp
 from aspects.utilities import settings
 
@@ -13,8 +17,14 @@ nlp = common_nlp.load_spacy()
 
 
 class AspectExtractor:
-
-    def __init__(self, ner_types=None, aspects_to_skip=None, is_ner=True, sentic=None, conceptnet=None):
+    def __init__(
+        self,
+        ner_types=None,
+        aspects_to_skip=None,
+        is_ner=True,
+        sentic=None,
+        conceptnet=None,
+    ):
         """
         Initialize extractor aspect extractor.
 
@@ -33,7 +43,7 @@ class AspectExtractor:
             Do we want to extract Named Entity as aspects?
         """
         if ner_types is None:
-            ner_types = {u'PERSON', u'GPE', u'ORG', u'PRODUCT', u'FAC', u'LOC'}
+            ner_types = {u"PERSON", u"GPE", u"ORG", u"PRODUCT", u"FAC", u"LOC"}
         self.is_ner = is_ner
         if aspects_to_skip is not None:
             self.aspects_to_skip = aspects_to_skip
@@ -67,17 +77,13 @@ class AspectExtractor:
 
         if self.is_ner:
             aspects += [
-                ent.text
-                for ent
-                in nlp(text).ents
-                if ent.label_ in self.ner_types
+                ent.text for ent in nlp(text).ents if ent.label_ in self.ner_types
             ]
 
         # lower case every aspect and only longer than 1
         return [
             x.strip().lower()
-            for x
-            in aspects
+            for x in aspects
             if x not in self.aspects_to_skip and len(x) > 1
         ]
 
@@ -93,9 +99,10 @@ class AspectExtractor:
         sentic_df = load_sentic()
         sentic_aspects = {}
         for aspect in aspects:
-            aspect = aspect.replace(' ', '_')
+            aspect = aspect.replace(" ", "_")
             sentic_aspects[aspect] = get_semantic_concept_by_concept(
-                sentic_df, aspect, settings.SENTIC_EXACT_MATCH_CONCEPTS)
+                sentic_df, aspect, settings.SENTIC_EXACT_MATCH_CONCEPTS
+            )
         return sentic_aspects
 
     def extract_concepts_batch(self, aspects: Sequence[List[str]]) -> List[Dict]:
@@ -103,8 +110,12 @@ class AspectExtractor:
         for aspects_internal in aspects:
             concept_aspects = {}
             if self.sentic:
-                concept_aspects['sentic'] = self.extract_concepts_from_sentic(aspects_internal)
+                concept_aspects["sentic"] = self.extract_concepts_from_sentic(
+                    aspects_internal
+                )
             if self.conceptnet:
-                concept_aspects['conceptnet_io'] = self.extract_concept_from_conceptnet_io(aspects_internal)
+                concept_aspects[
+                    "conceptnet_io"
+                ] = self.extract_concept_from_conceptnet_io(aspects_internal)
             concepts.append(concept_aspects)
         return concepts

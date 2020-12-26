@@ -2,7 +2,7 @@ import logging
 from collections import OrderedDict
 from itertools import product
 from operator import itemgetter
-from typing import Callable, Union
+from typing import Callable, Union, Dict
 
 import networkx as nx
 import pandas as pd
@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class Aspect2AspectGraph:
+    def __init__(self, aspects_to_skip=None):
+        self.aspects_to_skip = aspects_to_skip or []
+
     def build(
         self, discourse_tree_df: pd.DataFrame, filter_relation_fn: Callable = None
     ):
@@ -48,9 +51,13 @@ class Aspect2AspectGraph:
                 for aspect_left, aspect_right in product(
                     row.aspects[edu_left], row.aspects[edu_right]
                 ):
-                    graph = self.add_aspects_to_graph(
-                        graph, aspect_left, aspect_right, relation, weight
-                    )
+                    if not (
+                        aspect_left in self.aspects_to_skip
+                        or aspect_right in self.aspects_to_skip
+                    ):
+                        graph = self.add_aspects_to_graph(
+                            graph, aspect_left, aspect_right, relation, weight
+                        )
         return graph
 
     @staticmethod
@@ -64,7 +71,10 @@ class Aspect2AspectGraph:
 
 
 def merge_multiedges(
-    graph: object, node_attrib_name: object = "weight", default_node_weight: float = 1
+    graph: object,
+    node_attrib_name: object = "weight",
+    default_node_weight: float = 1,
+    aspect_cluster_map: Dict[str, str] = None,
 ) -> nx.Graph:
     """
     Merge multiple edges between nodes into one relation and sum attribute weight.
@@ -105,7 +115,8 @@ def merge_multiedges(
 
 
 def calculate_weighted_page_rank(
-    graph: Union[nx.MultiDiGraph, nx.MultiGraph, nx.Graph, nx.DiGraph], weight="weight"
+    graph: Union[nx.MultiDiGraph, nx.MultiGraph, nx.Graph, nx.DiGraph],
+    weight: str = "weight",
 ) -> OrderedDict:
     """
     Calculate Page Rank for ARRG.
@@ -129,6 +140,15 @@ def calculate_weighted_page_rank(
     page_ranks = nx.pagerank_scipy(graph, weight=weight)
     logger.info("Weighted Page Rank calculation ended.")
     return OrderedDict(sorted(page_ranks.items(), key=itemgetter(1), reverse=True))
+
+
+def calculate_hits(
+    graph: Union[nx.MultiDiGraph, nx.MultiGraph, nx.Graph, nx.DiGraph]
+) -> OrderedDict:
+    logger.info("HITS calculation starts.")
+    hubs, authorities = nx.hits_scipy(graph)
+    logger.info("HITS calculation ended.")
+    return OrderedDict(sorted(authorities.items(), key=itemgetter(1), reverse=True))
 
 
 def sort_networkx_attributes(graph_attribs_tuples):

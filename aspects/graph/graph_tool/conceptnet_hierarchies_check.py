@@ -91,8 +91,8 @@ def remove_not_connected_vertices(g):
 
 def prepare_hierarchies_neighborhood(
     experiments_path: ExperimentPaths,
-        conceptnet_graph_path: Union[str, Path],
-        filter_graphs_to_intersected_vertices: bool = True
+    conceptnet_graph_path: Union[str, Path],
+    filter_graphs_to_intersected_vertices: bool = True,
 ) -> pd.DataFrame:
     conceptnet_hierarchy_neighborhood_df_path = (
         experiments_path.experiment_path
@@ -122,7 +122,9 @@ def prepare_hierarchies_neighborhood(
         property_name="aspect_name",
     )
 
-    mlflow.log_param('filter_graphs_to_intersected_vertices', filter_graphs_to_intersected_vertices)
+    mlflow.log_param(
+        "filter_graphs_to_intersected_vertices", filter_graphs_to_intersected_vertices
+    )
 
     mlflow.log_metric(
         "conceptnet_graph_intersected_nodes",
@@ -132,10 +134,16 @@ def prepare_hierarchies_neighborhood(
         "aspect_graph_intersected_nodes", aspect_graph_intersected.num_vertices()
     )
 
-    mlflow.log_metric('conceptnet_graph_intersected_edges', conceptnet_graph_intersected.num_edges())
-    mlflow.log_metric('aspect_graph_intersected_edges', aspect_graph_intersected.num_edges())
+    mlflow.log_metric(
+        "conceptnet_graph_intersected_edges", conceptnet_graph_intersected.num_edges()
+    )
+    mlflow.log_metric(
+        "aspect_graph_intersected_edges", aspect_graph_intersected.num_edges()
+    )
 
-    aspect_names_intersected = list(aspect_graph_intersected.vertex_properties['aspect_name'])
+    aspect_names_intersected = list(
+        aspect_graph_intersected.vertex_properties["aspect_name"]
+    )
 
     vertices_name_to_aspect_vertex = dict(
         zip(aspect_graph.vertex_properties["aspect_name"], aspect_graph.vertices())
@@ -161,11 +169,11 @@ def prepare_hierarchies_neighborhood(
         vertices_conceptnet[a] for a in aspect_names_intersected
     ]
 
-    logger.info(
-        f"conceptnet_vertices_intersected len = {len(conceptnet_vertices_intersected)}"
+    mlflow.log_metric(
+        "conceptnet_vertices_intersected len", len(conceptnet_vertices_intersected)
     )
-    logger.info(
-        f"aspect_graph_vertices_intersected len = {len(aspect_graph_vertices_intersected)}"
+    mlflow.log_metric(
+        "aspect_graph_vertices_intersected len", len(aspect_graph_vertices_intersected)
     )
     assert len(conceptnet_vertices_intersected) == len(
         aspect_graph_vertices_intersected
