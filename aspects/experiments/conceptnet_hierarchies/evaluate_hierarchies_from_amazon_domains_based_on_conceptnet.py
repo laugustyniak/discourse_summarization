@@ -24,7 +24,7 @@ logger.setLevel(logging.INFO)
 
 datasets = [
     # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50),
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 10**5),
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 10 ** 5),
     # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 5001),
     # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50001),
     # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50001),
@@ -40,7 +40,10 @@ datasets = [
 
 @click.command()
 @click.option(
-    "--n-jobs", default=1, help="Number of concurrent job for parts of pipeline."
+    "--n-jobs",
+    default=-1,
+    help="Number of concurrent job for parts of pipeline. "
+    "-1 means all cores will be used.",
 )
 @click.option(
     "--batch-size",

@@ -79,8 +79,8 @@ class AspectAnalysis:
         mlflow.log_param("sent_model_path", sent_model_path)
 
         # number of all processes
-        if jobs is None:
-            self.jobs = multiprocessing.cpu_count()
+        if jobs is None or jobs == -1:
+            self.jobs = multiprocessing.cpu_count() - 1
         else:
             self.jobs = jobs
 
