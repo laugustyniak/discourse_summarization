@@ -20,7 +20,6 @@ from aspects.aspects.aspect_extractor import AspectExtractor
 from aspects.aspects.aspects_graph_builder import (
     Aspect2AspectGraph,
     sort_networkx_attributes,
-    sort_networkx_attibutes,
 )
 from aspects.data_io import serializer
 from aspects.rst.extractors import (
@@ -270,7 +269,7 @@ class AspectAnalysis:
 
         serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
-        aspect_with_max_pagerank = sort_networkx_attibutes(
+        aspect_with_max_pagerank = sort_networkx_attributes(
             nx.get_node_attributes(aht_graph, "pagerank")
         )[0]
         mlflow.log_param("aspect_with_max_pagerank", aspect_with_max_pagerank)
@@ -308,7 +307,7 @@ class AspectAnalysis:
 
         serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
 
-        aspect_with_max_pagerank = sort_networkx_attibutes(
+        aspect_with_max_pagerank = sort_networkx_attributes(
             nx.get_node_attributes(aht_graph, "pagerank")
         )[0]
         mlflow.log_param("aspect_with_max_pagerank", aspect_with_max_pagerank)
