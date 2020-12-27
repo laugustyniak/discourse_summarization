@@ -38,10 +38,11 @@ def filter_rules_gerani(
     if aggregation_fn is None:
         aggregation_fn = partial(max)
 
+    rules = sorted(rules, key=lambda relation: relation[:3])
     return [
         EDURelation(*(group + (aggregation_fn([r.weight for r in relations]),)))
         for group, relations in groupby(
-            sorted(rules), key=lambda relation: relation[:3]
+            rules, key=lambda relation: relation[:3]
         )
     ]
 
@@ -52,10 +53,15 @@ def filter_top_n_rules(
     if aggregation_fn is None:
         aggregation_fn = partial(max)
 
-    return [
+    # sort for groupby
+    rules = sorted(rules, key=lambda relation: relation[:3])
+
+    rules_filtered = [
         EDURelation(*(group + (aggregation_fn([r.weight for r in relations]),)))
-        for group, relations in groupby(
-            sorted(rules, key=attrgetter("weight"), reverse=True),
-            key=lambda relation: relation[:3],
-        )
+        for group, relations in groupby(rules, key=lambda relation: relation[:3])
     ]
+
+    if top_n is None:
+        return rules_filtered
+    else:
+        return sorted(rules, key=attrgetter("weight"), reverse=True)[:top_n]
