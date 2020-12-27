@@ -4,11 +4,15 @@ from itertools import product
 from operator import itemgetter
 from typing import Callable, Union, Dict
 
+import mlflow
 import networkx as nx
 import pandas as pd
 from tqdm import tqdm
 
+from aspects.utilities.settings import setup_mlflow
+
 logger = logging.getLogger(__name__)
+setup_mlflow()
 
 
 class Aspect2AspectGraph:
@@ -33,11 +37,14 @@ class Aspect2AspectGraph:
             Graph with aspect-aspect relations
 
         """
+        log_rules_stats(discourse_tree_df)
         if filter_relation_fn:
             tqdm.pandas(desc="Rules filtering...")
             discourse_tree_df.rules = discourse_tree_df.rules.progress_apply(
                 filter_relation_fn
             )
+            log_rules_stats(discourse_tree_df, "_filtered")
+
         return self.build_aspects_graph(discourse_tree_df)
 
     def build_aspects_graph(self, discourse_tree_df: pd.DataFrame) -> nx.MultiDiGraph:
@@ -68,6 +75,20 @@ class Aspect2AspectGraph:
                 aspect_left, aspect_right, relation_type=relation, weight=weight
             )
         return graph
+
+
+def log_rules_stats(discourse_tree_df, suffix: str = ""):
+    rules_cardinality = discourse_tree_df.rules.apply(lambda rs: len(rs))
+    mlflow.log_params(
+        {
+            f"rules_per_tree_avg{suffix}": rules_cardinality.mean(),
+            f"rules_per_tree_min{suffix}": rules_cardinality.min(),
+            f"rules_per_tree_max{suffix}": rules_cardinality.max(),
+            f"rules_per_tree_median{suffix}": rules_cardinality.median(),
+            f"rules_per_tree_std{suffix}": rules_cardinality.std(),
+            f"rules_per_tree_sum{suffix}": rules_cardinality.sum(),
+        }
+    )
 
 
 def merge_multiedges(
