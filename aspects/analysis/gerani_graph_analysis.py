@@ -84,6 +84,29 @@ def calculate_moi_by_gerani(
     return graph
 
 
+def calculate_weight(
+    graph: nx.MultiDiGraph,
+    ranks: Union[Dict, OrderedDict],
+    alpha_coefficient=0.5,
+) -> nx.MultiDiGraph:
+    aspect_importance = nx.get_node_attributes(graph, ASPECT_IMPORTANCE)
+
+    for aspect, score in tqdm(ranks.items(), desc="Calculating weights..."):
+        if aspect in aspect_importance:
+            sentiments_square = aspect_importance[aspect]
+        else:
+            sentiments_square = 0
+
+        # TODO: it would be great to have normalization or check if domains
+        #  of both parts of sum are from the same range of numbers
+        graph.nodes[aspect]["weight"] = (
+            alpha_coefficient * sentiments_square + (1 - alpha_coefficient) * score
+        )
+        graph.nodes[aspect]["score"] = score
+
+    return graph
+
+
 def gerani_paper_arrg_to_aht(
     graph: nx.MultiDiGraph,
     max_number_of_nodes: int = 100,
@@ -98,7 +121,9 @@ def gerani_paper_arrg_to_aht(
         alpha_coefficient=alpha_coefficient,
     )
 
-    graph_flatten = merge_multiedges(graph)
+    graph_flatten = merge_multiedges(
+        graph, node_attrib_name=weight, default_node_weight=0
+    )
     sorted_nodes = sorted(
         list(aspects_weighted_page_rank.items()),
         key=lambda node_degree_pair: node_degree_pair[1],
@@ -119,34 +144,42 @@ def our_paper_arrg_to_aht(
     max_number_of_nodes: int,
     weight: str = "weight",
     alpha_coefficient: float = 0.5,
-    use_aspect_clusters: bool = False,
+    use_aspect_clustering: bool = False,
 ) -> nx.Graph:
     logger.info("Generate Aspect Hierarchical Tree based on ARRG")
     # aspects_rank = calculate_hits(graph)
-    aspects_rank = nx.in_degree_centrality(graph)
-    # aspects_rank = calculate_weighted_page_rank(graph, 'weight')
-    graph = calculate_moi_by_gerani(
+    # aspects_rank = nx.in_degree_centrality(graph)
+    aspects_rank = calculate_weighted_page_rank(graph, "weight")
+    graph = calculate_weight(
         graph=graph,
-        weighted_page_rank=aspects_rank,
+        ranks=aspects_rank,
         alpha_coefficient=alpha_coefficient,
     )
-    if use_aspect_clusters:
-        aspect_cluster_map = {}
-    else:
-        aspect_cluster_map = None
-    # TODO add aspect merging here
-    graph_flatten = merge_multiedges(graph, aspect_cluster_map=aspect_cluster_map)
-    # sorted_nodes = sorted(list(graph_flatten.degree()), key=lambda node_degree_pair: node_degree_pair[1], reverse=True)
+    graph_flatten = merge_multiedges(
+        graph,
+        n_clusters=max_number_of_nodes,
+        use_aspect_clustering=use_aspect_clustering,
+    )
+    aspects_rank = [
+        (aspect, score)
+        for aspect, score in aspects_rank.items()
+        if aspect in graph_flatten
+    ]
     sorted_nodes = sorted(
-        list(aspects_rank.items()), key=lambda node_value: node_value[1], reverse=True
+        list(aspects_rank), key=lambda node_value: node_value[1], reverse=True
     )
 
-    csv_name = "/tmp/our_ranks.csv"
-    pd.DataFrame(sorted_nodes, columns=["aspect", "rank"]).to_csv(csv_name)
-    mlflow.log_artifact(csv_name)
+    mlflow.log_dict(dict(sorted_nodes), "arrg_aspect_ranks.json")
 
-    top_nodes = list(pluck(0, sorted_nodes[:max_number_of_nodes]))
-    sub_graph = graph_flatten.subgraph(top_nodes)
-    maximum_spanning_tree = nx.maximum_spanning_tree(sub_graph, weight=weight)
-    nx.set_node_attributes(maximum_spanning_tree, dict(sub_graph.nodes.items()))
+    arrg_relation_weights = {
+        f"{source}->{target}": data[weight]
+        for source, target, data in graph_flatten.edges(data=True)
+    }
+    mlflow.log_dict(
+        dict(sorted(arrg_relation_weights.items(), key=lambda t: t[1], reverse=True)),
+        "arrg_relation_weights.json",
+    )
+
+    maximum_spanning_tree = nx.maximum_spanning_tree(graph_flatten, weight=weight)
+    nx.set_node_attributes(maximum_spanning_tree, dict(graph_flatten.nodes.items()))
     return maximum_spanning_tree

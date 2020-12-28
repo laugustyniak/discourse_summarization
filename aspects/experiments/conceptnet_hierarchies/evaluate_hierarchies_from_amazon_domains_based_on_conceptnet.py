@@ -5,6 +5,7 @@ import click
 import matplotlib.pyplot as plt
 import mlflow
 import seaborn as sns
+from aspects.experiments import experiment_name_enum
 from tqdm import tqdm
 
 from aspects.data.conceptnet.graphs import CONCEPTNET_GRAPH_TOOL_GRAPHS
@@ -23,9 +24,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 datasets = [
+    (settings.EVENT_REGISTRY_BREXIT_NEWS_LARGE, None),
+    (settings.EVENT_REGISTRY_BREXIT_NEWS_WITH_BODY_LARGE, 10000),
+    (settings.EVENT_REGISTRY_BREXIT_NEWS_WITH_BODY_LARGE, 50000),
+
     # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50),
     # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 10 ** 5),
-    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 5001),
+    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 5001),
     # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 50001),
     # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50001),
     # (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, 50001),
@@ -50,7 +55,7 @@ datasets = [
     default=100,
     help="Number of examples that could we process by one process",
 )
-@click.option("--aht_max_number_of_nodes", default=50, help="Max nodes for AHT")
+@click.option("--aht_max_number_of_nodes", default=100, help="Max nodes for AHT")
 @click.option(
     "--alpha_coefficient", default=0.5, help="Alpha coefficient for moi calculation"
 )
@@ -78,7 +83,11 @@ def main(
     for dataset_path, max_reviews in tqdm(
         datasets, desc="Amazon datasets processing..."
     ):
-        for experiment_name in ["our", "gerani"]:
+        for experiment_name in [
+            # experiment_name_enum.GERANI,
+            experiment_name_enum.OUR,
+            experiment_name_enum.OUR_TOP_1_RULES
+        ]:
 
             with mlflow.start_run(
                 experiment_id=experiment_id,
@@ -97,10 +106,12 @@ def main(
                     alpha_coefficient=alpha_coefficient,
                 )
 
-                if experiment_name in ["our"]:
+                if experiment_name == experiment_name_enum.OUR:
                     aspect_analysis.our_pipeline()
-                elif experiment_name in ["gerani"]:
+                elif experiment_name == experiment_name_enum.GERANI:
                     aspect_analysis.gerani_pipeline()
+                elif experiment_name == experiment_name_enum.OUR_TOP_1_RULES:
+                    aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree()
                 else:
                     raise Exception("Wrong experiment type")
 

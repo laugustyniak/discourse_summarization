@@ -2,6 +2,7 @@ import json
 import logging
 import multiprocessing
 from concurrent.futures.process import ProcessPoolExecutor
+from functools import partial
 from os.path import basename
 from pathlib import Path
 from typing import Callable, List, Sequence, Union
@@ -14,6 +15,7 @@ from tqdm import tqdm
 from aspects.analysis.gerani_graph_analysis import (
     extend_graph_nodes_with_sentiments_and_weights,
     gerani_paper_arrg_to_aht,
+    our_paper_arrg_to_aht,
 )
 from aspects.aspects import rule_filters
 from aspects.aspects.aspect_extractor import AspectExtractor
@@ -49,21 +51,24 @@ ASPECTS_TO_SKIP = [
     "que es de buena calidad",
     "love",
     "nice app",
+    "inc",
+    "ra",
+    "st. patrick 's",
 ]
 
 
 class AspectAnalysis:
     def __init__(
-            self,
-            input_path: Union[str, Path],
-            output_path: Union[str, Path],
-            experiment_name: str = "",
-            jobs: int = None,
-            sent_model_path: Union[str, Path] = None,
-            batch_size: int = None,
-            max_docs: int = None,
-            alpha_coefficient: float = 0.5,
-            aht_max_number_of_nodes: int = 50,
+        self,
+        input_path: Union[str, Path],
+        output_path: Union[str, Path],
+        experiment_name: str = "",
+        jobs: int = None,
+        sent_model_path: Union[str, Path] = None,
+        batch_size: int = None,
+        max_docs: int = None,
+        alpha_coefficient: float = 0.5,
+        aht_max_number_of_nodes: int = 50,
     ):
         self.max_docs = max_docs
         mlflow.log_param("max_docs", max_docs)
@@ -74,8 +79,7 @@ class AspectAnalysis:
         else:
             self.output_path = output_path
         self.experiment_name = experiment_name
-        self.paths = ExperimentPaths(input_path, self.output_path,
-                                     experiment_name)
+        self.paths = ExperimentPaths(input_path, self.output_path, experiment_name)
         self.sent_model_path = sent_model_path
         mlflow.log_param("sent_model_path", sent_model_path)
 
@@ -91,8 +95,7 @@ class AspectAnalysis:
         mlflow.log_param("aht_max_number_of_nodes", aht_max_number_of_nodes)
 
     def parallelized_extraction(
-            self, elements: Sequence, fn: Callable,
-            desc: str = "Running in parallel"
+        self, elements: Sequence, fn: Callable, desc: str = "Running in parallel"
     ) -> List:
         with ProcessPoolExecutor(self.jobs) as pool:
             return list(
@@ -113,21 +116,18 @@ class AspectAnalysis:
 
             if f_extension in ["json"]:
                 with open(self.input_file_path, "r") as json_file:
-                    df = pd.DataFrame(json.load(json_file).values(),
-                                      columns=["text"])
+                    df = pd.DataFrame(json.load(json_file).values(), columns=["text"])
             elif f_extension in ["csv", "txt"]:
                 df = pd.read_csv(self.input_file_path, header=None)
                 df.columns = ["text"]
             else:
-                raise Exception(
-                    "Wrong file type! It must be [json, txt or csv]")
+                raise Exception("Wrong file type! It must be [json, txt or csv]")
 
             if self.max_docs is not None:
                 df = df.head(self.max_docs)
 
             df["discourse_tree"] = self.parallelized_extraction(
-                df.text.tolist(), extract_discourse_tree,
-                "Discourse trees parsing"
+                df.text.tolist(), extract_discourse_tree, "Discourse trees parsing"
             )
 
             n_docs = len(df)
@@ -142,8 +142,7 @@ class AspectAnalysis:
 
         return df
 
-    def extract_discourse_trees_ids_only(self,
-                                         df: pd.DataFrame) -> pd.DataFrame:
+    def extract_discourse_trees_ids_only(self, df: pd.DataFrame) -> pd.DataFrame:
         if "discourse_tree_ids_only" in df.columns:
             return df
 
@@ -196,8 +195,7 @@ class AspectAnalysis:
         self.discourse_trees_df_checkpoint(df)
 
         df["concepts"] = self.parallelized_extraction(
-            df.aspects.tolist(), extractor.extract_concepts_batch,
-            "Concepts extracting"
+            df.aspects.tolist(), extractor.extract_concepts_batch, "Concepts extracting"
         )
         self.discourse_trees_df_checkpoint(df)
 
@@ -210,8 +208,7 @@ class AspectAnalysis:
         pandas_utils.assert_columns(df, "discourse_tree_ids_only")
 
         df["rules"] = self.parallelized_extraction(
-            df.discourse_tree_ids_only.tolist(), extract_rules,
-            "Extracting rules"
+            df.discourse_tree_ids_only.tolist(), extract_rules, "Extracting rules"
         )
 
         self.discourse_trees_df_checkpoint(df)
@@ -219,15 +216,11 @@ class AspectAnalysis:
         return df
 
     def build_aspect_to_aspect_graph(
-            self,
-            df: pd.DataFrame,
-            filter_relation_fn: Callable = None,
-            aspects_to_skip=None,
+        self,
+        df: pd.DataFrame,
+        filter_relation_fn: Callable = None,
+        aspects_to_skip=None,
     ):
-        # if self.paths.aspect_to_aspect_graph.exists():
-        #     logging.info('Aspect to aspect graph has been already built, loading and passing to the next stage')
-        #     return serializer.load(self.paths.aspect_to_aspect_graph)
-
         builder = Aspect2AspectGraph(aspects_to_skip=aspects_to_skip)
         graph = builder.build(
             discourse_tree_df=df, filter_relation_fn=filter_relation_fn
@@ -236,7 +229,7 @@ class AspectAnalysis:
         return graph
 
     def add_sentiments_and_weights_to_nodes(
-            self, graph, discourse_trees_df: pd.DataFrame
+        self, graph, discourse_trees_df: pd.DataFrame
     ):
         graph, aspect_sentiments = extend_graph_nodes_with_sentiments_and_weights(
             graph, discourse_trees_df
@@ -246,20 +239,21 @@ class AspectAnalysis:
         return graph, aspect_sentiments
 
     def generate_aht(
-            self,
-            filter_relation_fn: Callable = None,
-            aht_graph_weight_name: str = "pagerank",
-            metric_for_aspect_with_max_weight="pagerank",
-            aspects_to_skip=None,
+        self,
+        aht_graph_creation_fn: Callable,
+        filter_relation_fn: Callable = None,
+        aht_graph_weight_name: str = "pagerank",
+        metric_for_aspect_with_max_weight="pagerank",
+        aspects_to_skip=None,
     ):
         logging.info(f"Experiments for:  {self.paths.experiment_path}")
 
         discourse_trees_df = (
             self.extract_discourse_trees()
-                .pipe(self.extract_discourse_trees_ids_only)
-                .pipe(self.extract_sentiment)
-                .pipe(self.extract_aspects)
-                .pipe(self.extract_edu_rhetorical_rules)
+            .pipe(self.extract_discourse_trees_ids_only)
+            .pipe(self.extract_sentiment)
+            .pipe(self.extract_aspects)
+            .pipe(self.extract_edu_rhetorical_rules)
         )
 
         mlflow.log_metric("discourse_tree_df_len", len(discourse_trees_df))
@@ -267,13 +261,10 @@ class AspectAnalysis:
         graph = self.build_aspect_to_aspect_graph(
             discourse_trees_df, filter_relation_fn, aspects_to_skip
         )
-        mlflow.log_metric("aspect_2_aspect_graph_edges",
-                          graph.number_of_edges())
-        mlflow.log_metric("aspect_2_aspect_graph_nodes",
-                          graph.number_of_nodes())
-        graph, _ = self.add_sentiments_and_weights_to_nodes(graph,
-                                                            discourse_trees_df)
-        aht_graph = gerani_paper_arrg_to_aht(
+        mlflow.log_metric("aspect_2_aspect_graph_edges", graph.number_of_edges())
+        mlflow.log_metric("aspect_2_aspect_graph_nodes", graph.number_of_nodes())
+        graph, _ = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
+        aht_graph = aht_graph_creation_fn(
             graph,
             max_number_of_nodes=self.aht_max_number_of_nodes,
             weight=aht_graph_weight_name,
@@ -296,6 +287,7 @@ class AspectAnalysis:
 
     def gerani_pipeline(self):
         self.generate_aht(
+            aht_graph_creation_fn=gerani_paper_arrg_to_aht,
             filter_relation_fn=rule_filters.filter_rules_gerani,
             aht_graph_weight_name="moi",
             metric_for_aspect_with_max_weight="pagerank",
@@ -303,16 +295,22 @@ class AspectAnalysis:
 
     def our_pipeline(self):
         self.generate_aht(
+            aht_graph_creation_fn=partial(
+                our_paper_arrg_to_aht, use_aspect_clustering=True
+            ),
             filter_relation_fn=None,
-            aht_graph_weight_name="pagerank",
-            metric_for_aspect_with_max_weight="pagerank",
+            aht_graph_weight_name="weight",
+            metric_for_aspect_with_max_weight="weight",
             aspects_to_skip=ASPECTS_TO_SKIP,
         )
 
     def our_pipeline_top_n_rules_per_discourse_tree(self):
         self.generate_aht(
+            aht_graph_creation_fn=partial(
+                our_paper_arrg_to_aht, use_aspect_clustering=True
+            ),
             filter_relation_fn=rule_filters.filter_top_n_rules,
-            aht_graph_weight_name="pagerank",
-            metric_for_aspect_with_max_weight="pagerank",
+            aht_graph_weight_name="weight",
+            metric_for_aspect_with_max_weight="weight",
             aspects_to_skip=ASPECTS_TO_SKIP,
         )

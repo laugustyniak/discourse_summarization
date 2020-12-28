@@ -2,13 +2,14 @@ import logging
 from collections import OrderedDict
 from itertools import product
 from operator import itemgetter
-from typing import Callable, Union, Dict
+from typing import Callable, Union
 
 import mlflow
 import networkx as nx
 import pandas as pd
 from tqdm import tqdm
 
+from aspects.embeddings.clusterizer import cluster_embeddings_with_spacy
 from aspects.utilities.settings import setup_mlflow
 
 logger = logging.getLogger(__name__)
@@ -93,41 +94,34 @@ def log_rules_stats(discourse_tree_df, suffix: str = ""):
 
 def merge_multiedges(
     graph: object,
-    node_attrib_name: object = "weight",
+    node_attrib_name: str = "weight",
     default_node_weight: float = 1,
-    aspect_cluster_map: Dict[str, str] = None,
+    use_aspect_clustering: bool = False,
+    n_clusters: int = None,
 ) -> nx.Graph:
-    """
-    Merge multiple edges between nodes into one relation and sum attribute weight.
+    if use_aspect_clustering and n_clusters is not None:
+        aspect_df = pd.DataFrame(
+            [(n, data["importance"]) for n, data in graph.nodes(data=True)],
+            columns=["text", "importance"],
+        )
+        aspect_cluster_representants = cluster_embeddings_with_spacy(
+            aspect_df, n_clusters
+        )
+        mlflow.log_dict(
+            aspect_cluster_representants, "aspect_cluster_representants.json"
+        )
 
-    Merge the edges connecting two nodes and consider the sum of their weights as the weight of the merged graph.
-    We also ignore the relation direction for the purpose of generating the tree.
-
-    Parameters
-    ----------
-    graph : networkx.MultiDiGraph
-        Aspect-aspect relation graph.
-
-    node_attrib_name : str
-        Name of node's attribute that will be summed up in merged relations.
-
-    Returns
-    -------
-    graph_new : networkx.Graph()
-        Aspect-aspect graph with maximum single relation between each pair of nodes.
-
-    Args:
-        default_node_weight:
-
-    """
     logger.info("Create a new graph without multiple edges between nodes.")
     graph_new = nx.Graph()
     for u, v, data in graph.edges(data=True):
         w = data[node_attrib_name] if node_attrib_name in data else default_node_weight
+        if use_aspect_clustering and n_clusters is not None:
+            u = aspect_cluster_representants[u]
+            v = aspect_cluster_representants[v]
         if graph_new.has_edge(u, v):
             graph_new[u][v][node_attrib_name] += w
         else:
-            graph_new.add_edge(u, v, weight=w)
+            graph_new.add_edge(u, v, **{node_attrib_name: w})
 
     logger.info("Copy nodes attributes from multi edge graph to flattened one.")
     nx.set_node_attributes(graph_new, dict(graph.nodes.items()))

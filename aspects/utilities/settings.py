@@ -39,6 +39,12 @@ BING_LIU_ASPECT_DATASETS_PATHS = list(BING_LIU_9_PRODUCTS_PATH.glob('*.txt')) + 
 
 BING_LIU_BIO_DATASET = ALL_BING_LIU_ASPECTS_PATH / 'bio_tags'
 
+# --------------------------------------------- EVENT REGISTRY ----------------------------------------------------- #
+
+EVENT_REGISTRY_DATA = DATA_PATH / 'event-registry'
+EVENT_REGISTRY_BREXIT_NEWS_LARGE = EVENT_REGISTRY_DATA / 'brexit-news-all.json'
+EVENT_REGISTRY_BREXIT_NEWS_WITH_BODY_LARGE = EVENT_REGISTRY_DATA / 'brexit-news-body-193927.json'
+
 # --------------------------------------------- SEMEVAL DATASETS ----------------------------------------------------- #
 SEMEVAL_DATASETS = DATA_PATH / 'semeval'
 SEMEVAL_DATASETS_2014 = SEMEVAL_DATASETS / '2014'
