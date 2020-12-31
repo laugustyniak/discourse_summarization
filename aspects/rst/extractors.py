@@ -28,7 +28,7 @@ def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
 
 
 def extract_discourse_tree_with_ids_only(
-    discourse_tree: nltk.Tree,
+        discourse_tree: nltk.Tree,
 ) -> Tuple[nltk.Tree, List[str]]:
     edu_tree_preprocessor = EDUTreeMapper()
     edu_tree_preprocessor.process_tree(discourse_tree)
