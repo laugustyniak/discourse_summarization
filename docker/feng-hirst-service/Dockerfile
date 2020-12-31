@@ -57,6 +57,6 @@ WORKDIR /opt/feng-hirst-service
 
 #CMD ["gunicorn", "app:parser_app", "-b", ":80", "-w", "2", "-k", "uvicorn.workers.UvicornWorker"]
 EXPOSE 8080
-ENTRYPOINT ["hug"]
-CMD ["-f", "app.py"]
+#ENTRYPOINT ["hug"]
+#CMD ["-f", "app.py"]
 #CMD ["gunicorn", "app:parser_app", "-b"]
