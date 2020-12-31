@@ -7,15 +7,19 @@ import nltk
 from aspects.rst.edu_tree_mapper import EDUTreeMapper
 from aspects.rst.edu_tree_rules_extractor import EDUTreeRulesExtractor
 from aspects.rst.parser_client import RSTParserClient
-from aspects.utilities import settings
 
 
 def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
     parser = RSTParserClient()
     try:
+        parse_tree_str = parser.parse(document)
+        parse_tree_str = (
+            parse_tree_str
+            if parse_tree_str.startswith("(")
+            else "(" + parse_tree_str + ")"
+        )
         return nltk.tree.Tree.fromstring(
-            parser.parse(document),
-            leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN,
+            parse_tree_str,
             remove_empty_top_bracketing=True,
         )
     except (ValueError, JSONDecodeError) as e:
