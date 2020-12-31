@@ -9,27 +9,10 @@ from falcon import HTTP_500, HTTP_400
 PARSER_PATH = "/opt/feng-hirst-rst-parser/src"
 PARSER_EXECUTABLE = (
     "parser_wrapper.py"  # Feng/Hirst uses Python 2, but our API is in Python 3
-)e
+)
 
 
-@hug.response_middleware()
-def process_data(request, response, resource):
-    """This is a middleware function that gets called for every request a hug API processes.
-    It will allow Javascript clients on other hosts / ports to access the API (CORS request).
-    """
-    response.set_header("Access-Control-Allow-Origin", "*")
-
-
-@hug.response_middleware()
-def process_response(request, response, resource, req_succeeded=True):
-    """This is a middleware function that gets called for every request a hug API processes
-    AFTER the response is routed. Here, we delete the (temporary) file
-    that contained the parser result.
-    """
-    os.unlink(response.stream.name)
-
-
-@hug.post("/api/rst/parse", output=hug.output_format.file)
+@hug.post("/api/rst/parse")
 def call_parser(body, response):
     parser = sh.Command(os.path.join(PARSER_PATH, PARSER_EXECUTABLE))
 
@@ -43,7 +26,7 @@ def call_parser(body, response):
                 with tempfile.NamedTemporaryFile(delete=False) as output_file:
                     output_file.write(result.stdout)
                     output_file.flush()
-                    return output_file.name
+                    return result.stdout
 
             except sh.ErrorReturnCode_1 as err:
                 response.status = HTTP_500
@@ -53,7 +36,7 @@ def call_parser(body, response):
                 with tempfile.NamedTemporaryFile(delete=False) as error_file:
                     error_file.write(error_msg)
                     error_file.flush()
-                    return error_file.name
+                    return error_msg
 
     else:
         response.status = HTTP_400
