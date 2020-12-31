@@ -15,7 +15,7 @@ EXPECTED_PARSETREE_LONG = """ParseTree(\'Elaboration[N][S]\', [ParseTree(\'Elabo
 @pytest.fixture(scope="session", autouse=True)
 def start_api():
     print("starting API...")
-    child = pexpect.spawn('hug -f feng_hug_api.py')
+    child = pexpect.spawn('hug -f app.py')
     yield child.expect('(?i)Serving on :8000') # provide the fixture value
     print("stopping API...")
     child.close()

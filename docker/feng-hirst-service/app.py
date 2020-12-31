@@ -1,10 +1,10 @@
+#!/usr/bin/env python3
 import os
 import tempfile
-from fastapi import FastAPI
-from pydantic import BaseModel
-import sh
 
-parser_app = FastAPI()
+import hug
+import sh
+from falcon import HTTP_500, HTTP_400
 
 PARSER_PATH = "/opt/feng-hirst-rst-parser/src"
 PARSER_EXECUTABLE = (
@@ -12,21 +12,49 @@ PARSER_EXECUTABLE = (
 )
 
 
-class Request(BaseModel):
-    text: str
+@hug.response_middleware()
+def process_data(request, response, resource):
+    """This is a middleware function that gets called for every request a hug API processes.
+    It will allow Javascript clients on other hosts / ports to access the API (CORS request).
+    """
+    response.set_header("Access-Control-Allow-Origin", "*")
 
 
-@parser_app.post("/api/rst/parse")
-async def call_parser(request: Request):
+@hug.response_middleware()
+def process_response(request, response, resource, req_succeeded=True):
+    """This is a middleware function that gets called for every request a hug API processes
+    AFTER the response is routed. Here, we delete the (temporary) file
+    that contained the parser result.
+    """
+    os.unlink(response.stream.name)
+
+
+@hug.post("/api/rst/parse", output=hug.output_format.file)
+def call_parser(body, response):
     parser = sh.Command(os.path.join(PARSER_PATH, PARSER_EXECUTABLE))
-    print(os.path.join(PARSER_PATH, PARSER_EXECUTABLE))
 
-    with tempfile.NamedTemporaryFile("w+t") as input_file:
-        input_file.write(request.text)
-        input_file.flush()
-        try:
-            result = parser(input_file.name, _cwd=PARSER_PATH)
-            return result.stdout
+    if body and "input" in body:
+        input_file_content = body["input"]
+        with tempfile.NamedTemporaryFile() as input_file:
+            input_file.write(input_file_content)
+            input_file.flush()
+            try:
+                result = parser(input_file.name, _cwd=PARSER_PATH)
+                with tempfile.NamedTemporaryFile(delete=False) as output_file:
+                    output_file.write(result.stdout)
+                    output_file.flush()
+                    return output_file.name
 
-        except Exception:
-            return ''
+            except sh.ErrorReturnCode_1 as err:
+                response.status = HTTP_500
+                trace = str(err.stderr, "utf-8")
+                error_msg = "{0}\n\n{1}".format(err, trace).encode("utf-8")
+
+                with tempfile.NamedTemporaryFile(delete=False) as error_file:
+                    error_file.write(error_msg)
+                    error_file.flush()
+                    return error_file.name
+
+    else:
+        response.status = HTTP_400
+        return {"body": body}
