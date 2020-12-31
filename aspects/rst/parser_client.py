@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 import requests
+from requests import ReadTimeout
 
 from aspects.utilities.settings import RST_PARSER_DOCKER_URL
 
@@ -11,5 +12,8 @@ class RSTParserClient:
 
     def parse(self, text: str) -> str:
         files = {"input": (f"{str(uuid4())}.txt", text)}
-        response = requests.post(self.url, files=files)
-        return response.text
+        try:
+            response = requests.post(self.url, files=files, timeout=5)
+            return response.text
+        except ReadTimeout:
+            return ""
