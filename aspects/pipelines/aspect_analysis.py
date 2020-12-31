@@ -2,6 +2,7 @@ import json
 import logging
 import multiprocessing
 from concurrent.futures.process import ProcessPoolExecutor
+from datetime import datetime
 from functools import partial
 from os.path import basename
 from pathlib import Path
@@ -73,6 +74,7 @@ class AspectAnalysis:
         self.max_docs = max_docs
         mlflow.log_param("max_docs", max_docs)
         self.batch_size = batch_size
+        mlflow.log_param("batch_size", max_docs)
         self.input_file_path = input_path
         if self.max_docs is not None:
             self.output_path = f"{str(output_path)}-{self.max_docs}-docs"
@@ -88,6 +90,7 @@ class AspectAnalysis:
             self.jobs = multiprocessing.cpu_count() - 1
         else:
             self.jobs = jobs
+        mlflow.log_param('n_jobs', self.jobs)
 
         self.alpha_coefficient = alpha_coefficient
         mlflow.log_param("alpha_coefficient", alpha_coefficient)
@@ -126,8 +129,16 @@ class AspectAnalysis:
             if self.max_docs is not None:
                 df = df.head(self.max_docs)
 
+            mlflow.log_param(
+                "discourse_parsing_start_time",
+                datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            )
             df["discourse_tree"] = self.parallelized_extraction(
                 df.text.tolist(), extract_discourse_tree, "Discourse trees parsing"
+            )
+            mlflow.log_param(
+                "discourse_parsing_end_time",
+                datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             )
 
             n_docs = len(df)
