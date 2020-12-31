@@ -41,3 +41,4 @@ conceptnet-5.7.0-assertions.csv
 .jupyter/
 
 *.egg-info/
+/docker/feng-hirst-rst-parser/
