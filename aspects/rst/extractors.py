@@ -17,7 +17,7 @@ def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
             parse_tree_str
             if parse_tree_str.startswith("(")
             else "(" + parse_tree_str + ")"
-        )
+        ).strip()
         return nltk.tree.Tree.fromstring(
             parse_tree_str,
             remove_empty_top_bracketing=True,
