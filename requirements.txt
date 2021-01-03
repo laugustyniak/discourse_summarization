@@ -14,9 +14,9 @@ pandas==0.25.3
 plotly==4.4.1
 PyHamcrest==2.0.2
 protobuf==3.11.2
-py2cytoscape==.0.7.1
+py2cytoscape==0.7.1
 pydot==1.4.1
-pygraphviz==1.6
+# pygraphviz==1.6 better install with conda
 pytest==5.3.2
 python-rake==1.4.5
 pyvis==0.1.7.0
@@ -25,10 +25,12 @@ seaborn==0.10.0
 sentencepiece==0.1.85
 smart-open==1.9.0
 spacy==2.2.4
-streamlit==0.56.0
+streamlit==0.73.1
 summa==1.2.0
 tensorboard==2.2.0
 tensorflow==2.2.0
 textblob==0.15.3
 toolz==0.10.0
+tornado==6.1
 tqdm
+wordcloud==1.8.1
