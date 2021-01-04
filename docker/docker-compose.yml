@@ -3,13 +3,24 @@ version: '3'
 services:
   rst_api:
     build:
-      context: ./rst
+      context: ./feng-hirst-rst-parser
       dockerfile: Dockerfile
     container_name: rst_api
+    command: gunicorn  --workers=8 --bind=0.0.0.0:8000 app:__hug_wsgi__
     ports:
-      - "5000:80"
+      - "5000:8000"
     tty: true
     restart: on-failure
+  nginx:
+    depends_on:
+      - rst_api
+    image: nginx:latest
+    container_name: rst_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/app
+      - ./config/nginx:/etc/nginx/conf.d
   aspect_extractor_api:
     build:
       context: ./aspect_extraction
@@ -25,7 +36,7 @@ services:
       dockerfile: Dockerfile
     container_name: sentiment_api
     ports:
-      - "5002:80"
+      - "5002:80"ex
     tty: true
     restart: on-failure
     tmpfs:
