@@ -13,7 +13,9 @@ class RSTParserClient:
     def parse(self, text: str) -> str:
         files = {"input": (f"{str(uuid4())}.txt", text)}
         try:
-            response = requests.post(self.url, files=files, timeout=5)
-            return response.text
+            response = requests.post(self.url, files=files, timeout=30)
+            return (
+                response.content.decode('utf-8').replace('\\n', '\n')
+            )
         except ReadTimeout:
             return ""
