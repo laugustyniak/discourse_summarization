@@ -1,3 +1,4 @@
+import logging
 from typing import Union, Tuple, List
 
 import nltk
@@ -11,11 +12,15 @@ from aspects.utilities import settings
 def extract_discourse_tree(document: str) -> Union[nltk.Tree, None]:
     parser = RSTParserClient()
     parse_tree_str = parser.parse(document)
-    return nltk.tree.Tree.fromstring(
-        parse_tree_str,
-        leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN,
-        remove_empty_top_bracketing=True,
-    )
+    try:
+        return nltk.tree.Tree.fromstring(
+            parse_tree_str,
+            leaf_pattern=settings.DISCOURSE_TREE_LEAF_PATTERN,
+            remove_empty_top_bracketing=True,
+        )
+    except ValueError as e:
+        logging.info(f"Document with errors: {document}. Error: {str(e)}")
+        return None
 
 
 def extract_discourse_tree_with_ids_only(
