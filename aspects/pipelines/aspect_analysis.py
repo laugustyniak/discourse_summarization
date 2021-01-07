@@ -48,7 +48,8 @@ logging.basicConfig(
 ASPECTS_TO_SKIP = [
     "fyi",
     "un",
-    "dynamat" "yz",
+    "dynamat",
+    "yz",
     "que es de buena calidad",
     "love",
     "nice app",
@@ -90,7 +91,7 @@ class AspectAnalysis:
             self.jobs = multiprocessing.cpu_count() - 1
         else:
             self.jobs = jobs
-        mlflow.log_param('n_jobs', self.jobs)
+        mlflow.log_param("n_jobs", self.jobs)
 
         self.alpha_coefficient = alpha_coefficient
         mlflow.log_param("alpha_coefficient", alpha_coefficient)
