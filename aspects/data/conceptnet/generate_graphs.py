@@ -10,10 +10,8 @@ from graph_tool.stats import remove_self_loops
 from tqdm import tqdm
 
 from aspects.utilities import settings
-from aspects.utilities.settings import setup_mlflow
 
-# TODO phd: add mlflow logging to get conceptnet stats for phd
-setup_mlflow()
+settings.setup_mlflow()
 
 """
 ConceptNet Relation Stats
@@ -100,77 +98,108 @@ def generate_english_graph(
     relation_types: Set[str] = None,
     synonymous_relations: Optional[List[str]] = None,
 ) -> gt.Graph:
-    df = pd.read_csv(settings.CONCEPTNET_CSV_EN_PATH, index_col=0)
-
-    if synonymous_relations:
-        synonyms_df = df[df.relation.isin(synonymous_relations)]
-        all_synonyms = list(
-            set(synonyms_df.target.tolist() + synonyms_df.source.tolist())
+    with mlflow.start_run(
+        experiment_id=5,
+        run_name=str(graph_path),
+        nested=True,
+    ):
+        df = pd.read_csv(settings.CONCEPTNET_CSV_EN_PATH, index_col=0)
+        relation_types = list(relation_types)
+        mlflow.log_dict(
+            {
+                "relations": relation_types or "all",
+                "synonymous_relations": synonymous_relations or "None",
+                "all_relations": len(df)
+            },
+            "filter-relations.json",
         )
 
-        synonyms = defaultdict(list)
-        for s, t in tqdm(
-            zip(synonyms_df.source.tolist(), synonyms_df.target.tolist()),
-            desc="Generating synonyms mapping",
-            total=len(synonyms_df),
-        ):
-            s = str(s)
-            t = str(t)
-            synonyms[s] += [t]
-            synonyms[t] += [s]
+        if synonymous_relations:
+            synonyms_df = df[df.relation.isin(synonymous_relations)]
+            all_synonyms = list(
+                set(synonyms_df.target.tolist() + synonyms_df.source.tolist())
+            )
 
-        synonyms = {k: set(v).union({k}) for k, v in synonyms.items()}
+            synonyms = defaultdict(list)
+            for s, t in tqdm(
+                zip(synonyms_df.source.tolist(), synonyms_df.target.tolist()),
+                desc="Generating synonyms mapping",
+                total=len(synonyms_df),
+            ):
+                s = str(s)
+                t = str(t)
+                synonyms[s] += [t]
+                synonyms[t] += [s]
 
-    if relation_types is not None:
-        df = df[df.relation.isin(relation_types)]
+            synonyms = {k: set(v).union({k}) for k, v in synonyms.items()}
 
-    g = gt.Graph()
-    e_relation = g.new_edge_property("string")
-    v_aspect_name = g.new_vertex_property("string")
+        if relation_types is not None:
+            df = df[df.relation.isin(relation_types)]
 
-    if synonymous_relations:
-        all_vertices_names = set(df.source.tolist() + df.target.tolist() + all_synonyms)
-    else:
-        all_vertices_names = set(df.source.tolist() + df.target.tolist())
+        mlflow.log_dict({
+            k: int(v)
+            for k, v
+            in df.relation.value_counts().items()
+        }, "relations.json")
 
-    vertices = {}
-    for aspect_name in tqdm(all_vertices_names, desc="Vertices adding to the graph..."):
-        v = g.add_vertex()
-        vertices[aspect_name] = v
-        v_aspect_name[v] = aspect_name
-
-    g.vertex_properties["aspect_name"] = v_aspect_name
-
-    def get_synonyms(vertex_name) -> List[str]:
-        return synonyms[vertex_name] if vertex_name in synonyms else [vertex_name]
-
-    edge_adding_errors = 0
-    for row in tqdm(
-        df.itertuples(), desc="Edges adding to the graph...", total=len(df)
-    ):
-        source = row.source  # satellite
-        target = row.target  # nucleus
-
-        # if N->S the reverse
-        if row.relation in NUCLEUS_SATELLITE_RELATIONS:
-            source, target = target, source
+        g = gt.Graph()
+        e_relation = g.new_edge_property("string")
+        v_aspect_name = g.new_vertex_property("string")
 
         if synonymous_relations:
-            for s, t in product(get_synonyms(source), get_synonyms(target)):
-                try:
-                    e = g.add_edge(vertices[s], vertices[t])
-                    e_relation[e] = row.relation
-                except KeyError:
-                    edge_adding_errors += 1
+            all_vertices_names = set(
+                df.source.tolist() + df.target.tolist() + all_synonyms
+            )
         else:
-            e = g.add_edge(vertices[source], vertices[target])
-            e_relation[e] = row.relation
+            all_vertices_names = set(df.source.tolist() + df.target.tolist())
 
-    print(f"{edge_adding_errors} edges with errors skipped")
-    g.edge_properties["relation"] = e_relation
-    g.save(str(graph_path))
+        vertices = {}
+        for aspect_name in tqdm(
+            all_vertices_names, desc="Vertices adding to the graph..."
+        ):
+            v = g.add_vertex()
+            vertices[aspect_name] = v
+            v_aspect_name[v] = aspect_name
 
-    return g
+        g.vertex_properties["aspect_name"] = v_aspect_name
+
+        def get_synonyms(vertex_name) -> List[str]:
+            return synonyms[vertex_name] if vertex_name in synonyms else [vertex_name]
+
+        edge_adding_errors = 0
+        for row in tqdm(
+            df.itertuples(), desc="Edges adding to the graph...", total=len(df)
+        ):
+            source = row.source  # satellite
+            target = row.target  # nucleus
+
+            # if N->S the reverse
+            if row.relation in NUCLEUS_SATELLITE_RELATIONS:
+                source, target = target, source
+
+            if synonymous_relations:
+                for s, t in product(get_synonyms(source), get_synonyms(target)):
+                    try:
+                        e = g.add_edge(vertices[s], vertices[t])
+                        e_relation[e] = row.relation
+                    except KeyError:
+                        edge_adding_errors += 1
+            else:
+                e = g.add_edge(vertices[source], vertices[target])
+                e_relation[e] = row.relation
+
+        print(f"{edge_adding_errors} edges with errors skipped")
+        mlflow.log_metrics(
+            {
+                "edge_adding_errors": edge_adding_errors,
+                "n_edges": g.num_edges(),
+                "n_vertices": g.num_vertices(),
+            }
+        )
+        g.edge_properties["relation"] = e_relation
+        g.save(str(graph_path))
+
+        return g
 
 
 def prepare_conceptnet_graph(graph_path: str, relation_types: Set[str]):
@@ -193,28 +222,26 @@ def prepare_conceptnet_graph(graph_path: str, relation_types: Set[str]):
 
 
 if __name__ == "__main__":
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
-        relation_types=None,
-        synonymous_relations=SYNONYMOUS_RELATIONS,
-    )
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
-        relation_types=None,
-        synonymous_relations=None,
-    )
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
-        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-        synonymous_relations=SYNONYMOUS_RELATIONS,
-    )
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_AND_RELATED_TO_EN_PATH,
-        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-        synonymous_relations=SYNONYMOUS_RELATIONS + ["RelatedTo"],
-    )
-    generate_english_graph(
-        graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITHOUT_SYNONYMS_EN_PATH,
-        relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
-        synonymous_relations=None,
-    )
+    with mlflow.start_run(experiment_id=5):
+        # generate_english_graph(
+        #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITH_SYNONYMS_EN_PATH,
+        #     relation_types=None,
+        #     synonymous_relations=SYNONYMOUS_RELATIONS,
+        # )
+        # generate_english_graph(
+        #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_ALL_RELATIONS_WITHOUT_SYNONYMS_EN_PATH,
+        #     relation_types=None,
+        #     synonymous_relations=None,
+        # )
+        # generate_english_graph(
+        #     graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITH_SYNONYMS_EN_PATH,
+        #     relation_types=SATELLITE_NUCLEUS_RELATIONS.union(NUCLEUS_SATELLITE_RELATIONS),
+        #     synonymous_relations=SYNONYMOUS_RELATIONS,
+        # )
+        generate_english_graph(
+            graph_path=settings.CONCEPTNET_GRAPH_TOOL_HIERARCHICAL_WITHOUT_SYNONYMS_EN_PATH,
+            relation_types=SATELLITE_NUCLEUS_RELATIONS.union(
+                NUCLEUS_SATELLITE_RELATIONS
+            ),
+            synonymous_relations=None,
+        )
