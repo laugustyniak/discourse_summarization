@@ -1,7 +1,9 @@
+import pandas as pd
 import logging
 from typing import Union
 
 import click
+import matplotlib
 import matplotlib.pyplot as plt
 import mlflow
 import seaborn as sns
@@ -22,6 +24,9 @@ setup_mlflow()
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+N_CALLS = 25_000
+N_CALLS_2 = 100_000
 
 datasets = [
     (settings.EVENT_REGISTRY_BREXIT_NEWS_LARGE, None),
@@ -46,13 +51,13 @@ datasets = [
 @click.command()
 @click.option(
     "--n-jobs",
-    default=-1,
+    default=20,
     help="Number of concurrent job for parts of pipeline. "
     "-1 means all cores will be used.",
 )
 @click.option(
     "--batch-size",
-    default=100,
+    default=50,
     help="Number of examples that could we process by one process",
 )
 @click.option("--aht_max_number_of_nodes", default=100, help="Max nodes for AHT")
@@ -84,9 +89,9 @@ def main(
         datasets, desc="Amazon datasets processing..."
     ):
         for experiment_name in [
-            # experiment_name_enum.GERANI,
+            experiment_name_enum.GERANI,
             experiment_name_enum.OUR,
-            experiment_name_enum.OUR_TOP_1_RULES
+            experiment_name_enum.OUR_TOP_1_RULES,
         ]:
 
             with mlflow.start_run(
@@ -179,10 +184,29 @@ def main(
                                 f"Shortest Paths pairs - data frame, without no paths and duplicates: {len(df)}"
                             )
 
-                            plt.figure()
+                            matplotlib.rc_file_defaults()
+                            ax1 = sns.set_style(style=None, rc=None)
+                            fig, ax1 = plt.subplots()
                             sns_plot = sns.lineplot(
                                 x=df.shortest_distance_aspect_graph,
                                 y=df.shortest_distance_conceptnet,
+                                ax=ax1,
+                            )
+                            ax2 = ax1.twinx()
+                            df_aspect_graph_distance_distribution = pd.DataFrame(
+                                df.shortest_distance_aspect_graph.value_counts()
+                            )
+                            df_aspect_graph_distance_distribution.reset_index(
+                                inplace=True
+                            )
+                            df_aspect_graph_distance_distribution.sort_values(
+                                by="index", inplace=True
+                            )
+                            sns.barplot(
+                                x=df_aspect_graph_distance_distribution["index"],
+                                y=df_aspect_graph_distance_distribution.shortest_distance_aspect_graph,
+                                alpha=0.5,
+                                ax=ax2,
                             )
                             logger.info(
                                 f"Shortest Paths correlation figure will be saved in {png_file_path}"
