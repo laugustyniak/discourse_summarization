@@ -7,6 +7,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import mlflow
 import seaborn as sns
+from scipy.stats import pearsonr
+
 from aspects.experiments import experiment_name_enum
 from tqdm import tqdm
 
@@ -178,6 +180,22 @@ def main(
                                 f"Shortest Paths pairs - data frame, without no paths and duplicates: {len(df)}"
                             )
 
+                            mlflow.log_dict(
+                                pd.DataFrame(
+                                    df.shortest_distance_aspect_graph.value_counts()
+                                ).to_dict(orient="index"),
+                                "shortest_distance_aspect_graph_distribution.json",
+                            )
+
+                            mlflow.log_dict(
+                                pd.DataFrame(
+                                    df.shortest_distance_conceptnet.value_counts()
+                                ).to_dict(orient="index"),
+                                "shortest_distance_conceptnet_distribution.json",
+                            )
+
+                            df = df[df.shortest_distance_aspect_graph <= 6]
+
                             matplotlib.rc_file_defaults()
                             ax1 = sns.set_style(style=None, rc=None)
                             fig, ax1 = plt.subplots()
@@ -204,6 +222,16 @@ def main(
                             )
                             logger.info(
                                 f"Shortest Paths correlation figure will be saved in {png_file_path}"
+                            )
+                            pearson_values = pearsonr(
+                                x=df.shortest_distance_aspect_graph.tolist(),
+                                y=df.shortest_distance_conceptnet.tolist(),
+                            )
+                            mlflow.log_metrics(
+                                {
+                                    "pearsonr": pearson_values[0],
+                                    "pearsonr_p-value": pearson_values[1],
+                                }
                             )
                             sns_plot.figure.savefig(png_file_path.as_posix())
                             plt.close()
