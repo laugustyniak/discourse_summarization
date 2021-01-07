@@ -36,7 +36,7 @@ services:
       dockerfile: Dockerfile
     container_name: sentiment_api
     ports:
-      - "5002:80"ex
+      - "5002:80"
     tty: true
     restart: on-failure
     tmpfs:
