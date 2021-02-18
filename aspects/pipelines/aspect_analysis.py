@@ -56,6 +56,13 @@ ASPECTS_TO_SKIP = [
     "inc",
     "ra",
     "st. patrick 's",
+    "swan slimline",
+    "ty",
+    "ewing",
+    "ozzy",
+    "swan slimline",
+    "aziz",
+    "xxl"
 ]
 
 
