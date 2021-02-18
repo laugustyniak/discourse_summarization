@@ -1,8 +1,7 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 
-RUN pip install tiny-tokenizer==3.1.0 \
-    fastapi==0.45.0 \
-    flair==0.4.4
+RUN pip install fastapi \
+    flair
 
 COPY . /app
 WORKDIR /app
