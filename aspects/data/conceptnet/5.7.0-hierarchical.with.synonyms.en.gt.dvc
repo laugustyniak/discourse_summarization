@@ -1,7 +1,3 @@
-md5: 857b2a6d90564d4086667a7a09e2eadf
 outs:
-- md5: 16e5aa82e861e9d885a473770547d4af
+- md5: de3fbcb3005e0087131a749b8a2bffe2
   path: 5.7.0-hierarchical.with.synonyms.en.gt
-  cache: true
-  metric: false
-  persist: false
