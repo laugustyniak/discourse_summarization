@@ -7,7 +7,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import mlflow
 import seaborn as sns
-from scipy.stats import pearsonr
 
 from aspects.experiments import experiment_name_enum
 from tqdm import tqdm
@@ -29,18 +28,24 @@ logger.setLevel(logging.INFO)
 
 N_CALLS = 25_000
 N_CALLS_2 = 100_000
+N_CALLS_3 = None
 
 datasets = [
     (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS),
     (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS),
-    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS),
-    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS),
+    # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS),
+    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS),
     (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS_2),
     (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_2),
-    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_2),
-    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_2),
-    (settings.EVENT_REGISTRY_BREXIT_NEWS_WITH_BODY_LARGE, 10000),
-    (settings.EVENT_REGISTRY_BREXIT_NEWS_LARGE, None),
+    # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_2),
+    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_2),
+
+    # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_3),
+    # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_3),
+    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_3),
+    #
+    # (settings.EVENT_REGISTRY_BREXIT_NEWS_WITH_BODY_LARGE, 10000),
+    # (settings.EVENT_REGISTRY_BREXIT_NEWS_LARGE, None),
 ]
 
 
@@ -60,7 +65,7 @@ datasets = [
 @click.option(
     "--alpha_coefficient", default=0.5, help="Alpha coefficient for moi calculation"
 )
-@click.option("--experiment-id", default=3, help="name of experiment for mlflow")
+@click.option("--experiment-id", default=6, help="name of experiment for mlflow")
 @click.option(
     "--overwrite-neighborhood/--no-overwrite-neighborhood",
     default=True,
@@ -85,7 +90,7 @@ def main(
         datasets, desc="Amazon datasets processing..."
     ):
         for experiment_name in [
-            experiment_name_enum.GERANI,
+            # experiment_name_enum.GERANI,
             experiment_name_enum.OUR,
             experiment_name_enum.OUR_TOP_1_RULES,
         ]:
@@ -223,14 +228,34 @@ def main(
                             logger.info(
                                 f"Shortest Paths correlation figure will be saved in {png_file_path}"
                             )
-                            pearson_values = pearsonr(
-                                x=df.shortest_distance_aspect_graph.tolist(),
-                                y=df.shortest_distance_conceptnet.tolist(),
+                            df.sort_values(
+                                by="shortest_distance_conceptnet", inplace=True
                             )
+                            pearson_correlation = (
+                                df.shortest_distance_aspect_graph.corr(
+                                    df.shortest_distance_conceptnet
+                                )
+                            )
+                            spearman_correlation = (
+                                df.shortest_distance_aspect_graph.corr(
+                                    df.shortest_distance_conceptnet, method="spearman"
+                                )
+                            )
+                            kendall_correlation = (
+                                df.shortest_distance_aspect_graph.corr(
+                                    df.shortest_distance_conceptnet, method="kendall"
+                                )
+                            )
+                            df_csv_path = (
+                                aspect_analysis.paths.experiment_path / "df.csv"
+                            )
+                            df.to_csv(df_csv_path.as_posix())
+                            mlflow.log_artifact(df_csv_path.as_posix())
                             mlflow.log_metrics(
                                 {
-                                    "pearsonr": pearson_values[0],
-                                    "pearsonr_p-value": pearson_values[1],
+                                    "pearson": pearson_correlation,
+                                    "spearman": spearman_correlation,
+                                    "kendall": kendall_correlation,
                                 }
                             )
                             sns_plot.figure.savefig(png_file_path.as_posix())
