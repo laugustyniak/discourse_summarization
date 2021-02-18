@@ -80,7 +80,7 @@ class AspectAnalysis:
         max_docs: int = None,
         alpha_coefficient: float = 0.5,
         aht_max_number_of_nodes: int = 50,
-        min_freq_of_aspects: int = 5,
+        min_freq_of_aspects: int = 1,
     ):
         self.max_docs = max_docs
         mlflow.log_param("max_docs", max_docs)
@@ -218,9 +218,9 @@ class AspectAnalysis:
         )
         self.discourse_trees_df_checkpoint(df)
 
-        df["concepts"] = self.parallelized_extraction(
-            df.aspects.tolist(), extractor.extract_concepts_batch, "Concepts extracting"
-        )
+        # df["concepts"] = self.parallelized_extraction(
+        #     df.aspects.tolist(), extractor.extract_concepts_batch, "Concepts extracting"
+        # )
         self.discourse_trees_df_checkpoint(df)
 
         return df
@@ -304,7 +304,14 @@ class AspectAnalysis:
 
         def filter_aspects(all_aspects, aspects_to_filter_):
             return [
-                [aspect for aspect in aspects if aspect in aspects_to_filter_]
+                [
+                    aspect.replace("&", "")
+                    .replace("/", "")
+                    .replace("\\", "")
+                    .replace('"', "")
+                    for aspect in aspects
+                    if aspect in aspects_to_filter_
+                ]
                 for aspects in all_aspects
             ]
 
@@ -352,7 +359,7 @@ class AspectAnalysis:
     def our_pipeline(self):
         self.generate_aht(
             aht_graph_creation_fn=partial(
-                our_paper_arrg_to_aht, use_aspect_clustering=True
+                our_paper_arrg_to_aht, use_aspect_clustering=False
             ),
             filter_relation_fn=None,
             aht_graph_weight_name="weight",
