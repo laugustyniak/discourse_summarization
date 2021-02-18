@@ -22,6 +22,8 @@ logger.setLevel(logging.INFO)
 
 setup_mlflow()
 
+MIN_DEGREE = 10
+
 
 def replace_zero_len_paths(
     shortest_paths: np.array, replaced_value: int = 0
@@ -98,9 +100,6 @@ def prepare_hierarchies_neighborhood(
         experiments_path.experiment_path
         / f"shortest-paths-pairs-{conceptnet_graph_path.stem}-df.pkl"
     )
-
-    if conceptnet_hierarchy_neighborhood_df_path.exists():
-        return pd.read_pickle(conceptnet_hierarchy_neighborhood_df_path.as_posix())
 
     logger.info("Prepare graphs")
 
@@ -234,7 +233,18 @@ def prepare_aspect_graph(
     logger.info(
         f"Load aspect 2 aspect graph - {str(experiment_paths.aspect_to_aspect_graph)}"
     )
-    aspect_graph = serializer.load(experiment_paths.aspect_to_aspect_graph)
+    aspect_graph = serializer.load(experiment_paths.aspect_hierarchical_tree)
+
+    mlflow.log_param("min_aspect_graph_degree", MIN_DEGREE)
+    remove = [
+        node
+        for node, degree in dict(aspect_graph.degree()).items()
+        if degree > MIN_DEGREE
+    ]
+    print(f'nodes: {len(aspect_graph.nodes())}')
+    aspect_graph.remove_nodes_from(remove)
+    print(f'nodes: {len(aspect_graph.nodes())}')
+
     aspect_graph = networkx_2_graph_tool(aspect_graph, node_name_property="aspect_name")
     remove_self_loops(aspect_graph)
     aspect_graph.reindex_edges()
