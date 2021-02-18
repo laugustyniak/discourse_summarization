@@ -28,7 +28,7 @@ spacy==2.2.4
 streamlit==0.73.1
 summa==1.2.0
 tensorboard==2.2.0
-tensorflow==2.2.0
+tensorflow==2.4.0
 textblob==0.15.3
 toolz==0.10.0
 tornado==6.1
