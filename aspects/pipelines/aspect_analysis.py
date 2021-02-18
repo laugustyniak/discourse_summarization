@@ -1,6 +1,7 @@
 import json
 import logging
 import multiprocessing
+from collections import Counter
 from concurrent.futures.process import ProcessPoolExecutor
 from datetime import datetime
 from functools import partial
@@ -11,6 +12,7 @@ from typing import Callable, List, Sequence, Union
 import mlflow
 import networkx as nx
 import pandas as pd
+from more_itertools import flatten
 from tqdm import tqdm
 
 from aspects.analysis.gerani_graph_analysis import (
@@ -62,7 +64,7 @@ ASPECTS_TO_SKIP = [
     "ozzy",
     "swan slimline",
     "aziz",
-    "xxl"
+    "xxl",
 ]
 
 
@@ -78,6 +80,7 @@ class AspectAnalysis:
         max_docs: int = None,
         alpha_coefficient: float = 0.5,
         aht_max_number_of_nodes: int = 50,
+        min_freq_of_aspects: int = 5,
     ):
         self.max_docs = max_docs
         mlflow.log_param("max_docs", max_docs)
@@ -104,6 +107,8 @@ class AspectAnalysis:
         mlflow.log_param("alpha_coefficient", alpha_coefficient)
         self.aht_max_number_of_nodes = aht_max_number_of_nodes
         mlflow.log_param("aht_max_number_of_nodes", aht_max_number_of_nodes)
+        self.min_freq_of_aspects = min_freq_of_aspects
+        mlflow.log_param("min_freq_of_aspects", min_freq_of_aspects)
 
     def parallelized_extraction(
         self, elements: Sequence, fn: Callable, desc: str = "Running in parallel"
@@ -273,6 +278,38 @@ class AspectAnalysis:
             .pipe(self.extract_sentiment)
             .pipe(self.extract_aspects)
             .pipe(self.extract_edu_rhetorical_rules)
+        )
+
+        # generate aspects counter for aspect when in discourse tree appear at least two aspects -
+        # the relation could be derived from it
+        aspect_counter = Counter(
+            flatten(
+                flatten(
+                    (
+                        discourse_trees_df[
+                            discourse_trees_df.aspects.apply(
+                                lambda aspects: list(flatten(aspects))
+                            ).apply(lambda aspects: len(set(aspects)) > 1)
+                        ]["aspects"]
+                    )
+                )
+            )
+        )
+        aspect_counter_df = pd.DataFrame(
+            aspect_counter.most_common(), columns=["aspect", "aspect_occurrences"]
+        ).sort_values(by="aspect_occurrences", ascending=False)
+        aspects_to_filter = aspect_counter_df[
+            aspect_counter_df.aspect_occurrences >= self.min_freq_of_aspects
+        ].aspect.tolist()
+
+        def filter_aspects(all_aspects, aspects_to_filter_):
+            return [
+                [aspect for aspect in aspects if aspect in aspects_to_filter_]
+                for aspects in all_aspects
+            ]
+
+        discourse_trees_df["aspects"] = discourse_trees_df.aspects.apply(
+            lambda aspects: filter_aspects(aspects, aspects_to_filter)
         )
 
         mlflow.log_metric("discourse_tree_df_len", len(discourse_trees_df))
