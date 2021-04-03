@@ -161,6 +161,9 @@ class AspectAnalysis:
             )
 
             assert not df.empty, "No trees to process!"
+            assert (
+                df[df.edus.apply(lambda l: len(l) > 0)].shape[0] > df.shape[0] / 2
+            ), "Probably to many RST errors, please check to discourse trees!"
 
             self.discourse_trees_df_checkpoint(df)
 
@@ -359,7 +362,7 @@ class AspectAnalysis:
     def our_pipeline(self):
         self.generate_aht(
             aht_graph_creation_fn=partial(
-                our_paper_arrg_to_aht, use_aspect_clustering=False
+                our_paper_arrg_to_aht, use_aspect_clustering=True
             ),
             filter_relation_fn=None,
             aht_graph_weight_name="weight",
