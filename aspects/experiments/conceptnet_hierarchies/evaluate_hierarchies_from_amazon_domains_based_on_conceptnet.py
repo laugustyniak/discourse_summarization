@@ -26,24 +26,24 @@ setup_mlflow()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-N_CALLS = 25_000
-N_CALLS_2 = 100_000
-N_CALLS_3 = None
+N_CALLS_1_000 = 1_000
+N_CALLS_10_000 = 10_000
+N_CALLS_25_000 = 25_000
+# N_CALLS_999_999 = 999_999
 
 datasets = [
-    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS),
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS),
-    # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS),
-    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS),
-    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS_2),
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_2),
-    # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_2),
-    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_2),
-
-    # (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_3),
-    # (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_3),
-    # (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_3),
-    #
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_1_000),
+    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_1_000),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_1_000),
+    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_1_000),
+    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS_10_000),
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_10_000),
+    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_10_000),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_10_000),
+    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS_25_000),
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_25_000),
+    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_25_000),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_25_000),
     # (settings.EVENT_REGISTRY_BREXIT_NEWS_WITH_BODY_LARGE, 10000),
     # (settings.EVENT_REGISTRY_BREXIT_NEWS_LARGE, None),
 ]
@@ -90,7 +90,7 @@ def main(
         datasets, desc="Amazon datasets processing..."
     ):
         for experiment_name in [
-            # experiment_name_enum.GERANI,
+            experiment_name_enum.GERANI,
             experiment_name_enum.OUR,
             experiment_name_enum.OUR_TOP_1_RULES,
         ]:
@@ -231,20 +231,14 @@ def main(
                             df.sort_values(
                                 by="shortest_distance_conceptnet", inplace=True
                             )
-                            pearson_correlation = (
-                                df.shortest_distance_aspect_graph.corr(
-                                    df.shortest_distance_conceptnet
-                                )
+                            pearson_correlation = df.shortest_distance_aspect_graph.corr(
+                                df.shortest_distance_conceptnet
                             )
-                            spearman_correlation = (
-                                df.shortest_distance_aspect_graph.corr(
-                                    df.shortest_distance_conceptnet, method="spearman"
-                                )
+                            spearman_correlation = df.shortest_distance_aspect_graph.corr(
+                                df.shortest_distance_conceptnet, method="spearman"
                             )
-                            kendall_correlation = (
-                                df.shortest_distance_aspect_graph.corr(
-                                    df.shortest_distance_conceptnet, method="kendall"
-                                )
+                            kendall_correlation = df.shortest_distance_aspect_graph.corr(
+                                df.shortest_distance_conceptnet, method="kendall"
                             )
                             df_csv_path = (
                                 aspect_analysis.paths.experiment_path / "df.csv"
