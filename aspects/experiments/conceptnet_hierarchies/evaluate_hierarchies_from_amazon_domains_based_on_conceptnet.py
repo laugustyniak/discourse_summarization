@@ -91,7 +91,7 @@ def main(
     ):
         for experiment_name in [
             experiment_name_enum.GERANI,
-            experiment_name_enum.OUR,
+            experiment_name_enum.OUR_ALL_RULES,
             experiment_name_enum.OUR_TOP_1_RULES,
         ]:
 
@@ -112,7 +112,7 @@ def main(
                     alpha_coefficient=alpha_coefficient,
                 )
 
-                if experiment_name == experiment_name_enum.OUR:
+                if experiment_name == experiment_name_enum.OUR_ALL_RULES:
                     aspect_analysis.our_pipeline()
                 elif experiment_name == experiment_name_enum.GERANI:
                     aspect_analysis.gerani_pipeline()

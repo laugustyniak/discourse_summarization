@@ -26,10 +26,12 @@ DATASETS = [
 
 EXPERIMENTS = [
     experiment_name_enum.GERANI,
-    experiment_name_enum.OUR,
-    experiment_name_enum.OUR_TOP_1_RULES,
+    experiment_name_enum.OUR_ALL_RULES,
     experiment_name_enum.OUR_TOP_5_RULES,
+    # experiment_name_enum.OUR_TOP_1_RULES,
 ]
+
+USE_ASPECT_CLUSTERING = False
 
 
 @click.command()
@@ -60,43 +62,50 @@ def main(
         DATASETS, desc="Amazon datasets processing..."
     ):
         with mlflow.start_run(
-            experiment_id=experiment_id,
-            run_name=f"{dataset_path.stem}-{max_reviews}",
-        ):
+            experiment_id=experiment_id, run_name=f"{dataset_path.stem}-{max_reviews}"
+        ) as dataset_flow:
             for experiment_name in EXPERIMENTS:
+                with mlflow.start_run(
+                    experiment_id=experiment_id,
+                    run_name=f"{experiment_name}",
+                    nested=True,
+                ) as experiment_subflow:
 
-                aspect_analysis = AspectAnalysis(
-                    input_path=dataset_path.as_posix(),
-                    output_path=settings.DEFAULT_OUTPUT_PATH / dataset_path.stem,
-                    experiment_name=experiment_name,
-                    jobs=n_jobs,
-                    batch_size=batch_size,
-                    max_docs=max_reviews,
-                    aht_max_number_of_nodes=aht_max_number_of_nodes,
-                    alpha_coefficient=alpha_coefficient,
-                )
-
-                if experiment_name == experiment_name_enum.OUR:
-                    aspect_analysis.our_pipeline()
-                elif experiment_name == experiment_name_enum.GERANI:
-                    aspect_analysis.gerani_pipeline()
-                elif experiment_name == experiment_name_enum.OUR_TOP_1_RULES:
-                    aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree(
-                        top_n=1, use_aspect_clustering=False
+                    aspect_analysis = AspectAnalysis(
+                        input_path=dataset_path.as_posix(),
+                        output_path=settings.DEFAULT_OUTPUT_PATH / dataset_path.stem,
+                        experiment_name=experiment_name,
+                        jobs=n_jobs,
+                        batch_size=batch_size,
+                        max_docs=max_reviews,
+                        aht_max_number_of_nodes=aht_max_number_of_nodes,
+                        alpha_coefficient=alpha_coefficient,
                     )
-                elif experiment_name == experiment_name_enum.OUR_TOP_5_RULES:
-                    aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree(
-                        top_n=5, use_aspect_clustering=False
-                    )
-                else:
-                    raise Exception("Wrong experiment type")
 
-        mlflow.log_param("dataset_path", dataset_path)
-        mlflow.log_param("dataset_name", dataset_path.stem)
-        mlflow.log_param("max_docs", max_reviews)
-        mlflow.log_param("n_jobs", n_jobs)
-        mlflow.log_param("aht_max_number_of_nodes", aht_max_number_of_nodes)
-        mlflow.log_param("alpha_coefficient", alpha_coefficient)
+                    if experiment_name == experiment_name_enum.OUR_ALL_RULES:
+                        aspect_analysis.our_pipeline(
+                            use_aspect_clustering=USE_ASPECT_CLUSTERING
+                        )
+                    elif experiment_name == experiment_name_enum.GERANI:
+                        aspect_analysis.gerani_pipeline()
+                    elif experiment_name == experiment_name_enum.OUR_TOP_1_RULES:
+                        aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree(
+                            top_n=1, use_aspect_clustering=USE_ASPECT_CLUSTERING
+                        )
+                    elif experiment_name == experiment_name_enum.OUR_TOP_5_RULES:
+                        aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree(
+                            top_n=5, use_aspect_clustering=USE_ASPECT_CLUSTERING
+                        )
+                    else:
+                        raise Exception("Wrong experiment type")
+
+            mlflow.log_param("dataset_path", dataset_path)
+            mlflow.log_param("dataset_name", dataset_path.stem)
+            mlflow.log_param("max_docs", max_reviews)
+            mlflow.log_param("n_jobs", n_jobs)
+            mlflow.log_param("aht_max_number_of_nodes", aht_max_number_of_nodes)
+            mlflow.log_param("alpha_coefficient", alpha_coefficient)
+            mlflow.log_param("use_aspect_clustering", USE_ASPECT_CLUSTERING)
 
 
 if __name__ == "__main__":

@@ -91,7 +91,7 @@ def calculate_moi_by_gerani(
 def calculate_weight(
     graph: nx.MultiDiGraph, ranks: Union[Dict, OrderedDict], alpha_coefficient=0.5
 ) -> nx.MultiDiGraph:
-    aspect_importance = nx.get_node_attributes(graph, ASPECT_IMPORTANCE)
+    aspect_importance = nx.get_node_attributes(graph, ASPECT_ABSOLUTE_IMPORTANCE)
 
     for aspect, score in tqdm(ranks.items(), desc="Calculating weights..."):
         if aspect in aspect_importance:

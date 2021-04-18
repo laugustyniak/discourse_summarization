@@ -80,6 +80,7 @@ class Aspect2AspectGraph:
 
 def log_rules_stats(discourse_tree_df, suffix: str = ""):
     rules_cardinality = discourse_tree_df.rules.apply(lambda rs: len(rs))
+    assert rules_cardinality.sum() > 0, "No rules to process"
     mlflow.log_params(
         {
             f"rules_per_tree_avg{suffix}": rules_cardinality.mean(),
