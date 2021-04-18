@@ -47,7 +47,7 @@ logging.basicConfig(
     filename="analyzer.log",
 )
 
-ASPECTS_TO_SKIP = [
+ASPECTS_TO_SKIP = frozenset([
     "fyi",
     "un",
     "dynamat",
@@ -65,7 +65,8 @@ ASPECTS_TO_SKIP = [
     "swan slimline",
     "aziz",
     "xxl",
-]
+    "rzr",
+])
 
 
 class AspectAnalysis:
@@ -229,8 +230,8 @@ class AspectAnalysis:
         return df
 
     def extract_edu_rhetorical_rules(self, df: pd.DataFrame) -> pd.DataFrame:
-        if "rules" in df.columns:
-            return df
+        # if "rules" in df.columns:
+        #     return df
 
         pandas_utils.assert_columns(df, "discourse_tree_ids_only")
 
@@ -284,6 +285,42 @@ class AspectAnalysis:
             .pipe(self.extract_edu_rhetorical_rules)
         )
 
+        if with_aspect_filtering:
+            discourse_trees_df = self.filter_rules_based_on_aspects_freq(
+                discourse_trees_df
+            )
+
+        mlflow.log_metric("discourse_tree_df_len", len(discourse_trees_df))
+
+        graph = self.build_aspect_to_aspect_graph(
+            discourse_trees_df, filter_relation_fn, aspects_to_skip
+        )
+        mlflow.log_metric("aspect_2_aspect_graph_edges", graph.number_of_edges())
+        mlflow.log_metric("aspect_2_aspect_graph_nodes", graph.number_of_nodes())
+        graph, _ = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
+        aht_graph = aht_graph_creation_fn(
+            graph,
+            max_number_of_nodes=self.aht_max_number_of_nodes,
+            weight=aht_graph_weight_name,
+        )
+
+        serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
+
+        aspect_with_max_weight = sort_networkx_attributes(
+            nx.get_node_attributes(aht_graph, metric_for_aspect_with_max_weight)
+        )[0]
+
+        aht_graph_directed = nx.bfs_tree(
+            aht_graph, aspect_with_max_weight, reverse=True
+        )
+        draw_tree(
+            aht_graph_directed,
+            self.paths.experiment_path / f"aht_for_{self.paths.experiment_name}",
+        )
+
+    def filter_rules_based_on_aspects_freq(
+        self, discourse_trees_df: pd.DataFrame
+    ) -> pd.DataFrame:
         # generate aspects counter for aspect when in discourse tree appear at least two aspects -
         # the relation could be derived from it
         aspect_counter = Counter(
@@ -322,62 +359,40 @@ class AspectAnalysis:
         discourse_trees_df["aspects"] = discourse_trees_df.aspects.apply(
             lambda aspects: filter_aspects(aspects, aspects_to_filter)
         )
-
-        mlflow.log_metric("discourse_tree_df_len", len(discourse_trees_df))
-
-        graph = self.build_aspect_to_aspect_graph(
-            discourse_trees_df, filter_relation_fn, aspects_to_skip
-        )
-        mlflow.log_metric("aspect_2_aspect_graph_edges", graph.number_of_edges())
-        mlflow.log_metric("aspect_2_aspect_graph_nodes", graph.number_of_nodes())
-        graph, _ = self.add_sentiments_and_weights_to_nodes(graph, discourse_trees_df)
-        aht_graph = aht_graph_creation_fn(
-            graph,
-            max_number_of_nodes=self.aht_max_number_of_nodes,
-            weight=aht_graph_weight_name,
-        )
-
-        serializer.save(aht_graph, self.paths.aspect_hierarchical_tree)
-
-        aspect_with_max_weight = sort_networkx_attributes(
-            nx.get_node_attributes(aht_graph, metric_for_aspect_with_max_weight)
-        )[0]
-        mlflow.log_param("aspect_with_max_weight", aspect_with_max_weight)
-
-        aht_graph_directed = nx.bfs_tree(
-            aht_graph, aspect_with_max_weight, reverse=True
-        )
-        draw_tree(
-            aht_graph_directed,
-            self.paths.experiment_path / f"aht_for_{self.paths.experiment_name}",
-        )
+        return discourse_trees_df
 
     def gerani_pipeline(self):
         self.generate_aht(
             aht_graph_creation_fn=gerani_paper_arrg_to_aht,
             filter_relation_fn=rule_filters.filter_rules_gerani,
             aht_graph_weight_name="moi",
-            metric_for_aspect_with_max_weight="pagerank",
+            metric_for_aspect_with_max_weight="moi",
+            aspects_to_skip=ASPECTS_TO_SKIP,
+            with_aspect_filtering=False,
         )
 
-    def our_pipeline(self):
+    def our_pipeline(self, use_aspect_clustering: bool = False):
         self.generate_aht(
             aht_graph_creation_fn=partial(
-                our_paper_arrg_to_aht, use_aspect_clustering=True
+                our_paper_arrg_to_aht, use_aspect_clustering=use_aspect_clustering
             ),
             filter_relation_fn=None,
             aht_graph_weight_name="weight",
             metric_for_aspect_with_max_weight="weight",
             aspects_to_skip=ASPECTS_TO_SKIP,
+            with_aspect_filtering=False,
         )
 
-    def our_pipeline_top_n_rules_per_discourse_tree(self):
+    def our_pipeline_top_n_rules_per_discourse_tree(
+        self, use_aspect_clustering: bool = False, top_n: int = 1
+    ):
         self.generate_aht(
             aht_graph_creation_fn=partial(
-                our_paper_arrg_to_aht, use_aspect_clustering=True
+                our_paper_arrg_to_aht, use_aspect_clustering=use_aspect_clustering
             ),
-            filter_relation_fn=rule_filters.filter_top_n_rules,
+            filter_relation_fn=partial(rule_filters.filter_top_n_rules, top_n=top_n),
             aht_graph_weight_name="weight",
             metric_for_aspect_with_max_weight="weight",
             aspects_to_skip=ASPECTS_TO_SKIP,
+            with_aspect_filtering=False,
         )
