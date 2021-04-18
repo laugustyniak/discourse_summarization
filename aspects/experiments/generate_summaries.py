@@ -17,26 +17,18 @@ setup_mlflow()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-N_CALLS_1_000 = 1_000
-N_CALLS_10_000 = 10_000
-N_CALLS_25_000 = 25_000
-# N_CALLS_999_999 = 999_999
+DATASETS = [
+    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, 25_000),
+    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, 25_000),
+    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, 50_000),
+    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, None),
+]
 
-datasets = [
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_1_000),
-    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_1_000),
-    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_1_000),
-    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_1_000),
-    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS_10_000),
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_10_000),
-    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_10_000),
-    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_10_000),
-    (settings.AMAZON_REVIEWS_APPS_FOR_ANDROID_DATASET_JSON, N_CALLS_25_000),
-    (settings.AMAZON_REVIEWS_AUTOMOTIVE_DATASET_JSON, N_CALLS_25_000),
-    (settings.AMAZON_REVIEWS_AMAZON_INSTANT_VIDEO_DATASET_JSON, N_CALLS_25_000),
-    (settings.AMAZON_REVIEWS_CELL_PHONES_AND_ACCESSORIES_DATASET_JSON, N_CALLS_25_000),
-    # (settings.EVENT_REGISTRY_BREXIT_NEWS_WITH_BODY_LARGE, 10000),
-    # (settings.EVENT_REGISTRY_BREXIT_NEWS_LARGE, None),
+EXPERIMENTS = [
+    experiment_name_enum.GERANI,
+    experiment_name_enum.OUR,
+    experiment_name_enum.OUR_TOP_1_RULES,
+    experiment_name_enum.OUR_TOP_5_RULES,
 ]
 
 
@@ -56,7 +48,7 @@ datasets = [
 @click.option(
     "--alpha_coefficient", default=0.5, help="Alpha coefficient for moi calculation"
 )
-@click.option("--experiment-id", default=6, help="name of experiment for mlflow")
+@click.option("--experiment-id", default=8, help="name of experiment for mlflow")
 def main(
     n_jobs: int,
     batch_size: int,
@@ -65,18 +57,14 @@ def main(
     experiment_id: Union[str, int],
 ):
     for dataset_path, max_reviews in tqdm(
-        datasets, desc="Amazon datasets processing..."
+        DATASETS, desc="Amazon datasets processing..."
     ):
-        for experiment_name in [
-            experiment_name_enum.GERANI,
-            experiment_name_enum.OUR,
-            experiment_name_enum.OUR_TOP_1_RULES,
-        ]:
+        with mlflow.start_run(
+            experiment_id=experiment_id,
+            run_name=f"{dataset_path.stem}-{max_reviews}",
+        ):
+            for experiment_name in EXPERIMENTS:
 
-            with mlflow.start_run(
-                experiment_id=experiment_id,
-                run_name=f"{experiment_name}-{dataset_path.stem}-{max_reviews}",
-            ):
                 aspect_analysis = AspectAnalysis(
                     input_path=dataset_path.as_posix(),
                     output_path=settings.DEFAULT_OUTPUT_PATH / dataset_path.stem,
@@ -93,19 +81,22 @@ def main(
                 elif experiment_name == experiment_name_enum.GERANI:
                     aspect_analysis.gerani_pipeline()
                 elif experiment_name == experiment_name_enum.OUR_TOP_1_RULES:
-                    aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree()
+                    aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree(
+                        top_n=1, use_aspect_clustering=False
+                    )
+                elif experiment_name == experiment_name_enum.OUR_TOP_5_RULES:
+                    aspect_analysis.our_pipeline_top_n_rules_per_discourse_tree(
+                        top_n=5, use_aspect_clustering=False
+                    )
                 else:
                     raise Exception("Wrong experiment type")
 
-                mlflow.log_param("experiment_name", experiment_name)
-                mlflow.log_param("dataset_path", dataset_path)
-                mlflow.log_param("dataset_name", dataset_path.stem)
-                mlflow.log_param("method", experiment_name)
-                mlflow.log_param("max_docs", max_reviews)
-                mlflow.log_param("batch_size", batch_size)
-                mlflow.log_param("n_jobs", n_jobs)
-                mlflow.log_param("aht_max_number_of_nodes", aht_max_number_of_nodes)
-                mlflow.log_param("alpha_coefficient", alpha_coefficient)
+        mlflow.log_param("dataset_path", dataset_path)
+        mlflow.log_param("dataset_name", dataset_path.stem)
+        mlflow.log_param("max_docs", max_reviews)
+        mlflow.log_param("n_jobs", n_jobs)
+        mlflow.log_param("aht_max_number_of_nodes", aht_max_number_of_nodes)
+        mlflow.log_param("alpha_coefficient", alpha_coefficient)
 
 
 if __name__ == "__main__":
