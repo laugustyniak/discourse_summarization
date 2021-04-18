@@ -21,6 +21,7 @@ setup_mlflow()
 logger = logging.getLogger(__name__)
 
 ASPECT_IMPORTANCE = "importance"
+ASPECT_ABSOLUTE_IMPORTANCE = "absolute_importance"
 
 
 def extend_graph_nodes_with_sentiments_and_weights(
@@ -48,6 +49,9 @@ def extend_graph_nodes_with_sentiments_and_weights(
             graph.nodes[aspect]["sentiment_sum"] = float(np.sum(sentiments))
             graph.nodes[aspect][ASPECT_IMPORTANCE] = float(
                 np.sum([x ** 2 for x in sentiments])
+            )
+            graph.nodes[aspect][ASPECT_ABSOLUTE_IMPORTANCE] = float(
+                np.sum([abs(x) for x in sentiments])
             )
             n_aspects_updated += 1
         except KeyError as err:
@@ -85,9 +89,7 @@ def calculate_moi_by_gerani(
 
 
 def calculate_weight(
-    graph: nx.MultiDiGraph,
-    ranks: Union[Dict, OrderedDict],
-    alpha_coefficient=0.5,
+    graph: nx.MultiDiGraph, ranks: Union[Dict, OrderedDict], alpha_coefficient=0.5
 ) -> nx.MultiDiGraph:
     aspect_importance = nx.get_node_attributes(graph, ASPECT_IMPORTANCE)
 
@@ -130,7 +132,7 @@ def gerani_paper_arrg_to_aht(
         reverse=True,
     )
     csv_name = "/tmp/gerani_page_ranks.csv"
-    pd.DataFrame(sorted_nodes, columns=["aspect", "page_rank"]).to_csv(csv_name)
+    pd.DataFrame(sorted_nodes, columns=["aspect", weight]).to_csv(csv_name)
     mlflow.log_artifact(csv_name)
     top_nodes = list(pluck(0, sorted_nodes[:max_number_of_nodes]))
     sub_graph = graph_flatten.subgraph(top_nodes)
@@ -148,12 +150,10 @@ def our_paper_arrg_to_aht(
 ) -> nx.Graph:
     logger.info("Generate Aspect Hierarchical Tree based on ARRG")
     # aspects_rank = calculate_hits(graph)
-    # aspects_rank = nx.in_degree_centrality(graph)
-    aspects_rank = calculate_weighted_page_rank(graph, "weight")
+    aspects_rank = nx.in_degree_centrality(graph)
+    # aspects_rank = calculate_weighted_page_rank(graph, "weight")
     graph = calculate_weight(
-        graph=graph,
-        ranks=aspects_rank,
-        alpha_coefficient=alpha_coefficient,
+        graph=graph, ranks=aspects_rank, alpha_coefficient=alpha_coefficient
     )
     graph_flatten = merge_multiedges(
         graph,

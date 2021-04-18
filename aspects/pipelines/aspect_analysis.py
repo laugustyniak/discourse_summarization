@@ -272,6 +272,7 @@ class AspectAnalysis:
         aht_graph_weight_name: str = "pagerank",
         metric_for_aspect_with_max_weight="pagerank",
         aspects_to_skip=None,
+        with_aspect_filtering: bool = False,
     ):
         logging.info(f"Experiments for:  {self.paths.experiment_path}")
 
