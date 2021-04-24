@@ -157,6 +157,8 @@ def our_paper_arrg_to_aht(
     )
     graph_flatten = merge_multiedges(
         graph,
+        node_attrib_name=weight,
+        default_node_weight=0,
         n_clusters=max_number_of_nodes,
         use_aspect_clustering=use_aspect_clustering,
     )
@@ -167,7 +169,7 @@ def our_paper_arrg_to_aht(
     ]
     sorted_nodes = sorted(
         list(aspects_rank), key=lambda node_value: node_value[1], reverse=True
-    )
+    )[:max_number_of_nodes]
 
     mlflow.log_dict(dict(sorted_nodes), "arrg_aspect_ranks.json")
 

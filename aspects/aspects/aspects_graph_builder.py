@@ -96,7 +96,7 @@ def log_rules_stats(discourse_tree_df, suffix: str = ""):
 def merge_multiedges(
     graph: object,
     node_attrib_name: str = "weight",
-    default_node_weight: float = 1,
+    default_node_weight: float = 0,
     use_aspect_clustering: bool = False,
     n_clusters: int = None,
 ) -> nx.Graph:
