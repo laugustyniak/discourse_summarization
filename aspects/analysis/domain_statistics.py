@@ -1,16 +1,15 @@
+from collections import Counter
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Dict
 
 import pandas as pd
-from collections import Counter
-
 from more_itertools import flatten
 from tqdm import tqdm
 
 
 def generate_domain_statistics(
     reviews_path: Path, min_trees: int = 200
-) -> Tuple[pd.DataFrame, Dictr[str, pd.DataFrame]]:
+) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
     statistics = []
     dfs = {}
 
